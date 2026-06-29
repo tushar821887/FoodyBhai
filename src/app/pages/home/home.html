@@ -1,0 +1,111 @@
+<app-hero></app-hero>
+
+<section class="section about-section">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-img animate-fade-in">
+        <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80" alt="Restaurant Kitchen">
+      </div>
+      <div class="about-content animate-fade-in">
+        <h2 class="section-title">Why Choose <span>Foody Bhai?</span></h2>
+        <p class="section-subtitle">We are Meerut's premier delivery-only restaurant, dedicated to bringing you the finest culinary experiences right in the comfort of your home.</p>
+        
+        <ul class="features-list">
+          <li>
+            <div class="feature-icon"><i class="fa-solid fa-fire-burner"></i></div>
+            <div class="feature-text">
+              <h4>Freshly Prepared</h4>
+              <p>Every meal is cooked to order using the freshest ingredients.</p>
+            </div>
+          </li>
+          <li>
+            <div class="feature-icon"><i class="fa-solid fa-broom"></i></div>
+            <div class="feature-text">
+              <h4>Hygienic Kitchen</h4>
+              <p>We maintain the highest standards of cleanliness and food safety.</p>
+            </div>
+          </li>
+          <li>
+            <div class="feature-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div class="feature-text">
+              <h4>Affordable Pricing</h4>
+              <p>Premium quality food that doesn't break the bank.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section popular-section bg-light">
+  <div class="container">
+    <div class="text-center animate-fade-in">
+      <h2 class="section-title">Popular <span>Dishes</span></h2>
+      <p class="section-subtitle">Discover our most loved dishes that keep our customers coming back for more.</p>
+    </div>
+    
+    <div class="menu-grid">
+      @for (item of popularItems; track item.id) {
+        <app-menu-card [item]="item"></app-menu-card>
+      }
+    </div>
+    
+    <div class="text-center" style="margin-top: 3rem;">
+      <a routerLink="/menu" class="btn btn-primary">View Full Menu</a>
+    </div>
+  </div>
+</section>
+
+<section class="section reviews-section">
+  <div class="container">
+    <div class="text-center animate-fade-in">
+      <h2 class="section-title">Customer <span>Reviews</span></h2>
+      <p class="section-subtitle">Don't just take our word for it, see what our customers have to say.</p>
+    </div>
+    
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="stars">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="review-text">"The Paneer Butter Masala was absolutely delicious! The packaging was secure and the food was hot when it arrived."</p>
+        <div class="reviewer">
+          <div class="avatar">S</div>
+          <div class="reviewer-info">
+            <strong>Rahul Sharma</strong>
+            <span>Meerut</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="review-card">
+        <div class="stars">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+        </div>
+        <p class="review-text">"Best delivery restaurant in Meerut! Their Aloo Parathas taste just like home. Highly recommended for breakfast."</p>
+        <div class="reviewer">
+          <div class="avatar">P</div>
+          <div class="reviewer-info">
+            <strong>Priya Singh</strong>
+            <span>Meerut</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="review-card">
+        <div class="stars">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="review-text">"Fast delivery and amazing taste. The Veg Biryani is a must-try. Will definitely order again from Foody Bhai."</p>
+        <div class="reviewer">
+          <div class="avatar">A</div>
+          <div class="reviewer-info">
+            <strong>Amit Verma</strong>
+            <span>Meerut</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
