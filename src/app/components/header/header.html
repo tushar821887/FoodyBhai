@@ -1,0 +1,27 @@
+<header class="header" [class.scrolled]="isScrolled">
+  <div class="container header-container">
+    <a routerLink="/" class="logo">
+      <i class="fa-solid fa-utensils logo-icon"></i>
+      Foody <span>Bhai</span>
+    </a>
+
+    <div class="mobile-toggle" (click)="toggleMenu()">
+      <i class="fa-solid" [class.fa-bars]="!isMenuOpen" [class.fa-xmark]="isMenuOpen"></i>
+    </div>
+
+    <nav class="nav-menu" [class.active]="isMenuOpen">
+      <ul class="nav-list">
+        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Home</a></li>
+        <li><a routerLink="/menu" routerLinkActive="active" (click)="closeMenu()">Menu</a></li>
+        <li><a routerLink="/about" routerLinkActive="active" (click)="closeMenu()">About</a></li>
+        <li><a routerLink="/delivery" routerLinkActive="active" (click)="closeMenu()">Delivery</a></li>
+        <li><a routerLink="/gallery" routerLinkActive="active" (click)="closeMenu()">Gallery</a></li>
+        <li><a routerLink="/contact" routerLinkActive="active" (click)="closeMenu()">Contact</a></li>
+      </ul>
+      <!-- routerLink="/menu" -->
+      <button class="btn btn-primary order-btn"  (click)="closeMenu();openZomatoStore()">
+        Order Now <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </nav>
+  </div>
+</header>

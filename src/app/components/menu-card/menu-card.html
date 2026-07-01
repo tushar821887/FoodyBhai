@@ -1,0 +1,21 @@
+<div class="menu-card animate-fade-in">
+  <div class="card-img-wrapper">
+    <img [src]="item.image" [alt]="item.name" class="card-img">
+    <div class="veg-badge" [class.non-veg]="!item.isVeg">
+      <div class="dot"></div>
+    </div>
+  </div>
+  <div class="card-content">
+    <div class="card-header">
+      <h3 class="item-name">{{item.name}}</h3>
+      <span class="item-price">₹{{item.price}}</span>
+    </div>
+    <p class="item-desc">{{item.description}}</p>
+    <div class="card-footer">
+      <span class="item-category">{{item.category}}</span>
+      <button class="add-to-cart-btn">
+        <i class="fa-solid fa-plus"></i> Add
+      </button>
+    </div>
+  </div>
+</div>

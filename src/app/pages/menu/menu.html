@@ -1,0 +1,51 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Our <span>Menu</span></h1>
+    <p class="page-subtitle">Explore our wide variety of delicious, freshly prepared dishes.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="menu-controls animate-fade-in">
+      <div class="search-bar">
+        <i class="fa-solid fa-search"></i>
+        <input type="text" placeholder="Search for dishes..." [value]="searchQuery" (input)="onSearch($event)">
+      </div>
+      
+      <div class="filter-options">
+        <label class="custom-checkbox">
+          <input type="checkbox" [checked]="vegOnly" (change)="toggleVegOnly()">
+          <span class="checkmark"></span>
+          <span class="label-text"><div class="veg-badge"><div class="dot"></div></div> Veg Only</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="category-tabs animate-fade-in">
+      @for (category of categories; track category) {
+        <button 
+          class="category-tab" 
+          [class.active]="activeCategory === category"
+          (click)="setCategory(category)">
+          {{category}}
+        </button>
+      }
+    </div>
+
+    <div class="menu-grid">
+      @if (filteredItems.length > 0) {
+        @for (item of filteredItems; track item.id) {
+          <app-menu-card [item]="item"></app-menu-card>
+        }
+      } @else {
+        <div class="no-results text-center" style="grid-column: 1 / -1; padding: 4rem 0;">
+          <i class="fa-solid fa-plate-wheat" style="font-size: 3rem; color: var(--text-light); margin-bottom: 1rem;"></i>
+          <h3>No dishes found!</h3>
+          <p>Try adjusting your search or filter criteria.</p>
+          <button class="btn btn-secondary mt-3" (click)="resetFilters()">Clear Filters</button>
+        </div>
+      }
+    </div>
+  </div>
+</section>
