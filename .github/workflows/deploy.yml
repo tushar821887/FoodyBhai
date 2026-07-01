@@ -1,31 +1,17 @@
-name: Deploy Angular to GitHub Pages
+name: Deploy Angular to Hostinger
 
 on:
   # Runs on pushes targeting the default branch (main or master)
   push:
     branches:
       - main
-      - develop
       - master
-
+  
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  # Build job
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,28 +27,16 @@ jobs:
         run: npm ci
         
       - name: Build with Angular
-        # IMPORTANT: If your repository is not at the root (e.g. username.github.io/FoodyBhai),
-        # uncomment the below line and replace 'FoodyBhai' with your repository name.
-        # run: npm run build -- --base-href /FoodyBhai/
-        
-        # Default build command:
+        # Assuming you will host this on a custom domain (e.g., foodybhai.com)
         run: npm run build -- --configuration production
         
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          # In Angular 17+, the static files are output to dist/project-name/browser
-          # Because your project is 'foody-bhai', the path is dist/foody-bhai/browser
-          path: 'dist/foody-bhai/browser'
-
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Path where Angular outputs the compiled static files
+          local-dir: dist/foody-bhai/browser/
+          # Optional: define where to upload on Hostinger (e.g., public_html)
+          # server-dir: /public_html/
