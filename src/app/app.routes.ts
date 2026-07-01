@@ -7,5 +7,6 @@ export const routes: Routes = [
   { path: 'delivery', loadComponent: () => import('./pages/delivery/delivery').then(m => m.Delivery) },
   { path: 'contact', loadComponent: () => import('./pages/contact/contact').then(m => m.Contact) },
   { path: 'gallery', loadComponent: () => import('./pages/gallery/gallery').then(m => m.Gallery) },
+  { path: 'privacy-policy', loadComponent: () => import('./pages/privacy-policy/privacy-policy').then(m => m.PrivacyPolicy) },
   { path: '**', redirectTo: '' }
 ];
