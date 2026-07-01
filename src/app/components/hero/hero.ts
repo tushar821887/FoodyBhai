@@ -8,6 +8,7 @@ import { RouterLink } from '@angular/router';
   styleUrl: './hero.css'
 })
 export class Hero {
+  
   openZomatoStore(){
     window.location.href='https://www.zomato.com/meerut/foody-bhai-mohan-puri/order';
   }
