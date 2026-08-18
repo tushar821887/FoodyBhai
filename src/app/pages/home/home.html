@@ -4,32 +4,32 @@
   <div class="container">
     <div class="about-grid">
       <div class="about-img animate-fade-in">
-        <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80" alt="Restaurant Kitchen">
+        <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80" alt="Cooking healthy food">
       </div>
       <div class="about-content animate-fade-in">
-        <h2 class="section-title">Why Choose <span>Foody Bhai?</span></h2>
-        <p class="section-subtitle">We are Meerut's premier delivery-only restaurant, dedicated to bringing you the finest culinary experiences right in the comfort of your home.</p>
+        <h2 class="section-title">Welcome to <span>FoodyBhai</span></h2>
+        <p class="section-subtitle">Your ultimate destination for discovering authentic, easy-to-follow, and delicious recipes for every occasion.</p>
         
         <ul class="features-list">
           <li>
-            <div class="feature-icon"><i class="fa-solid fa-fire-burner"></i></div>
+            <div class="feature-icon"><i class="fa-solid fa-list-check"></i></div>
             <div class="feature-text">
-              <h4>Freshly Prepared</h4>
-              <p>Every meal is cooked to order using the freshest ingredients.</p>
+              <h4>Step-by-Step Instructions</h4>
+              <p>Clear, detailed, and tested recipes that guarantee perfect results every time.</p>
             </div>
           </li>
           <li>
-            <div class="feature-icon"><i class="fa-solid fa-broom"></i></div>
+            <div class="feature-icon"><i class="fa-solid fa-leaf"></i></div>
             <div class="feature-text">
-              <h4>Hygienic Kitchen</h4>
-              <p>We maintain the highest standards of cleanliness and food safety.</p>
+              <h4>Authentic Ingredients</h4>
+              <p>Learn the secrets of traditional cooking with accessible ingredients.</p>
             </div>
           </li>
           <li>
-            <div class="feature-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div class="feature-icon"><i class="fa-solid fa-clock"></i></div>
             <div class="feature-text">
-              <h4>Affordable Pricing</h4>
-              <p>Premium quality food that doesn't break the bank.</p>
+              <h4>Quick & Easy</h4>
+              <p>Find meals that fit your schedule, from 15-minute snacks to elaborate weekend feasts.</p>
             </div>
           </li>
         </ul>
@@ -38,11 +38,29 @@
   </div>
 </section>
 
-<section class="section popular-section bg-light">
+<section class="section categories-section bg-light">
+  <div class="container">
+    <div class="text-center animate-fade-in mb-5">
+      <h2 class="section-title">Explore <span>Categories</span></h2>
+      <p class="section-subtitle">Find exactly what you're craving by browsing our recipe categories.</p>
+    </div>
+    
+    <div class="category-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+      @for (category of categories; track category.slug) {
+        <a [routerLink]="['/category', category.slug]" class="category-card" style="background: white; padding: 2rem; border-radius: var(--border-radius); text-align: center; text-decoration: none; color: inherit; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+          <h3 style="color: var(--primary-color); margin-bottom: 1rem;">{{category.name}}</h3>
+          <p style="color: var(--text-light); font-size: 0.9rem;">{{category.description}}</p>
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section popular-section">
   <div class="container">
     <div class="text-center animate-fade-in">
-      <h2 class="section-title">Popular <span>Dishes</span></h2>
-      <p class="section-subtitle">Discover our most loved dishes that keep our customers coming back for more.</p>
+      <h2 class="section-title">Popular <span>Recipes</span></h2>
+      <p class="section-subtitle">Discover our most loved and highly-rated recipes from the community.</p>
     </div>
     
     <div class="menu-grid">
@@ -52,60 +70,7 @@
     </div>
     
     <div class="text-center" style="margin-top: 3rem;">
-      <a routerLink="/menu" class="btn btn-primary">View Full Menu</a>
-    </div>
-  </div>
-</section>
-
-<section class="section reviews-section">
-  <div class="container">
-    <div class="text-center animate-fade-in">
-      <h2 class="section-title">Customer <span>Reviews</span></h2>
-      <p class="section-subtitle">Don't just take our word for it, see what our customers have to say.</p>
-    </div>
-    
-    <div class="reviews-grid">
-      <div class="review-card">
-        <div class="stars">
-          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-        </div>
-        <p class="review-text">"The Paneer Butter Masala was absolutely delicious! The packaging was secure and the food was hot when it arrived."</p>
-        <div class="reviewer">
-          <div class="avatar">S</div>
-          <div class="reviewer-info">
-            <strong>Rahul Sharma</strong>
-            <span>Meerut</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="review-card">
-        <div class="stars">
-          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
-        </div>
-        <p class="review-text">"Best delivery restaurant in Meerut! Their Aloo Parathas taste just like home. Highly recommended for breakfast."</p>
-        <div class="reviewer">
-          <div class="avatar">P</div>
-          <div class="reviewer-info">
-            <strong>Priya Singh</strong>
-            <span>Meerut</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="review-card">
-        <div class="stars">
-          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-        </div>
-        <p class="review-text">"Fast delivery and amazing taste. The Veg Biryani is a must-try. Will definitely order again from Foody Bhai."</p>
-        <div class="reviewer">
-          <div class="avatar">A</div>
-          <div class="reviewer-info">
-            <strong>Amit Verma</strong>
-            <span>Meerut</span>
-          </div>
-        </div>
-      </div>
+      <a routerLink="/recipes" class="btn btn-primary">Browse All Recipes</a>
     </div>
   </div>
 </section>

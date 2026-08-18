@@ -1,7 +1,7 @@
 <div class="page-header">
   <div class="container text-center animate-fade-in">
-    <h1 class="page-title">Our <span>Menu</span></h1>
-    <p class="page-subtitle">Explore our wide variety of delicious, freshly prepared dishes.</p>
+    <h1 class="page-title">Our <span>Recipes</span></h1>
+    <p class="page-subtitle">Explore our wide variety of delicious, easy-to-follow recipes.</p>
   </div>
 </div>
 
@@ -10,7 +10,7 @@
     <div class="menu-controls animate-fade-in">
       <div class="search-bar">
         <i class="fa-solid fa-search"></i>
-        <input type="text" placeholder="Search for dishes..." [value]="searchQuery" (input)="onSearch($event)">
+        <input type="text" placeholder="Search for recipes..." [value]="searchQuery" (input)="onSearch($event)">
       </div>
       
       <div class="filter-options">
@@ -23,12 +23,12 @@
     </div>
 
     <div class="category-tabs animate-fade-in">
-      @for (category of categories; track category) {
+      @for (category of categories; track category.slug) {
         <button 
           class="category-tab" 
-          [class.active]="activeCategory === category"
-          (click)="setCategory(category)">
-          {{category}}
+          [class.active]="activeCategory === category.name"
+          (click)="setCategory(category.name)">
+          {{category.name}}
         </button>
       }
     </div>
@@ -41,7 +41,7 @@
       } @else {
         <div class="no-results text-center" style="grid-column: 1 / -1; padding: 4rem 0;">
           <i class="fa-solid fa-plate-wheat" style="font-size: 3rem; color: var(--text-light); margin-bottom: 1rem;"></i>
-          <h3>No dishes found!</h3>
+          <h3>No recipes found!</h3>
           <p>Try adjusting your search or filter criteria.</p>
           <button class="btn btn-secondary mt-3" (click)="resetFilters()">Clear Filters</button>
         </div>

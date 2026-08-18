@@ -1,0 +1,118 @@
+@if (recipe) {
+  <div [innerHTML]="schemaMarkup"></div>
+  
+  <div class="recipe-header">
+    <div class="container text-center animate-fade-in">
+      <div class="breadcrumbs">
+        <a routerLink="/">Home</a> > <a routerLink="/recipes">Recipes</a> > <a [routerLink]="['/category', recipe.category | lowercase]">{{recipe.category}}</a> > {{recipe.title}}
+      </div>
+      <h1 class="page-title" style="margin-top: 1rem;">{{recipe.title}}</h1>
+      <p class="recipe-description">{{recipe.description}}</p>
+    </div>
+  </div>
+
+  <section class="section recipe-detail-section">
+    <div class="container">
+      <div class="recipe-hero-image animate-fade-in">
+        <img [src]="recipe.image" [alt]="recipe.imageAlt || recipe.title" class="img-fluid rounded">
+      </div>
+
+      <div class="recipe-content-grid">
+        <div class="recipe-main-content">
+          <div class="recipe-intro mb-4">
+            <h2>About this Recipe</h2>
+            <p>{{recipe.introduction}}</p>
+          </div>
+
+          <div class="recipe-meta mb-4">
+            <div class="meta-item">
+              <i class="fa-regular fa-clock"></i>
+              <div>
+                <strong>Prep Time</strong>
+                <span>{{recipe.prepTime}}</span>
+              </div>
+            </div>
+            <div class="meta-item">
+              <i class="fa-solid fa-fire-burner"></i>
+              <div>
+                <strong>Cook Time</strong>
+                <span>{{recipe.cookTime}}</span>
+              </div>
+            </div>
+            <div class="meta-item">
+              <i class="fa-solid fa-users"></i>
+              <div>
+                <strong>Servings</strong>
+                <span>{{recipe.servings}}</span>
+              </div>
+            </div>
+            <div class="meta-item">
+              <i class="fa-solid fa-chart-simple"></i>
+              <div>
+                <strong>Difficulty</strong>
+                <span>{{recipe.difficulty}}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="recipe-ingredients mb-5">
+            <h2>Ingredients</h2>
+            <ul class="ingredients-list">
+              @for (ingredient of recipe.ingredients; track ingredient) {
+                <li>
+                  <label class="custom-checkbox">
+                    <input type="checkbox">
+                    <span class="checkmark"></span>
+                    <span class="label-text">{{ingredient}}</span>
+                  </label>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="recipe-instructions mb-5">
+            <h2>Step-by-Step Instructions</h2>
+            <ol class="instructions-list">
+              @for (step of recipe.instructions; track step; let i = $index) {
+                <li>
+                  <strong>Step {{i + 1}}</strong>
+                  <p>{{step}}</p>
+                </li>
+              }
+            </ol>
+          </div>
+
+          @if (recipe.tips && recipe.tips.length > 0) {
+            <div class="recipe-tips p-4 bg-light rounded mb-5">
+              <h3><i class="fa-regular fa-lightbulb"></i> Chef's Tips</h3>
+              <ul>
+                @for (tip of recipe.tips; track tip) {
+                  <li>{{tip}}</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+
+        <aside class="recipe-sidebar">
+          <div class="sidebar-widget">
+            <h3>Recipe Info</h3>
+            <ul class="info-list">
+              <li><strong>Category:</strong> <a [routerLink]="['/category', recipe.category | lowercase]">{{recipe.category}}</a></li>
+              <li><strong>Cuisine:</strong> {{recipe.cuisine}}</li>
+              <li><strong>Diet:</strong> {{recipe.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}}</li>
+            </ul>
+          </div>
+          
+          <!-- Can add related recipes widget here later -->
+        </aside>
+      </div>
+    </div>
+  </section>
+} @else {
+  <div class="container text-center section">
+    <h2>Recipe Not Found</h2>
+    <p>Sorry, we couldn't find the recipe you're looking for.</p>
+    <a routerLink="/recipes" class="btn btn-primary mt-3">Browse Recipes</a>
+  </div>
+}

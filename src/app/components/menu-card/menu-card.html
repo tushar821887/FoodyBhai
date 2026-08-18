@@ -1,21 +1,21 @@
-<div class="menu-card animate-fade-in">
+<a [routerLink]="['/recipe', item.slug]" class="menu-card animate-fade-in" style="text-decoration: none; color: inherit; display: block;">
   <div class="card-img-wrapper">
-    <img [src]="item.image" [alt]="item.name" class="card-img">
+    <img [src]="item.image" [alt]="item.imageAlt || item.title" class="card-img">
     <div class="veg-badge" [class.non-veg]="!item.isVeg">
       <div class="dot"></div>
     </div>
   </div>
   <div class="card-content">
     <div class="card-header">
-      <h3 class="item-name">{{item.name}}</h3>
-      <span class="item-price">₹{{item.price}}</span>
+      <h3 class="item-name">{{item.title}}</h3>
+      <span class="item-price" style="font-size: 0.9rem; color: #666;"><i class="fa-regular fa-clock"></i> {{item.totalTime}}</span>
     </div>
     <p class="item-desc">{{item.description}}</p>
     <div class="card-footer">
       <span class="item-category">{{item.category}}</span>
-      <button class="add-to-cart-btn">
-        <i class="fa-solid fa-plus"></i> Add
+      <button class="add-to-cart-btn" style="background: none; color: var(--primary-color); border: 1px solid var(--primary-color);">
+        View Recipe <i class="fa-solid fa-arrow-right"></i>
       </button>
     </div>
   </div>
-</div>
+</a>

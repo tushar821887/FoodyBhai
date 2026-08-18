@@ -1,0 +1,28 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <div class="breadcrumbs mb-3">
+      <a routerLink="/">Home</a> > <a routerLink="/recipes">Recipes</a> > {{categoryName}}
+    </div>
+    <h1 class="page-title">{{categoryName}} <span>Recipes</span></h1>
+    <p class="page-subtitle" style="max-width: 800px; margin: 0 auto;">{{categoryDesc}}</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="menu-grid">
+      @if (recipes.length > 0) {
+        @for (item of recipes; track item.id) {
+          <app-menu-card [item]="item"></app-menu-card>
+        }
+      } @else {
+        <div class="no-results text-center" style="grid-column: 1 / -1; padding: 4rem 0;">
+          <i class="fa-solid fa-plate-wheat" style="font-size: 3rem; color: var(--text-light); margin-bottom: 1rem;"></i>
+          <h3>No recipes found in this category!</h3>
+          <p>We are working on adding more delicious recipes soon.</p>
+          <a routerLink="/recipes" class="btn btn-secondary mt-3">Browse All Recipes</a>
+        </div>
+      }
+    </div>
+  </div>
+</section>

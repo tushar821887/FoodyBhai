@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MenuCard } from '../../components/menu-card/menu-card';
-import { Menu, MenuItem } from '../../services/menu';
+import { RecipeService, Recipe } from '../../services/recipe.service';
 
 @Component({
   selector: 'app-menu',
@@ -10,26 +10,26 @@ import { Menu, MenuItem } from '../../services/menu';
   styleUrl: './menu.css'
 })
 export class MenuComponent implements OnInit {
-  allItems: MenuItem[] = [];
-  filteredItems: MenuItem[] = [];
-  categories: string[] = [];
+  allItems: Recipe[] = [];
+  filteredItems: Recipe[] = [];
+  categories: {name: string, slug: string}[] = [];
   
   activeCategory: string = 'All';
   searchQuery: string = '';
   vegOnly: boolean = false;
   
-  private menuService = inject(Menu);
+  private recipeService = inject(RecipeService);
 
   ngOnInit() {
-    this.categories = this.menuService.getCategories();
-    this.menuService.getMenuItems().subscribe(items => {
+    this.categories = [{name: 'All', slug: 'all'}, ...this.recipeService.getCategories()];
+    this.recipeService.getRecipes().subscribe(items => {
       this.allItems = items;
       this.filteredItems = items;
     });
   }
 
-  setCategory(category: string) {
-    this.activeCategory = category;
+  setCategory(categoryName: string) {
+    this.activeCategory = categoryName;
     this.applyFilters();
   }
 
@@ -56,7 +56,7 @@ export class MenuComponent implements OnInit {
       const matchCategory = this.activeCategory === 'All' || item.category === this.activeCategory;
       
       // Search filter
-      const matchSearch = item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+      const matchSearch = item.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
                           item.description.toLowerCase().includes(this.searchQuery.toLowerCase());
       
       // Veg filter
