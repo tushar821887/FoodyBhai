@@ -318,16 +318,12 @@
 
 /* Marquee Styles */
 .top-marquee {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   background-color: var(--primary-color);
   color: white;
   padding: 8px 0;
   overflow: hidden;
   white-space: nowrap;
-  z-index: 1001;
   display: flex;
 }
 
@@ -348,11 +344,16 @@
   100% { transform: translateX(-50%); }
 }
 
-/* Adjust header padding to accommodate marquee */
+/* Base header padding since marquee is now relative */
 .header {
-  padding: calc(1.5rem + 34px) 0 1.5rem 0;
+  padding: 0; /* Removing padding here, will add padding to container */
 }
 
-.header.scrolled {
-  padding: calc(1rem + 34px) 0 1rem 0;
+.header-inner {
+  padding: 1.5rem 0;
+  transition: padding var(--transition-normal);
+}
+
+.header.scrolled .header-inner {
+  padding: 1rem 0;
 }

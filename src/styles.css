@@ -146,7 +146,7 @@ img {
 
 .main-content {
   min-height: calc(100vh - 300px); /* Adjust based on header/footer */
-  margin-top: 80px; /* Space for fixed header */
+  margin-top: 140px; /* Space for fixed header */
 }
 
 /* Responsive */

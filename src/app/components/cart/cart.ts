@@ -75,6 +75,10 @@ export class CartComponent {
     this.cartService.updateQuantity(item.recipe.id, item.quantity - 1);
   }
 
+  removeItem(item: CartItem) {
+    this.cartService.removeFromCart(item.recipe.id);
+  }
+
   checkout() {
     if (!this.customerName || !this.customerPhone || !this.deliveryAddress) {
       alert("Please fill in your Name, Phone Number, and Delivery Address.");
