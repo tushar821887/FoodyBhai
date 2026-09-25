@@ -33,13 +33,101 @@
 
   @if ((cartService.items$ | async)?.length! > 0) {
     <div class="cart-footer">
-      <div class="cart-total">
-        <span>Total</span>
+  
+
+    <div class="cart-coupon mb-4">
+      @if (cartService.coupon$ | async) {
+        <div class="applied-coupon">
+          <div class="ac-left">
+            <i class="fa-solid fa-circle-check"></i>
+            <div>
+              <strong>'{{cartService.coupon$ | async}}' applied</strong>
+              <span>You are saving ₹{{cartService.discount$ | async}}</span>
+            </div>
+          </div>
+          <button class="remove-coupon-btn" (click)="removeCoupon()">Remove</button>
+        </div>
+      } @else {
+        <div class="coupon-wrapper" [class.has-error]="couponError">
+          <i class="fa-solid fa-percent coupon-icon"></i>
+          <input type="text" [(ngModel)]="couponInput" placeholder="Enter coupon code" class="coupon-input">
+          <button class="apply-coupon-btn" (click)="applyCoupon()">APPLY</button>
+        </div>
+        @if (couponError) {
+          <small class="coupon-error-msg"><i class="fa-solid fa-circle-exclamation"></i> {{couponError}}</small>
+        }
+      }
+    </div>
+
+    <div class="cart-total" style="flex-direction: column; gap: 0.8rem; align-items: stretch; margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; font-size: 0.95rem; color: var(--text-dark);">
+        <span>Item Total</span>
         <span>₹{{cartService.totalPrice$ | async}}</span>
       </div>
-      <button class="btn btn-primary checkout-btn" (click)="checkout()">
-        Order on WhatsApp <i class="fa-brands fa-whatsapp"></i>
+      @if ((cartService.discount$ | async)! > 0) {
+        <div style="display: flex; justify-content: space-between; color: var(--success); font-size: 0.95rem; font-weight: 500;">
+          <span>Item Discount</span>
+          <span>-₹{{cartService.discount$ | async}}</span>
+        </div>
+      }
+      <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.3rem; margin-top: 0.5rem; border-top: 2px dashed rgba(0,0,0,0.08); padding-top: 1rem; color: var(--secondary-color);">
+        <span>To Pay</span>
+        <span>₹{{cartService.finalPrice$ | async}}</span>
+      </div>
+    </div>
+
+
+
+      @if ((cartService.totalPrice$ | async)! < 100) {
+        <div class="min-order-warning" style="background: rgba(255,193,7,0.15); color: #b78100; padding: 0.8rem; border-radius: 8px; text-align: center; margin-bottom: 1rem; font-size: 0.9rem; font-weight: 500;">
+          <i class="fa-solid fa-circle-info"></i> Add items worth ₹{{100 - (cartService.totalPrice$ | async)!}} more to checkout
+        </div>
+      }
+      <button class="btn btn-primary checkout-btn" [disabled]="(cartService.totalPrice$ | async)! < 100" (click)="openCheckoutModal()" [style.opacity]="(cartService.totalPrice$ | async)! < 100 ? '0.5' : '1'" [style.cursor]="(cartService.totalPrice$ | async)! < 100 ? 'not-allowed' : 'pointer'">
+        Proceed to Checkout
       </button>
     </div>
   }
 </div>
+
+@if (showCheckoutModal) {
+  <div class="checkout-overlay">
+    <div class="checkout-modal animate-fade-in">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-truck" style="color: var(--primary-color);"></i> Delivery Details</h3>
+        <button class="close-btn" (click)="closeCheckoutModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="professional-form" style="padding: 0; background: transparent; border: none;">
+          <div class="form-group-sm">
+            <label>Full Name *</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" [(ngModel)]="customerName" placeholder="e.g. Rahul Sharma" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group-sm">
+            <label>Phone Number *</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-phone"></i>
+              <input type="tel" [(ngModel)]="customerPhone" placeholder="+91 98765 43210" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group-sm mb-4">
+            <label>Complete Address *</label>
+            <div class="input-with-icon align-top">
+              <i class="fa-solid fa-location-dot" style="margin-top: 14px;"></i>
+              <textarea [(ngModel)]="deliveryAddress" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3" required></textarea>
+            </div>
+          </div>
+
+          <button class="btn btn-primary checkout-btn" (click)="checkout()">
+            Order on WhatsApp <i class="fa-brands fa-whatsapp"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

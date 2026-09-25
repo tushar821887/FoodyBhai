@@ -160,3 +160,10 @@ img {
     font-size: 2rem;
   }
 }
+
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 60px; /* space for bottom nav */
+  }
+}

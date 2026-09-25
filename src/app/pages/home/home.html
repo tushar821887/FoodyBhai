@@ -48,7 +48,10 @@
     <div class="category-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
       @for (category of categories; track category.slug) {
         <a [routerLink]="['/category', category.slug]" class="category-card" style="background: white; padding: 2rem; border-radius: var(--border-radius); text-align: center; text-decoration: none; color: inherit; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
-          <h3 style="color: var(--primary-color); margin-bottom: 1rem;">{{category.name}}</h3>
+          <div style="width: 70px; height: 70px; background: rgba(255, 71, 87, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--primary-color); font-size: 2rem; transition: all 0.3s ease;">
+            <i [class]="category.icon"></i>
+          </div>
+          <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">{{category.name}}</h3>
           <p style="color: var(--text-light); font-size: 0.9rem;">{{category.description}}</p>
         </a>
       }

@@ -1,6 +1,6 @@
 .hero {
   padding: 4rem 0 6rem 0;
-  background: linear-gradient(135deg, rgba(255,245,246,1) 0%, rgba(255,255,255,1) 100%);
+  background: #fcf2ec;
   position: relative;
   overflow: hidden;
 }
@@ -172,6 +172,11 @@
   .floating-card {
     left: 20px;
   }
+
+  .img-wrapper img {
+    height: 400px;
+  }
+
 }
 
 @media (max-width: 768px) {
@@ -182,4 +187,19 @@
   .hero-stats {
     gap: 1.5rem;
   }
+
+  .img-wrapper img {
+    height: 260px;
+  }
+  
+  .floating-card {
+    left: 10px;
+    bottom: -15px;
+    padding: 0.5rem 1rem;
+  }
+  
+  .floating-card strong {
+    font-size: 1rem;
+  }
+
 }

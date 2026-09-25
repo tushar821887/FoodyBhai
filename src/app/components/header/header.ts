@@ -2,6 +2,7 @@ import { Component, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../../services/cart.service';
+import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-header',
@@ -13,7 +14,7 @@ export class Header {
   isScrolled = false;
   isMenuOpen = false;
 
-  constructor(public cartService: CartService) {}
+  constructor(public cartService: CartService, public locationService: LocationService) {}
 
   @HostListener('window:scroll', [])
   onWindowScroll() {

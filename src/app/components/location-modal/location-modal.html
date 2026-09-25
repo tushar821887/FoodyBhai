@@ -1,0 +1,61 @@
+@if (locationService.showModal$ | async) {
+  <div class="location-overlay">
+    <div class="location-modal animate-fade-in">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-location-dot" style="color: var(--primary-color);"></i> Select Delivery Location</h3>
+        @if (locationService.getLocation()) {
+          <button class="close-btn" (click)="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        }
+      </div>
+      
+      <div class="modal-body">
+        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Please select your location to check if we deliver to your area.</p>
+        
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="searchQuery" 
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Search your area, street, or landmark..."
+            autocomplete="off"
+          >
+          @if (isLoading) {
+            <i class="fa-solid fa-circle-notch fa-spin loading-icon"></i>
+          }
+        </div>
+
+        @if (errorMsg) {
+          <div class="error-msg">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{errorMsg}}
+          </div>
+        }
+
+        <div class="results-list">
+          <!-- Local Instant Results -->
+          @for (result of localResults; track result.name) {
+            <div class="result-item" (click)="selectLocation(result)">
+              <i class="fa-solid fa-location-crosshairs" style="color: var(--primary-color);"></i>
+              <div class="result-text">
+                <span class="result-title">{{result.name}}</span>
+                <span class="result-subtitle">{{result.display_name}}</span>
+              </div>
+            </div>
+          }
+          
+          <!-- API Results (if any) -->
+          @for (result of searchResults; track result.place_id) {
+            <div class="result-item" (click)="selectLocation(result)">
+              <i class="fa-solid fa-map-pin"></i>
+              <div class="result-text">
+                <span class="result-title">{{result.name}}</span>
+                <span class="result-subtitle">{{result.display_name}}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

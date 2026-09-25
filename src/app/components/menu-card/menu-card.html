@@ -18,9 +18,22 @@
     <p class="item-desc">{{item.description}}</p>
     <div class="card-footer">
       <span class="item-category">{{item.category}}</span>
-      <button (click)="addToCart()" class="add-to-cart-btn" style="background: none; color: var(--primary-color); border: 1px solid var(--primary-color); display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
-        Add +
-      </button>
+      
+      @if (quantity$ | async; as qty) {
+        <div class="inline-quantity-controls" style="display: flex; align-items: center; background: var(--background-light); border-radius: 4px; padding: 2px;">
+          <button (click)="decreaseQuantity(qty)" style="background: white; border: 1px solid #ddd; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; color: var(--secondary-color); display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <span style="width: 30px; text-align: center; font-weight: bold;">{{qty}}</span>
+          <button (click)="increaseQuantity()" style="background: white; border: 1px solid #ddd; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; color: var(--secondary-color); display: flex; align-items: center; justify-content: center;">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      } @else {
+        <button (click)="addToCart()" class="add-to-cart-btn" style="background: none; color: var(--primary-color); border: 1px solid var(--primary-color); display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 32px; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+          Add <i class="fa-solid fa-plus" style="margin-left: 5px; font-size: 0.8rem;"></i>
+        </button>
+      }
     </div>
   </div>
 </div>

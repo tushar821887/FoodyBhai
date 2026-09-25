@@ -12,7 +12,7 @@ import { RecipeService, Recipe } from '../../services/recipe.service';
 })
 export class Home implements OnInit {
   popularItems: Recipe[] = [];
-  categories: {name: string, slug: string, description: string}[] = [];
+  categories: {name: string, slug: string, description: string, icon?: string}[] = [];
   private recipeService = inject(RecipeService);
 
   ngOnInit() {
