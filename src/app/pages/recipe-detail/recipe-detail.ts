@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RecipeService, Recipe } from '../../services/recipe.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -19,6 +20,7 @@ export class RecipeDetail implements OnInit {
   private meta = inject(Meta);
   private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
+  private cartService = inject(CartService);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -33,6 +35,12 @@ export class RecipeDetail implements OnInit {
         });
       }
     });
+  }
+
+  addToCart() {
+    if (this.recipe) {
+      this.cartService.addToCart(this.recipe);
+    }
   }
 
   private setSeoTags(recipe: Recipe) {
@@ -74,7 +82,6 @@ export class RecipeDetail implements OnInit {
   }
 
   private formatIsoTime(timeStr: string): string {
-    // Basic parser for "X mins" to "PTXM"
     const minsMatch = timeStr.match(/(\d+)\s*min/);
     if (minsMatch) {
       return `PT${minsMatch[1]}M`;

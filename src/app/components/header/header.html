@@ -12,13 +12,18 @@
     <nav class="nav-menu" [class.active]="isMenuOpen">
       <ul class="nav-list">
         <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Home</a></li>
-        <li><a routerLink="/recipes" routerLinkActive="active" (click)="closeMenu()">Recipes</a></li>
+        <li><a routerLink="/menu" routerLinkActive="active" (click)="closeMenu()">Menu</a></li>
         <li><a routerLink="/about" routerLinkActive="active" (click)="closeMenu()">About</a></li>
         <li><a routerLink="/contact" routerLinkActive="active" (click)="closeMenu()">Contact</a></li>
       </ul>
-      <a routerLink="/recipes" class="btn btn-primary order-btn" (click)="closeMenu()">
-        Explore Recipes <i class="fa-solid fa-arrow-right"></i>
-      </a>
+      <div class="header-actions">
+        <button class="cart-toggle-btn" (click)="openCart()">
+          <i class="fa-solid fa-cart-shopping"></i>
+          @if ((cartService.totalItems$ | async)! > 0) {
+            <span class="cart-badge">{{cartService.totalItems$ | async}}</span>
+          }
+        </button>
+      </div>
     </nav>
   </div>
 </header>

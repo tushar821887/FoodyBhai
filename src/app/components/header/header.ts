@@ -1,6 +1,7 @@
 import { Component, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -11,6 +12,8 @@ import { CommonModule } from '@angular/common';
 export class Header {
   isScrolled = false;
   isMenuOpen = false;
+
+  constructor(public cartService: CartService) {}
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
@@ -24,6 +27,12 @@ export class Header {
   closeMenu() {
     this.isMenuOpen = false;
   }
+
+  openCart() {
+    this.cartService.openCart();
+    this.closeMenu();
+  }
+
   openZomatoStore(){
     window.location.href='https://www.zomato.com/meerut/foody-bhai-mohan-puri/order';
   }

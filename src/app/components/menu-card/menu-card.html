@@ -1,21 +1,26 @@
-<a [routerLink]="['/recipe', item.slug]" class="menu-card animate-fade-in" style="text-decoration: none; color: inherit; display: block;">
-  <div class="card-img-wrapper">
+<div class="menu-card animate-fade-in">
+  <a [routerLink]="['/recipe', item.slug]" style="text-decoration: none; color: inherit; display: block;" class="card-img-wrapper">
     <img [src]="item.image" [alt]="item.imageAlt || item.title" class="card-img">
     <div class="veg-badge" [class.non-veg]="!item.isVeg">
       <div class="dot"></div>
     </div>
-  </div>
+  </a>
   <div class="card-content">
     <div class="card-header">
-      <h3 class="item-name">{{item.title}}</h3>
-      <span class="item-price" style="font-size: 0.9rem; color: #666;"><i class="fa-regular fa-clock"></i> {{item.totalTime}}</span>
+      <a [routerLink]="['/recipe', item.slug]" style="text-decoration: none; color: inherit;">
+        <h3 class="item-name">{{item.title}}</h3>
+      </a>
+      <div style="text-align: right;">
+        <span class="item-price" style="font-size: 1.1rem; color: var(--primary-color); font-weight: bold;" *ngIf="item.price">₹{{item.price}}</span>
+        <div style="font-size: 0.8rem; color: #666;" *ngIf="item.totalTime && !item.price"><i class="fa-regular fa-clock"></i> {{item.totalTime}}</div>
+      </div>
     </div>
     <p class="item-desc">{{item.description}}</p>
     <div class="card-footer">
       <span class="item-category">{{item.category}}</span>
-      <button class="add-to-cart-btn" style="background: none; color: var(--primary-color); border: 1px solid var(--primary-color);">
-        View Recipe <i class="fa-solid fa-arrow-right"></i>
+      <button (click)="addToCart()" class="add-to-cart-btn" style="background: none; color: var(--primary-color); border: 1px solid var(--primary-color); display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: all 0.2s;">
+        Add +
       </button>
     </div>
   </div>
-</a>
+</div>

@@ -1,0 +1,45 @@
+<div class="cart-overlay" [class.open]="(cartService.isOpen$ | async)" (click)="closeCart()"></div>
+<div class="cart-sidebar" [class.open]="(cartService.isOpen$ | async)">
+  <div class="cart-header">
+    <h3>Your Order</h3>
+    <button class="close-btn" (click)="closeCart()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <div class="cart-body">
+    @if ((cartService.items$ | async)?.length === 0) {
+      <div class="empty-cart">
+        <i class="fa-solid fa-cart-shopping mb-3 text-muted"></i>
+        <p>Your cart is empty.</p>
+        <button class="btn btn-outline" (click)="closeCart()">Browse Menu</button>
+      </div>
+    } @else {
+      <div class="cart-items">
+        @for (item of (cartService.items$ | async); track item.recipe.id) {
+          <div class="cart-item">
+            <div class="item-info">
+              <h4 class="item-title">{{item.recipe.title}}</h4>
+              <p class="item-price">₹{{item.recipe.price}}</p>
+            </div>
+            <div class="quantity-controls">
+              <button (click)="decreaseQuantity(item)"><i class="fa-solid fa-minus"></i></button>
+              <span>{{item.quantity}}</span>
+              <button (click)="increaseQuantity(item)"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if ((cartService.items$ | async)?.length! > 0) {
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total</span>
+        <span>₹{{cartService.totalPrice$ | async}}</span>
+      </div>
+      <button class="btn btn-primary checkout-btn" (click)="checkout()">
+        Order on WhatsApp <i class="fa-brands fa-whatsapp"></i>
+      </button>
+    </div>
+  }
+</div>

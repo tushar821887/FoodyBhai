@@ -4,7 +4,7 @@ export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home').then(m => m.Home) },
   { path: 'recipe/:slug', loadComponent: () => import('./pages/recipe-detail/recipe-detail').then(m => m.RecipeDetail) },
   { path: 'category/:slug', loadComponent: () => import('./pages/category/category').then(m => m.Category) },
-  { path: 'recipes', loadComponent: () => import('./pages/menu/menu').then(m => m.MenuComponent) },
+  { path: 'menu', loadComponent: () => import('./pages/menu/menu').then(m => m.MenuComponent) },
   { path: 'about', loadComponent: () => import('./pages/about/about').then(m => m.About) },
   { path: 'contact', loadComponent: () => import('./pages/contact/contact').then(m => m.Contact) },
   { path: 'privacy-policy', loadComponent: () => import('./pages/privacy-policy/privacy-policy').then(m => m.PrivacyPolicy) },
