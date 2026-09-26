@@ -1,14 +1,24 @@
 <section class="hero">
   <div class="container hero-container">
     <div class="hero-content animate-fade-in">
-      <div class="badge delivery-badge">
-        <i class="fa-solid fa-motorcycle"></i> 100% Delivery Only Restaurant
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem;" class="hero-badges">
+        <div class="badge delivery-badge" style="margin-bottom: 0;">
+          <i class="fa-solid fa-motorcycle"></i> 100% Delivery Only
+        </div>
+        <div class="badge delivery-badge" style="margin-bottom: 0; background: var(--primary-color); color: white; border: none;">
+          <i class="fa-solid fa-location-dot"></i> Delivering in Meerut Area Only
+        </div>
       </div>
       <h1 class="hero-title">Experience <span>Premium</span> Food at Home.</h1>
       <p class="hero-subtitle">Meerut's finest delivery-only kitchen bringing you freshly prepared, hygienic, and mouth-watering delicacies right to your doorstep.</p>
-      <div class="hero-actions">
-        <a routerLink="/menu" class="btn btn-primary btn-lg">Order Now <i class="fa-solid fa-arrow-right"></i></a>
-        <a routerLink="/about" class="btn btn-secondary btn-lg">Know More</a>
+      <div class="hero-actions" style="flex-wrap: wrap; gap: 1rem;">
+        <a routerLink="/menu" class="btn btn-primary btn-lg">Order Here <i class="fa-solid fa-arrow-right"></i></a>
+        <a href="https://www.zomato.com/meerut/foody-bhai-mohan-puri/order" target="_blank" class="btn btn-lg" style="background: #e23744; color: white; border: none; box-shadow: 0 4px 15px rgba(226, 55, 68, 0.3);">
+          <strong style="font-style: italic; font-weight: 800; font-size: 1.2rem; letter-spacing: 0.5px;">zomato</strong>
+        </a>
+        <a href="https://www.swiggy.com/city/meerut/foody-bhai-meerut-cantt-rest1404714" target="_blank" class="btn btn-lg" style="background: #fc8019; color: white; border: none; box-shadow: 0 4px 15px rgba(252, 128, 25, 0.3);">
+          <strong style="font-weight: 800; font-size: 1.2rem; letter-spacing: 0.5px;">SWIGGY</strong>
+        </a>
       </div>
       
       <div class="hero-stats">

@@ -43,6 +43,11 @@ export class RecipeDetail implements OnInit {
     }
   }
 
+  getCategorySlug(categoryName: string): string {
+    if (!categoryName) return '';
+    return categoryName.toLowerCase().replace(/ & /g, '-and-').replace(/ /g, '-');
+  }
+
   private setSeoTags(recipe: Recipe) {
     this.title.setTitle(`${recipe.seoTitle} | FoodyBhai`);
     this.meta.updateTag({ name: 'description', content: recipe.seoDescription });

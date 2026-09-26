@@ -19,8 +19,8 @@ export class LocationService {
       if (saved) {
         this.locationSubject.next(saved);
       } else {
-        // If no location is saved, show the modal
-        setTimeout(() => this.openLocationModal(), 1000);
+        // Automatically default to Meerut, no popup
+        this.saveLocation('Meerut, Uttar Pradesh, India');
       }
     }
   }

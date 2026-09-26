@@ -4,7 +4,7 @@
   <div class="recipe-header">
     <div class="container text-center animate-fade-in">
       <div class="breadcrumbs">
-        <a routerLink="/">Home</a> > <a routerLink="/menu">Menu</a> > <a [routerLink]="['/category', recipe.category | lowercase]">{{recipe.category}}</a> > {{recipe.title}}
+        <a routerLink="/">Home</a> > <a routerLink="/menu">Menu</a> > <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a> > {{recipe.title}}
       </div>
       <h1 class="page-title" style="margin-top: 1rem;">{{recipe.title}}</h1>
       <p class="recipe-description">{{recipe.description}}</p>
@@ -98,7 +98,7 @@
           <div class="sidebar-widget">
             <h3>Recipe Info</h3>
             <ul class="info-list">
-              <li><strong>Category:</strong> <a [routerLink]="['/category', recipe.category | lowercase]">{{recipe.category}}</a></li>
+              <li><strong>Category:</strong> <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a></li>
               <li><strong>Cuisine:</strong> {{recipe.cuisine}}</li>
               <li><strong>Diet:</strong> {{recipe.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}}</li>
               <li *ngIf="recipe.price"><strong>Price:</strong> ₹{{recipe.price}}</li>

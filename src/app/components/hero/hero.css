@@ -203,3 +203,9 @@
   }
 
 }
+
+@media (max-width: 992px) {
+  .hero-badges {
+    justify-content: center;
+  }
+}
