@@ -153,19 +153,32 @@ export class CartComponent implements OnDestroy {
     this.setStep(this.currentStep - 1);
   }
 
-  // --- Address Logic ---
+  // --- Address Modal & Logic ---
+  isAddressModalOpen = false;
+  activeModalTab: 'saved' | 'new' = 'saved';
+
   get selectedAddress() {
     return this.savedAddresses.find(a => a.id === this.selectedAddressId) || null;
+  }
+
+  openAddressModal() {
+    this.isAddressModalOpen = true;
+    this.activeModalTab = this.savedAddresses.length > 0 ? 'saved' : 'new';
+  }
+
+  closeAddressModal() {
+    this.isAddressModalOpen = false;
+  }
+
+  switchModalTab(tab: 'saved' | 'new') {
+    this.activeModalTab = tab;
   }
 
   selectAddress(id: string | undefined) {
     if (id) {
       this.selectedAddressId = id;
+      this.closeAddressModal();
     }
-  }
-
-  toggleNewAddressForm() {
-    this.showNewAddressForm = !this.showNewAddressForm;
   }
 
   saveNewAddress() {
@@ -178,11 +191,11 @@ export class CartComponent implements OnDestroy {
     }).subscribe({
       next: (user) => {
         this.isAddingAddress = false;
-        this.showNewAddressForm = false;
         this.newAddressText = '';
         if (user.addresses && user.addresses.length > 0) {
           const added = user.addresses[user.addresses.length - 1];
           this.selectedAddressId = added.id || null;
+          this.closeAddressModal();
         }
       },
       error: () => {

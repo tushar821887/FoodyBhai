@@ -81,65 +81,31 @@
 
                 @if (authService.isLoggedIn()) {
                   <div class="form-group mb-2">
-                    <label>Select Delivery Address *</label>
+                    <label>Delivery Address *</label>
                     
-                    @if (savedAddresses.length > 0) {
-                      <div class="address-grid">
-                        @for (addr of savedAddresses; track addr.id) {
-                          <div class="address-card" [class.selected]="selectedAddressId === addr.id" (click)="selectAddress(addr.id)">
-                            <div class="address-header">
-                              <span class="address-label">
-                                @if (addr.label.toLowerCase() === 'home') {
-                                  <i class="fa-solid fa-house"></i>
-                                } @else if (addr.label.toLowerCase() === 'work' || addr.label.toLowerCase() === 'office') {
-                                  <i class="fa-solid fa-briefcase"></i>
-                                } @else {
-                                  <i class="fa-solid fa-map-pin"></i>
-                                }
-                                {{ addr.label }}
-                              </span>
-                              <button type="button" class="btn-delete-addr" (click)="deleteAddress(addr.id, $event)">
-                                <i class="fa-solid fa-trash"></i>
-                              </button>
-                            </div>
-                            <p class="address-text">{{ addr.fullAddress }}</p>
-                            <div class="check-circle"><i class="fa-solid fa-check"></i></div>
-                          </div>
-                        }
+                    @if (selectedAddress) {
+                      <div class="selected-address-box mb-3">
+                        <div class="address-header" style="border: none; padding-bottom: 0; margin-bottom: 0.5rem;">
+                          <span class="address-label">
+                            @if (selectedAddress.label.toLowerCase() === 'home') {
+                              <i class="fa-solid fa-house"></i>
+                            } @else if (selectedAddress.label.toLowerCase() === 'work' || selectedAddress.label.toLowerCase() === 'office') {
+                              <i class="fa-solid fa-briefcase"></i>
+                            } @else {
+                              <i class="fa-solid fa-map-pin"></i>
+                            }
+                            {{ selectedAddress.label }}
+                          </span>
+                        </div>
+                        <p class="address-text">{{ selectedAddress.fullAddress }}</p>
                       </div>
+                      <button type="button" class="btn btn-outline w-100" (click)="openAddressModal()">
+                        <i class="fa-solid fa-pen"></i> Change Delivery Address
+                      </button>
                     } @else {
-                      <div class="no-address-alert mb-3">
-                        <i class="fa-solid fa-location-dot"></i> You don't have any saved addresses.
-                      </div>
-                    }
-
-                    <button type="button" class="btn btn-outline w-100 mt-3" (click)="toggleNewAddressForm()">
-                      <i class="fa-solid fa-plus"></i> Add New Address
-                    </button>
-
-                    @if (showNewAddressForm) {
-                      <div class="new-address-form mt-3 animate-fade-in">
-                        <div class="form-group">
-                          <label>Save as (e.g., Home, Work)</label>
-                          <div class="label-badges">
-                            <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Home'" (click)="newAddressLabel = 'Home'">Home</button>
-                            <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Work'" (click)="newAddressLabel = 'Work'">Work</button>
-                            <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Other'" (click)="newAddressLabel = 'Other'">Other</button>
-                          </div>
-                          <input type="text" [(ngModel)]="newAddressLabel" placeholder="Custom label" class="form-control mt-2" *ngIf="newAddressLabel !== 'Home' && newAddressLabel !== 'Work'">
-                        </div>
-                        <div class="form-group">
-                          <label>Complete Address</label>
-                          <textarea [(ngModel)]="newAddressText" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
-                          <small class="text-muted mt-1 d-block">We deliver in Meerut area only.</small>
-                        </div>
-                        <div class="d-flex gap-2">
-                          <button type="button" class="btn btn-secondary flex-1" (click)="showNewAddressForm = false">Cancel</button>
-                          <button type="button" class="btn btn-primary flex-1" (click)="saveNewAddress()" [disabled]="isAddingAddress || !newAddressText">
-                            {{ isAddingAddress ? 'Saving...' : 'Save Address' }}
-                          </button>
-                        </div>
-                      </div>
+                      <button type="button" class="btn btn-primary w-100 mb-2 py-3" style="font-size: 1.05rem;" (click)="openAddressModal()">
+                        <i class="fa-solid fa-location-dot me-2"></i> Choose Delivery Address
+                      </button>
                     }
                   </div>
                 } @else {
@@ -288,3 +254,83 @@
     }
   </div>
 </section>
+
+@if (isAddressModalOpen) {
+  <div class="modal-overlay" (click)="closeAddressModal()">
+    <div class="modal-container animate-fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4 style="margin: 0;">Manage Delivery Address</h4>
+        <button class="btn-close" (click)="closeAddressModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="modal-tabs">
+        <button class="modal-tab" [class.active]="activeModalTab === 'saved'" (click)="switchModalTab('saved')">
+          Saved Addresses ({{ savedAddresses.length }})
+        </button>
+        <button class="modal-tab" [class.active]="activeModalTab === 'new'" (click)="switchModalTab('new')">
+          <i class="fa-solid fa-plus"></i> Add New
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 1rem;">
+        @if (activeModalTab === 'saved') {
+          @if (savedAddresses.length > 0) {
+            <div class="address-grid">
+              @for (addr of savedAddresses; track addr.id) {
+                <div class="address-card" [class.selected]="selectedAddressId === addr.id" (click)="selectAddress(addr.id)">
+                  <div class="address-header">
+                    <span class="address-label">
+                      @if (addr.label.toLowerCase() === 'home') {
+                        <i class="fa-solid fa-house"></i>
+                      } @else if (addr.label.toLowerCase() === 'work' || addr.label.toLowerCase() === 'office') {
+                        <i class="fa-solid fa-briefcase"></i>
+                      } @else {
+                        <i class="fa-solid fa-map-pin"></i>
+                      }
+                      {{ addr.label }}
+                    </span>
+                    <button type="button" class="btn-delete-addr" (click)="deleteAddress(addr.id, $event)">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                  <p class="address-text">{{ addr.fullAddress }}</p>
+                  <div class="check-circle"><i class="fa-solid fa-check"></i></div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-address-alert text-center py-4">
+              <i class="fa-solid fa-location-dot" style="font-size: 2rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+              <p>You don't have any saved addresses.</p>
+              <button class="btn btn-primary mt-3" (click)="switchModalTab('new')">Add a New Address</button>
+            </div>
+          }
+        } @else {
+          <!-- New Address Form Tab -->
+          <div class="new-address-form p-0" style="border: none; background: transparent; box-shadow: none;">
+            <div class="form-group mb-3">
+              <label>Save as (e.g., Home, Work)</label>
+              <div class="label-badges">
+                <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Home'" (click)="newAddressLabel = 'Home'">Home</button>
+                <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Work'" (click)="newAddressLabel = 'Work'">Work</button>
+                <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Other'" (click)="newAddressLabel = 'Other'">Other</button>
+              </div>
+              <input type="text" [(ngModel)]="newAddressLabel" placeholder="Custom label" class="form-control mt-2" *ngIf="newAddressLabel !== 'Home' && newAddressLabel !== 'Work'">
+            </div>
+            <div class="form-group mb-4">
+              <label>Complete Address</label>
+              <textarea [(ngModel)]="newAddressText" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
+              <small class="text-muted mt-1 d-block">We deliver in Meerut area only.</small>
+            </div>
+            <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--border-color);">
+              <button type="button" class="btn btn-secondary flex-1" (click)="closeAddressModal()">Cancel</button>
+              <button type="button" class="btn btn-primary flex-1" (click)="saveNewAddress()" [disabled]="isAddingAddress || !newAddressText">
+                {{ isAddingAddress ? 'Saving...' : 'Save Address' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
