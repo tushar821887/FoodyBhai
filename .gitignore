@@ -42,3 +42,17 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Capacitor
+/android/app/build/
+/android/.gradle/
+/android/build/
+/android/app/.cxx/
+
+# Backend
+backend/dist/
+backend/node_modules/
+backend/.env
+
+# APK files
+*.apk

@@ -32,6 +32,16 @@
         <li><a routerLink="/menu" routerLinkActive="active">Menu</a></li>
         <li><a routerLink="/about" routerLinkActive="active">About</a></li>
         <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+        
+        <!-- Auth Links -->
+        @if (authService.isAuthenticated$ | async) {
+          <li style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--primary-color); font-weight: 600;"><i class="fa-solid fa-user"></i> {{(authService.currentUser$ | async)?.name}}</span>
+            <a href="javascript:void(0)" (click)="logout()" style="color: var(--text-light); margin-left: 0.5rem;"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+          </li>
+        } @else {
+          <li><a routerLink="/login" routerLinkActive="active" class="login-btn"><i class="fa-solid fa-user"></i> Login</a></li>
+        }
       </ul>
     </nav>
     
@@ -63,10 +73,17 @@
     <i class="fa-solid fa-book-open"></i>
     <span>Menu</span>
   </a>
-  <a routerLink="/contact" routerLinkActive="active" class="nav-item">
-    <i class="fa-solid fa-envelope"></i>
-    <span>Contact</span>
-  </a>
+  @if (authService.isAuthenticated$ | async) {
+    <a href="javascript:void(0)" (click)="logout()" class="nav-item">
+      <i class="fa-solid fa-user-check"></i>
+      <span>Logout</span>
+    </a>
+  } @else {
+    <a routerLink="/login" routerLinkActive="active" class="nav-item">
+      <i class="fa-solid fa-user"></i>
+      <span>Login</span>
+    </a>
+  }
   <a class="nav-item cart-nav-item" (click)="openCart()">
     <i class="fa-solid fa-cart-shopping"></i>
     <span>Cart</span>
