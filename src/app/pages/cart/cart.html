@@ -1,0 +1,128 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Your <span>Cart</span></h1>
+    <p class="page-subtitle">Review your items and complete your order.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container animate-fade-in">
+    @if ((cartService.items$ | async)?.length === 0) {
+      <div class="text-center" style="padding: 4rem 1rem; background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-sm);">
+        <i class="fa-solid fa-cart-shopping mb-4 text-muted" style="font-size: 4rem; color: #cbd5e1;"></i>
+        <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">Your cart is empty</h3>
+        <p style="color: var(--text-light); margin-bottom: 2rem;">Looks like you haven't added anything to your cart yet.</p>
+        <a routerLink="/menu" class="btn btn-primary" style="display: inline-block;">Browse Menu</a>
+      </div>
+    } @else {
+      <div class="cart-layout">
+        <!-- Left Side: Items -->
+        <div class="cart-items-section">
+          <div class="cart-card">
+            <h4 class="cart-card-title">Order Items ({{cartService.totalItems$ | async}})</h4>
+            <div class="cart-items-list">
+              @for (item of (cartService.items$ | async); track item.recipe.id) {
+                <div class="cart-item-row">
+                  <img [src]="item.recipe.image || 'assets/images/placeholder.jpg'" alt="{{item.recipe.title}}" class="cart-item-img">
+                  <div class="cart-item-info">
+                    <h5 class="cart-item-title">{{item.recipe.title}}</h5>
+                    <span class="cart-item-price">₹{{item.recipe.price}}</span>
+                  </div>
+                  <div class="cart-item-controls">
+                    <div class="qty-controls">
+                      <button class="qty-btn" (click)="decreaseQuantity(item)"><i class="fa-solid fa-minus"></i></button>
+                      <span class="qty-val">{{item.quantity}}</span>
+                      <button class="qty-btn" (click)="increaseQuantity(item)"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <button class="remove-btn" (click)="removeItem(item)" title="Remove item"><i class="fa-solid fa-trash-can"></i></button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Summary & Checkout -->
+        <div class="cart-summary-section">
+          <div class="cart-card">
+            <h4 class="cart-card-title">Order Summary</h4>
+            
+            <div class="cart-coupon-box">
+              @if (cartService.coupon$ | async) {
+                <div class="applied-coupon">
+                  <div>
+                    <i class="fa-solid fa-circle-check" style="color: var(--success); margin-right: 0.5rem;"></i>
+                    <strong>'{{cartService.coupon$ | async}}' applied</strong>
+                  </div>
+                  <button class="remove-coupon" (click)="removeCoupon()">Remove</button>
+                </div>
+              } @else {
+                <div class="coupon-input-group" [class.has-error]="couponError">
+                  <input type="text" [(ngModel)]="couponInput" placeholder="Enter coupon code" class="coupon-field">
+                  <button class="btn-apply" (click)="applyCoupon()">Apply</button>
+                </div>
+                @if (couponError) {
+                  <small class="text-danger mt-2 d-block"><i class="fa-solid fa-circle-exclamation"></i> {{couponError}}</small>
+                }
+                @if (couponSuccess) {
+                  <small class="text-success mt-2 d-block"><i class="fa-solid fa-circle-check"></i> {{couponSuccess}}</small>
+                }
+              }
+            </div>
+
+            <div class="cart-totals">
+              <div class="total-row">
+                <span>Item Total</span>
+                <span>₹{{cartService.totalPrice$ | async}}</span>
+              </div>
+              <div class="total-row text-success">
+                <span>Delivery Fee</span>
+                <span>FREE</span>
+              </div>
+              @if ((cartService.discount$ | async)! > 0) {
+                <div class="total-row text-success">
+                  <span>Discount</span>
+                  <span>-₹{{cartService.discount$ | async}}</span>
+                </div>
+              }
+              <div class="total-row grand-total">
+                <span>To Pay</span>
+                <span>₹{{cartService.finalPrice$ | async}}</span>
+              </div>
+            </div>
+
+            @if ((cartService.totalPrice$ | async)! < 100) {
+              <div class="min-order-alert">
+                <i class="fa-solid fa-circle-info"></i> Add items worth ₹{{100 - (cartService.totalPrice$ | async)!}} more to checkout.
+              </div>
+            }
+          </div>
+
+          <!-- Checkout Form integrated directly below summary -->
+          <div class="cart-card mt-4" [style.opacity]="(cartService.totalPrice$ | async)! < 100 ? '0.5' : '1'" [style.pointer-events]="(cartService.totalPrice$ | async)! < 100 ? 'none' : 'auto'">
+            <h4 class="cart-card-title"><i class="fa-solid fa-truck"></i> Delivery Details</h4>
+            <div class="checkout-form">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" [(ngModel)]="customerName" placeholder="e.g. Rahul Sharma" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Phone Number *</label>
+                <input type="tel" [(ngModel)]="customerPhone" placeholder="+91 98765 43210" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Complete Address *</label>
+                <textarea [(ngModel)]="deliveryAddress" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
+                <small class="text-muted mt-2 d-block"><i class="fa-solid fa-circle-info"></i> We deliver in Meerut area only.</small>
+              </div>
+              
+              <button class="btn btn-primary w-100 btn-lg mt-3" style="display: flex; align-items: center; justify-content: center; gap: 0.8rem;" (click)="checkout()">
+                Checkout via WhatsApp <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</section>

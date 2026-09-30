@@ -1,6 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../services/cart.service';
 import { OrderService } from '../../services/order.service';
 import { AuthService } from '../../services/auth.service';
@@ -9,7 +10,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './cart.html',
   styleUrls: ['./cart.css']
 })
@@ -17,7 +18,6 @@ export class CartComponent implements OnDestroy {
   customerName = '';
   customerPhone = '';
   deliveryAddress = '';
-  showCheckoutModal = false;
 
   couponInput = '';
   couponError = '';
@@ -29,12 +29,13 @@ export class CartComponent implements OnDestroy {
   constructor(
     public cartService: CartService,
     private orderService: OrderService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {
     this.authSub = this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.customerName = user.name;
-        this.customerPhone = user.email; // phone is not in User interface but we prefill with something if we had it
+        this.customerPhone = user.email; // Phone fallback
       } else {
         this.customerName = '';
         this.customerPhone = '';
@@ -53,7 +54,7 @@ export class CartComponent implements OnDestroy {
     this.couponSuccess = '';
     
     if (this.cartService.getCurrentTotal() < 100) {
-      this.couponError = 'Minimum order of ₹100 required to apply coupon.';
+      this.couponError = 'Minimum order of ₹100 required.';
       return;
     }
 
@@ -75,22 +76,6 @@ export class CartComponent implements OnDestroy {
     this.couponInput = '';
     this.couponSuccess = '';
     this.couponError = '';
-  }
-
-  closeCart() {
-    this.cartService.closeCart();
-  }
-
-  openCheckoutModal() {
-    if (this.cartService.getCurrentTotal() < 100) {
-      alert("Minimum order value is ₹100");
-      return;
-    }
-    this.showCheckoutModal = true;
-  }
-
-  closeCheckoutModal() {
-    this.showCheckoutModal = false;
   }
 
   increaseQuantity(item: CartItem) {
@@ -121,8 +106,7 @@ export class CartComponent implements OnDestroy {
       if (link) window.open(link, '_blank');
       this.cartService.clearCart();
       this.deliveryAddress = '';
-      this.cartService.closeCart();
-      this.closeCheckoutModal();
+      this.router.navigate(['/orders']); // Redirect to orders page
     };
 
     if (this.authService.isLoggedIn()) {

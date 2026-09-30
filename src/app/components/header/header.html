@@ -51,12 +51,12 @@
         <a href="tel:8218870579" class="header-phone">
           <i class="fa-solid fa-phone"></i> +91 8218870579
         </a>
-        <button class="cart-toggle-btn" (click)="openCart()">
+        <a routerLink="/cart" class="cart-toggle-btn" style="text-decoration: none;">
           <i class="fa-solid fa-cart-shopping"></i>
           @if ((cartService.totalItems$ | async)! > 0) {
             <span class="cart-badge">{{cartService.totalItems$ | async}}</span>
           }
-        </button>
+        </a>
       </div>
     </div>
   </div>
@@ -89,7 +89,7 @@
       <span>Login</span>
     </a>
   }
-  <a class="nav-item cart-nav-item" (click)="openCart()">
+  <a routerLink="/cart" routerLinkActive="active" class="nav-item cart-nav-item">
     <i class="fa-solid fa-cart-shopping"></i>
     <span>Cart</span>
     @if ((cartService.totalItems$ | async)! > 0) {
