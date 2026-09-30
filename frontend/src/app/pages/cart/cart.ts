@@ -115,26 +115,52 @@ export class CartComponent implements OnDestroy {
     this.cartService.removeFromCart(item.recipe.id);
   }
 
-  // --- Address Logic ---
-  isAddressModalOpen = false;
+  // --- Stepper Logic ---
+  currentStep = 1;
 
+  setStep(step: number) {
+    // Basic validation before allowing moving forward
+    if (step === 2 && this.cartService.getCurrentTotal() < 100) {
+      alert("Minimum order of ₹100 required.");
+      return;
+    }
+    if (step === 3) {
+      if (!this.customerName || !this.customerPhone) {
+        alert("Please fill in your Name and Phone Number.");
+        return;
+      }
+      if (this.authService.isLoggedIn() && !this.selectedAddressId && this.savedAddresses.length > 0) {
+        alert("Please select a delivery address.");
+        return;
+      }
+      if (!this.authService.isLoggedIn() && !this.deliveryAddress) {
+        alert("Please provide a delivery address.");
+        return;
+      }
+    }
+    
+    // Only allow going to previous steps or next step if validated
+    if (step < this.currentStep || step === this.currentStep + 1) {
+      this.currentStep = step;
+    }
+  }
+
+  nextStep() {
+    this.setStep(this.currentStep + 1);
+  }
+
+  prevStep() {
+    this.setStep(this.currentStep - 1);
+  }
+
+  // --- Address Logic ---
   get selectedAddress() {
     return this.savedAddresses.find(a => a.id === this.selectedAddressId) || null;
-  }
-
-  openAddressModal() {
-    this.isAddressModalOpen = true;
-  }
-
-  closeAddressModal() {
-    this.isAddressModalOpen = false;
-    this.showNewAddressForm = false;
   }
 
   selectAddress(id: string | undefined) {
     if (id) {
       this.selectedAddressId = id;
-      this.closeAddressModal();
     }
   }
 
@@ -155,10 +181,8 @@ export class CartComponent implements OnDestroy {
         this.showNewAddressForm = false;
         this.newAddressText = '';
         if (user.addresses && user.addresses.length > 0) {
-          // Select the newly added address
           const added = user.addresses[user.addresses.length - 1];
           this.selectedAddressId = added.id || null;
-          this.closeAddressModal();
         }
       },
       error: () => {
