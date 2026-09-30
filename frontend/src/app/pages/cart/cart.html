@@ -23,7 +23,7 @@
             <div class="cart-items-list">
               @for (item of (cartService.items$ | async); track item.recipe.id) {
                 <div class="cart-item-row">
-                  <img [src]="item.recipe.image || 'assets/images/placeholder.jpg'" alt="{{item.recipe.title}}" class="cart-item-img">
+                  <img [src]="item.recipe.image || '/assets/images/placeholder.jpg'" alt="{{item.recipe.title}}" class="cart-item-img">
                   <div class="cart-item-info">
                     <h5 class="cart-item-title">{{item.recipe.title}}</h5>
                     <span class="cart-item-price">₹{{item.recipe.price}}</span>

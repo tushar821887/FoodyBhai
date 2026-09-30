@@ -24,11 +24,11 @@
       </div>
     } @else {
       <div class="orders-list">
-        @for (order of orders; track order._id || order.id) {
+        @for (order of orders; track $index) {
           <div class="order-card">
             <div class="order-header">
               <div class="order-meta">
-                <span class="order-id">Order #{{ (order._id || order.id)?.slice(-6)?.toUpperCase() }}</span>
+                <span class="order-id">Order #{{ (order._id || order.id || 'N/A')?.slice(-6)?.toUpperCase() }}</span>
                 <span class="order-date"><i class="fa-regular fa-calendar"></i> {{ order.createdAt | date:'medium' }}</span>
               </div>
               <div class="order-status-badge" [ngClass]="(order.status || 'pending').toLowerCase()">
@@ -45,10 +45,10 @@
             <div class="order-body">
               <div class="order-items-list">
                 <h5 class="section-title">Items Ordered</h5>
-                @for (item of order.items; track item?.recipe?.id) {
+                @for (item of order.items; track $index) {
                   <div class="order-item-detailed">
                     <div class="item-img-container">
-                      <img [src]="item?.recipe?.image || 'assets/images/placeholder.jpg'" alt="{{item?.recipe?.title}}" class="item-img">
+                      <img [src]="item?.recipe?.image || '/assets/images/placeholder.jpg'" alt="{{item?.recipe?.title}}" class="item-img">
                       <span class="item-qty-badge">{{ item?.quantity }}x</span>
                     </div>
                     <div class="item-details">

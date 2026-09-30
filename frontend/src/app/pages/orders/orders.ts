@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
 import { AuthService } from '../../services/auth.service';
@@ -17,7 +17,8 @@ export class OrdersComponent implements OnInit {
 
   constructor(
     private orderService: OrderService,
-    public authService: AuthService
+    public authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -32,12 +33,14 @@ export class OrdersComponent implements OnInit {
   loadOrders() {
     this.orderService.getOrderHistory().subscribe({
       next: (data) => {
-        this.orders = data;
+        this.orders = data || [];
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.errorMessage = 'Failed to load order history.';
         this.isLoading = false;
+        this.cdr.detectChanges();
         console.error(err);
       }
     });
