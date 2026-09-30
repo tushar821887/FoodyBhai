@@ -36,9 +36,10 @@
         <!-- Auth Links -->
         @if (authService.isAuthenticated$ | async) {
           <li><a routerLink="/orders" routerLinkActive="active">Orders</a></li>
+          <li><a routerLink="/addresses" routerLinkActive="active">Addresses</a></li>
           <li style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
             <span style="color: var(--primary-color); font-weight: 600;"><i class="fa-solid fa-user"></i> {{(authService.currentUser$ | async)?.name}}</span>
-            <a href="javascript:void(0)" (click)="logout()" style="color: var(--text-light); margin-left: 0.5rem;"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+            <a href="javascript:void(0)" (click)="logout()" style="color: var(--text-light); margin-left: 0.5rem;" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
           </li>
         } @else {
           <li><a routerLink="/login" routerLinkActive="active" class="login-btn"><i class="fa-solid fa-user"></i> Login</a></li>
@@ -78,6 +79,10 @@
     <a routerLink="/orders" routerLinkActive="active" class="nav-item">
       <i class="fa-solid fa-receipt"></i>
       <span>Orders</span>
+    </a>
+    <a routerLink="/addresses" routerLinkActive="active" class="nav-item">
+      <i class="fa-solid fa-location-dot"></i>
+      <span>Address</span>
     </a>
     <a href="javascript:void(0)" (click)="logout()" class="nav-item">
       <i class="fa-solid fa-arrow-right-from-bracket"></i>

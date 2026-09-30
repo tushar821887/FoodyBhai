@@ -398,10 +398,22 @@
   border: 1px solid var(--border-color);
 }
 
+.new-address-form .form-group {
+  margin-bottom: 1.5rem;
+  display: block;
+  width: 100%;
+}
+
+.new-address-form .form-control {
+  width: 100%;
+  display: block;
+}
+
 .label-badges {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 .badge-btn {
@@ -436,15 +448,17 @@
 .flex-1 {
   flex: 1;
 }
-.bg-light {
-  background-color: #f8f9fa;
+.w-100 {
+  width: 100%;
 }
-.text-sm {
-  font-size: 0.85rem;
-}
-.fw-bold {
-  font-weight: 700;
-}
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.bg-light { background-color: #f8f9fa; }
+.text-sm { font-size: 0.85rem; }
+.fw-bold { font-weight: 700; }
 
 /* Modal Styles */
 .modal-overlay {

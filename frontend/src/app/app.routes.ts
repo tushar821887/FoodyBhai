@@ -15,6 +15,7 @@ export const routes: Routes = [
   { path: 'terms', loadComponent: () => import('./pages/terms/terms').then(m => m.Terms) },
   { path: 'disclaimer', loadComponent: () => import('./pages/disclaimer/disclaimer').then(m => m.Disclaimer) },
   { path: 'orders', loadComponent: () => import('./pages/orders/orders').then(m => m.OrdersComponent) },
+  { path: 'addresses', loadComponent: () => import('./pages/addresses/addresses').then(m => m.AddressesComponent) },
   { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.CartComponent) },
   { path: 'admin', loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent) },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then(m => m.NotFound) }
