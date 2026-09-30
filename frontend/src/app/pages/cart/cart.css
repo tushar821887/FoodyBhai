@@ -261,3 +261,187 @@
     justify-content: space-between;
   }
 }
+
+/* Address UI Styles */
+.address-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .address-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.address-card {
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.address-card:hover {
+  border-color: #ffb8c0;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.address-card.selected {
+  border-color: var(--primary-color);
+  background-color: #fff0f1;
+}
+
+.address-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.address-label {
+  font-weight: 700;
+  color: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.address-label i {
+  color: var(--primary-color);
+}
+
+.address-text {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.4;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.check-circle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 24px;
+  height: 24px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+}
+
+.address-card.selected .check-circle {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.btn-delete-addr {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s;
+  z-index: 2; /* keep clickable over card */
+}
+
+.btn-delete-addr:hover {
+  color: var(--primary-color);
+}
+.address-card.selected .btn-delete-addr {
+  display: none; /* hide when selected to avoid overlapping with checkmark */
+}
+
+.no-address-alert {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: var(--text-light);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px dashed var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  background: #fff0f1;
+  border-style: solid;
+}
+
+.new-address-form {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color);
+}
+
+.label-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge-btn {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  color: var(--text-light);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.badge-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.badge-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.d-flex {
+  display: flex;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.flex-1 {
+  flex: 1;
+}
+.bg-light {
+  background-color: #f8f9fa;
+}
+.text-sm {
+  font-size: 0.85rem;
+}
+.fw-bold {
+  font-weight: 700;
+}

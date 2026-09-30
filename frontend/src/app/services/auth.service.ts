@@ -4,10 +4,17 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface Address {
+  id?: string;
+  label: string;
+  fullAddress: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  addresses?: Address[];
 }
 
 export interface AuthResponse {
@@ -133,5 +140,40 @@ export class AuthService {
     }
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
+  }
+
+  // --- Profile & Address Methods ---
+
+  fetchProfile(): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/users/me`).pipe(
+      tap(user => {
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        }
+        this.currentUserSubject.next(user);
+      })
+    );
+  }
+
+  addAddress(address: { label: string, fullAddress: string }): Observable<User> {
+    return this.http.post<User>(`${this.API_URL}/users/addresses`, address).pipe(
+      tap(user => {
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        }
+        this.currentUserSubject.next(user);
+      })
+    );
+  }
+
+  deleteAddress(addressId: string): Observable<User> {
+    return this.http.delete<User>(`${this.API_URL}/users/addresses/${addressId}`).pipe(
+      tap(user => {
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        }
+        this.currentUserSubject.next(user);
+      })
+    );
   }
 }

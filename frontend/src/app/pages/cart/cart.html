@@ -110,11 +110,82 @@
                 <label>Phone Number *</label>
                 <input type="tel" [(ngModel)]="customerPhone" placeholder="+91 98765 43210" class="form-control">
               </div>
-              <div class="form-group">
-                <label>Complete Address *</label>
-                <textarea [(ngModel)]="deliveryAddress" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
-                <small class="text-muted mt-2 d-block"><i class="fa-solid fa-circle-info"></i> We deliver in Meerut area only.</small>
-              </div>
+              <!-- Address Selection UI -->
+              @if (authService.isLoggedIn()) {
+                <div class="form-group mb-4">
+                  <label>Select Delivery Address *</label>
+                  
+                  @if (savedAddresses.length > 0) {
+                    <div class="address-grid">
+                      @for (addr of savedAddresses; track addr.id) {
+                        <div class="address-card" [class.selected]="selectedAddressId === addr.id" (click)="selectAddress(addr.id)">
+                          <div class="address-header">
+                            <span class="address-label">
+                              @if (addr.label.toLowerCase() === 'home') {
+                                <i class="fa-solid fa-house"></i>
+                              } @else if (addr.label.toLowerCase() === 'work' || addr.label.toLowerCase() === 'office') {
+                                <i class="fa-solid fa-briefcase"></i>
+                              } @else {
+                                <i class="fa-solid fa-map-pin"></i>
+                              }
+                              {{ addr.label }}
+                            </span>
+                            <button type="button" class="btn-delete-addr" (click)="deleteAddress(addr.id, $event)">
+                              <i class="fa-solid fa-trash"></i>
+                            </button>
+                          </div>
+                          <p class="address-text">{{ addr.fullAddress }}</p>
+                          <div class="check-circle"><i class="fa-solid fa-check"></i></div>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="no-address-alert">
+                      <i class="fa-solid fa-location-dot"></i> You don't have any saved addresses.
+                    </div>
+                  }
+
+                  <button type="button" class="btn btn-outline w-100 mt-3" (click)="toggleNewAddressForm()">
+                    <i class="fa-solid fa-plus"></i> Add New Address
+                  </button>
+
+                  @if (showNewAddressForm) {
+                    <div class="new-address-form mt-3 animate-fade-in">
+                      <div class="form-group">
+                        <label>Save as (e.g., Home, Work)</label>
+                        <div class="label-badges">
+                          <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Home'" (click)="newAddressLabel = 'Home'">Home</button>
+                          <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Work'" (click)="newAddressLabel = 'Work'">Work</button>
+                          <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Other'" (click)="newAddressLabel = 'Other'">Other</button>
+                        </div>
+                        <input type="text" [(ngModel)]="newAddressLabel" placeholder="Custom label" class="form-control mt-2" *ngIf="newAddressLabel !== 'Home' && newAddressLabel !== 'Work'">
+                      </div>
+                      <div class="form-group">
+                        <label>Complete Address</label>
+                        <textarea [(ngModel)]="newAddressText" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
+                        <small class="text-muted mt-1 d-block">We deliver in Meerut area only.</small>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary flex-1" (click)="showNewAddressForm = false">Cancel</button>
+                        <button type="button" class="btn btn-primary flex-1" (click)="saveNewAddress()" [disabled]="isAddingAddress || !newAddressText">
+                          {{ isAddingAddress ? 'Saving...' : 'Save Address' }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="form-group">
+                  <label>Complete Address *</label>
+                  <textarea [(ngModel)]="deliveryAddress" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
+                  <small class="text-muted mt-2 d-block"><i class="fa-solid fa-circle-info"></i> We deliver in Meerut area only.</small>
+                  
+                  <div class="mt-3 p-3 bg-light rounded text-center">
+                    <p class="mb-2 text-sm text-muted">Want to save your address for faster checkout?</p>
+                    <a routerLink="/login" class="text-primary fw-bold" style="text-decoration: none;">Login or Register</a>
+                  </div>
+                </div>
+              }
               
               <button class="btn btn-primary w-100 btn-lg mt-3" style="display: flex; align-items: center; justify-content: center; gap: 0.8rem;" (click)="checkout()">
                 Checkout via WhatsApp <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i>

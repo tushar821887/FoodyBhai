@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../services/cart.service';
 import { OrderService } from '../../services/order.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, Address } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -17,7 +17,15 @@ import { Subscription } from 'rxjs';
 export class CartComponent implements OnDestroy {
   customerName = '';
   customerPhone = '';
-  deliveryAddress = '';
+  
+  // Address properties
+  deliveryAddress = ''; // Fallback for guest users
+  savedAddresses: Address[] = [];
+  selectedAddressId: string | null = null;
+  showNewAddressForm = false;
+  newAddressLabel = 'Home';
+  newAddressText = '';
+  isAddingAddress = false;
 
   couponInput = '';
   couponError = '';
@@ -29,16 +37,31 @@ export class CartComponent implements OnDestroy {
   constructor(
     public cartService: CartService,
     private orderService: OrderService,
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router
   ) {
+    // Optionally fetch full profile if we only have partial user stored
+    if (this.authService.isLoggedIn()) {
+      this.authService.fetchProfile().subscribe();
+    }
+
     this.authSub = this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.customerName = user.name;
-        this.customerPhone = user.email; // Phone fallback
+        this.customerPhone = user.email; // Fallback
+        this.savedAddresses = user.addresses || [];
+        
+        // Auto-select first address if none selected
+        if (this.savedAddresses.length > 0 && !this.selectedAddressId) {
+          this.selectedAddressId = this.savedAddresses[0].id || null;
+        } else if (this.savedAddresses.length === 0) {
+          this.selectedAddressId = null;
+        }
       } else {
         this.customerName = '';
         this.customerPhone = '';
+        this.savedAddresses = [];
+        this.selectedAddressId = null;
       }
     });
     
@@ -49,6 +72,7 @@ export class CartComponent implements OnDestroy {
     if (this.authSub) this.authSub.unsubscribe();
   }
 
+  // --- Coupon Logic ---
   applyCoupon() {
     this.couponError = '';
     this.couponSuccess = '';
@@ -78,6 +102,7 @@ export class CartComponent implements OnDestroy {
     this.couponError = '';
   }
 
+  // --- Cart Quantity ---
   increaseQuantity(item: CartItem) {
     this.cartService.updateQuantity(item.recipe.id, item.quantity + 1);
   }
@@ -90,8 +115,67 @@ export class CartComponent implements OnDestroy {
     this.cartService.removeFromCart(item.recipe.id);
   }
 
+  // --- Address Logic ---
+  selectAddress(id: string | undefined) {
+    if (id) this.selectedAddressId = id;
+  }
+
+  toggleNewAddressForm() {
+    this.showNewAddressForm = !this.showNewAddressForm;
+  }
+
+  saveNewAddress() {
+    if (!this.newAddressLabel || !this.newAddressText) return;
+    
+    this.isAddingAddress = true;
+    this.authService.addAddress({
+      label: this.newAddressLabel,
+      fullAddress: this.newAddressText
+    }).subscribe({
+      next: (user) => {
+        this.isAddingAddress = false;
+        this.showNewAddressForm = false;
+        this.newAddressText = '';
+        if (user.addresses && user.addresses.length > 0) {
+          // Select the newly added address
+          const added = user.addresses[user.addresses.length - 1];
+          this.selectedAddressId = added.id || null;
+        }
+      },
+      error: () => {
+        this.isAddingAddress = false;
+        alert('Failed to save address. Please try again.');
+      }
+    });
+  }
+
+  deleteAddress(id: string | undefined, event: Event) {
+    event.stopPropagation();
+    if (!id || !confirm('Delete this address?')) return;
+    this.authService.deleteAddress(id).subscribe();
+  }
+
+  // --- Checkout ---
   checkout() {
-    if (!this.customerName || !this.customerPhone || !this.deliveryAddress) {
+    let finalAddress = this.deliveryAddress;
+
+    if (this.authService.isLoggedIn()) {
+      if (this.savedAddresses.length > 0) {
+        if (!this.selectedAddressId) {
+          alert("Please select a delivery address.");
+          return;
+        }
+        const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
+        if (selected) {
+          finalAddress = selected.fullAddress;
+        }
+      } else {
+        alert("Please add a delivery address.");
+        return;
+      }
+    }
+
+    if (!this.customerName || !this.customerPhone || !finalAddress) {
       alert("Please fill in your Name, Phone Number, and Delivery Address.");
       return;
     }
@@ -99,7 +183,7 @@ export class CartComponent implements OnDestroy {
     const link = this.cartService.getWhatsAppLinkWithDetails(
       this.customerName, 
       this.customerPhone, 
-      this.deliveryAddress
+      finalAddress
     );
 
     const finishCheckout = () => {
@@ -119,7 +203,7 @@ export class CartComponent implements OnDestroy {
         deliveryDetails: {
           name: this.customerName,
           phone: this.customerPhone,
-          address: this.deliveryAddress
+          address: finalAddress
         }
       }).subscribe({
         next: () => finishCheckout(),

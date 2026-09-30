@@ -55,4 +55,20 @@ export class UsersService {
   ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
+
+  async addAddress(userId: string, addressData: { label: string, fullAddress: string }): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $push: { addresses: addressData } },
+      { new: true }
+    );
+  }
+
+  async deleteAddress(userId: string, addressId: string): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $pull: { addresses: { _id: addressId } } } as any,
+      { new: true }
+    );
+  }
 }
