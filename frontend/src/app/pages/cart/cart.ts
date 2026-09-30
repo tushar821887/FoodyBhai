@@ -116,8 +116,26 @@ export class CartComponent implements OnDestroy {
   }
 
   // --- Address Logic ---
+  isAddressModalOpen = false;
+
+  get selectedAddress() {
+    return this.savedAddresses.find(a => a.id === this.selectedAddressId) || null;
+  }
+
+  openAddressModal() {
+    this.isAddressModalOpen = true;
+  }
+
+  closeAddressModal() {
+    this.isAddressModalOpen = false;
+    this.showNewAddressForm = false;
+  }
+
   selectAddress(id: string | undefined) {
-    if (id) this.selectedAddressId = id;
+    if (id) {
+      this.selectedAddressId = id;
+      this.closeAddressModal();
+    }
   }
 
   toggleNewAddressForm() {
@@ -140,6 +158,7 @@ export class CartComponent implements OnDestroy {
           // Select the newly added address
           const added = user.addresses[user.addresses.length - 1];
           this.selectedAddressId = added.id || null;
+          this.closeAddressModal();
         }
       },
       error: () => {
