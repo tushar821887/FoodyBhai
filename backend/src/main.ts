@@ -14,12 +14,28 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // CORS configuration
-  const frontendUrl = configService.get<string>(
-    'FRONTEND_URL',
-    'http://localhost:4200',
-  );
   app.enableCors({
-    origin: frontendUrl.split(',').map((url) => url.trim()),
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        'https://foodybhai.in',
+        'https://www.foodybhai.in',
+        'https://api.foodybhai.in'
+      ];
+      
+      // Allow any localhost port for development
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        const frontendUrls = configService.get<string>('FRONTEND_URL', '').split(',').map(url => url.trim());
+        if (frontendUrls.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   });
