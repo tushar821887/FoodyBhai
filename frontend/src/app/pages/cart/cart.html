@@ -315,16 +315,16 @@
                 <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Work'" (click)="newAddressLabel = 'Work'">Work</button>
                 <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Other'" (click)="newAddressLabel = 'Other'">Other</button>
               </div>
-              <input type="text" [(ngModel)]="newAddressLabel" placeholder="Custom label" class="form-control mt-2" *ngIf="newAddressLabel !== 'Home' && newAddressLabel !== 'Work'">
+              <input type="text" [(ngModel)]="newAddressLabel" placeholder="Custom label" class="modern-input mt-2" *ngIf="newAddressLabel !== 'Home' && newAddressLabel !== 'Work'">
             </div>
             <div class="form-group mb-4">
               <label>Complete Address</label>
-              <textarea [(ngModel)]="newAddressText" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
-              <small class="text-muted mt-1 d-block">We deliver in Meerut area only.</small>
+              <textarea [(ngModel)]="newAddressText" placeholder="House/Flat No., Street, Landmark..." class="modern-input" rows="3"></textarea>
+              <small class="text-muted mt-1 d-block"><i class="fa-solid fa-circle-info me-1"></i> We deliver in Meerut area only.</small>
             </div>
             <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--border-color);">
-              <button type="button" class="btn btn-secondary flex-1" (click)="closeAddressModal()">Cancel</button>
-              <button type="button" class="btn btn-primary flex-1" (click)="saveNewAddress()" [disabled]="isAddingAddress || !newAddressText">
+              <button type="button" class="btn btn-cancel flex-1 py-3" (click)="closeAddressModal()">Cancel</button>
+              <button type="button" class="btn btn-save flex-1 py-3" (click)="saveNewAddress()" [disabled]="isAddingAddress || !newAddressText">
                 {{ isAddingAddress ? 'Saving...' : 'Save Address' }}
               </button>
             </div>
