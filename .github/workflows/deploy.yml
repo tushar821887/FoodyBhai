@@ -1,12 +1,9 @@
 name: Deploy Angular to Hostinger
 
 on:
-  # Runs on pushes targeting the default branch (main or master)
   push:
     branches:
       - develop
-  
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -21,13 +18,15 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
           
       - name: Install dependencies
         run: npm ci
+        working-directory: ./frontend
         
       - name: Build with Angular
-        # Assuming you will host this on a custom domain (e.g., foodybhai.com)
         run: npm run build -- --configuration production
+        working-directory: ./frontend
         
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -35,7 +34,4 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Path where Angular outputs the compiled static files
-          local-dir: dist/foody-bhai/browser/
-          # Optional: define where to upload on Hostinger (e.g., public_html)
-          # server-dir: /public_html/
+          local-dir: frontend/dist/foody-bhai/browser/
