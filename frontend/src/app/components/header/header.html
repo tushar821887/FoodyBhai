@@ -1,0 +1,104 @@
+<header class="header" [class.scrolled]="isScrolled">
+  <div class="top-marquee">
+    <div class="marquee-content">
+      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
+      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
+      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
+      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
+    </div>
+  </div>
+
+  <div class="header-inner">
+    <div class="container header-container">
+    <div class="header-left">
+      <a routerLink="/" class="logo">
+        <img src="/assets/images/logo.png" alt="Foody Bhai Logo" class="logo-img">
+      </a>
+
+      <!-- Location Selector -->
+      <div class="header-location" (click)="locationService.openLocationModal()">
+        <i class="fa-solid fa-location-dot location-icon"></i>
+        <div class="loc-text">
+          <span class="loc-label">Delivering to</span>
+          <span class="loc-value">{{ (locationService.location$ | async) || 'Select Location' }} <i class="fa-solid fa-chevron-down"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Nav (Centered) -->
+    <nav class="nav-menu desktop-nav">
+      <ul class="nav-list">
+        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
+        <li><a routerLink="/menu" routerLinkActive="active">Menu</a></li>
+        <li><a routerLink="/about" routerLinkActive="active">About</a></li>
+        <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+        
+        <!-- Auth Links -->
+        @if (authService.isAuthenticated$ | async) {
+          <li><a routerLink="/orders" routerLinkActive="active">Orders</a></li>
+          <li><a routerLink="/addresses" routerLinkActive="active">Addresses</a></li>
+          <li style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--primary-color); font-weight: 600;"><i class="fa-solid fa-user"></i> {{(authService.currentUser$ | async)?.name}}</span>
+            <a href="javascript:void(0)" (click)="logout()" style="color: var(--text-light); margin-left: 0.5rem;" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
+          </li>
+        } @else {
+          <li><a routerLink="/login" routerLinkActive="active" class="login-btn"><i class="fa-solid fa-user"></i> Login</a></li>
+        }
+      </ul>
+    </nav>
+    
+    <div class="header-right desktop-nav">
+      <div class="header-actions">
+        <a href="tel:8218870579" class="header-phone">
+          <i class="fa-solid fa-phone"></i> +91 8218870579
+        </a>
+        <a routerLink="/cart" class="cart-toggle-btn" style="text-decoration: none;">
+          <i class="fa-solid fa-cart-shopping"></i>
+          @if ((cartService.totalItems$ | async)! > 0) {
+            <span class="cart-badge">{{cartService.totalItems$ | async}}</span>
+          }
+        </a>
+      </div>
+    </div>
+  </div>
+  </div>
+</header>
+
+
+<!-- Mobile Bottom Navigation -->
+<div class="mobile-bottom-nav">
+  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+  </a>
+  <a routerLink="/menu" routerLinkActive="active" class="nav-item">
+    <i class="fa-solid fa-book-open"></i>
+    <span>Menu</span>
+  </a>
+  @if (authService.isAuthenticated$ | async) {
+    <a routerLink="/orders" routerLinkActive="active" class="nav-item">
+      <i class="fa-solid fa-receipt"></i>
+      <span>Orders</span>
+    </a>
+    <a routerLink="/addresses" routerLinkActive="active" class="nav-item">
+      <i class="fa-solid fa-location-dot"></i>
+      <span>Address</span>
+    </a>
+    <a href="javascript:void(0)" (click)="logout()" class="nav-item">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      <span>Logout</span>
+    </a>
+  } @else {
+    <a routerLink="/login" routerLinkActive="active" class="nav-item">
+      <i class="fa-solid fa-user"></i>
+      <span>Login</span>
+    </a>
+  }
+  <a routerLink="/cart" routerLinkActive="active" class="nav-item cart-nav-item">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span>Cart</span>
+    @if ((cartService.totalItems$ | async)! > 0) {
+      <span class="mobile-cart-badge">{{cartService.totalItems$ | async}}</span>
+    }
+  </a>
+</div>

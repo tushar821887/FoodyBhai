@@ -1,0 +1,94 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Admin <span>Dashboard</span></h1>
+    <p class="page-subtitle">Manage menu items, categories, and prices.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container animate-fade-in">
+    
+    <div class="admin-grid">
+      <!-- Add New Item Form -->
+      <div class="admin-card">
+        <h3 class="card-title"><i class="fa-solid fa-plus-circle"></i> Add New Menu Item</h3>
+        
+        @if (successMessage) {
+          <div class="alert alert-success">{{ successMessage }}</div>
+        }
+        @if (errorMessage) {
+          <div class="alert alert-danger">{{ errorMessage }}</div>
+        }
+
+        <form [formGroup]="recipeForm" (ngSubmit)="onSubmit()" class="admin-form">
+          <div class="form-group">
+            <label>Item Name *</label>
+            <input type="text" formControlName="title" placeholder="e.g. Paneer Butter Masala" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea formControlName="description" rows="3" placeholder="Short description of the dish..." class="form-control"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Category *</label>
+              <select formControlName="category" class="form-control">
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Price (₹) *</label>
+              <input type="number" formControlName="price" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Image URL</label>
+            <input type="text" formControlName="image" placeholder="https://..." class="form-control">
+          </div>
+
+          <div class="form-check">
+            <input type="checkbox" formControlName="isVeg" id="isVegCheck">
+            <label for="isVegCheck">Is 100% Pure Veg? <span style="color: green;">●</span></label>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100" [disabled]="recipeForm.invalid || isLoading">
+            @if (isLoading) {
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Adding...
+            } @else {
+              <i class="fa-solid fa-save"></i> Save Item
+            }
+          </button>
+        </form>
+      </div>
+
+      <!-- Manage Items List -->
+      <div class="admin-card">
+        <h3 class="card-title"><i class="fa-solid fa-list"></i> Current Menu Items ({{ recipes.length }})</h3>
+        
+        <div class="items-list">
+          @for (item of recipes; track item._id) {
+            <div class="admin-item-row">
+              <div class="item-info">
+                <span class="item-name">{{ item.title }}</span>
+                <span class="item-cat badge">{{ item.category }}</span>
+              </div>
+              <div class="item-actions">
+                <span class="item-price">₹{{ item.price }}</span>
+                <button (click)="deleteRecipe(item._id || item.id)" class="btn-delete" title="Delete">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

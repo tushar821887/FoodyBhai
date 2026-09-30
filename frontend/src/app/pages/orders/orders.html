@@ -1,0 +1,100 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Order <span>History</span></h1>
+    <p class="page-subtitle">View all your past delicious orders.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container animate-fade-in">
+    @if (isLoading) {
+      <div class="text-center" style="padding: 3rem;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+        <p style="margin-top: 1rem; color: var(--text-light);">Loading your orders...</p>
+      </div>
+    } @else if (errorMessage) {
+      <div class="alert" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; border-left: 4px solid #c62828;">
+        <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+      </div>
+    } @else if (orders.length === 0) {
+      <div class="text-center" style="padding: 3rem; background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-sm);">
+        <i class="fa-solid fa-receipt" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">No orders yet</h3>
+        <p style="color: var(--text-light);">You haven't placed any orders. Time to explore our menu!</p>
+      </div>
+    } @else {
+      <div class="orders-list">
+        @for (order of orders; track $index) {
+          <div class="order-card">
+            <div class="order-header">
+              <div class="order-meta">
+                <span class="order-id">Order #{{ (order._id || order.id || 'N/A')?.slice(-6)?.toUpperCase() }}</span>
+                <span class="order-date"><i class="fa-regular fa-calendar"></i> {{ order.createdAt | date:'medium' }}</span>
+              </div>
+              <div class="order-status-badge" [ngClass]="(order.status || 'pending').toLowerCase()">
+                @if ((order.status || 'pending').toLowerCase() === 'pending') {
+                  <i class="fa-solid fa-clock"></i>
+                }
+                @if ((order.status || 'pending').toLowerCase() === 'completed') {
+                  <i class="fa-solid fa-check"></i>
+                }
+                {{ (order.status || 'pending') | uppercase }}
+              </div>
+            </div>
+            
+            <div class="order-body">
+              <div class="order-items-list">
+                <h5 class="section-title">Items Ordered</h5>
+                @for (item of order.items; track $index) {
+                  <div class="order-item-detailed">
+                    <div class="item-img-container">
+                      <img [src]="item?.recipe?.image || '/assets/images/placeholder.jpg'" alt="{{item?.recipe?.title}}" class="item-img">
+                      <span class="item-qty-badge">{{ item?.quantity }}x</span>
+                    </div>
+                    <div class="item-details">
+                      <h6 class="item-title">{{ item?.recipe?.title }}</h6>
+                      <span class="item-price">₹{{ item?.recipe?.price }}</span>
+                    </div>
+                    <div class="item-total-price">
+                      ₹{{ (item?.recipe?.price || 0) * (item?.quantity || 1) }}
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="order-divider"></div>
+
+              <div class="order-summary-section">
+                <div class="delivery-details-box">
+                  <h5 class="section-title">Delivery Details</h5>
+                  <div class="detail-row">
+                    <i class="fa-solid fa-user"></i>
+                    <span>{{ order?.deliveryDetails?.name || authService.getCurrentUser()?.name }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>{{ order?.deliveryDetails?.phone || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-row address-row">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>{{ order?.deliveryDetails?.address || 'N/A' }}</span>
+                  </div>
+                </div>
+
+                <div class="price-summary-box">
+                  <div class="price-row total-row">
+                    <span>Total Amount</span>
+                    <span class="total-value">₹{{ order.totalAmount }}</span>
+                  </div>
+                  <div class="payment-mode">
+                    <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Ordered via WhatsApp
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

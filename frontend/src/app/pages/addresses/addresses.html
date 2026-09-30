@@ -1,0 +1,84 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Manage <span>Addresses</span></h1>
+    <p class="page-subtitle">Save and organize your delivery locations.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container animate-fade-in">
+    <div class="address-container">
+      @if (!authService.isLoggedIn()) {
+        <div class="text-center bg-white p-5 rounded shadow-sm">
+          <i class="fa-solid fa-lock text-muted mb-3" style="font-size: 3rem; color: #cbd5e1;"></i>
+          <h3>Please Login</h3>
+          <p class="text-muted">You need to be logged in to manage your addresses.</p>
+        </div>
+      } @else {
+        
+        <div class="address-grid">
+          @for (addr of savedAddresses; track addr.id) {
+            <div class="address-card">
+              <div class="address-header">
+                <span class="address-label">
+                  @if (addr.label.toLowerCase() === 'home') {
+                    <i class="fa-solid fa-house"></i>
+                  } @else if (addr.label.toLowerCase() === 'work' || addr.label.toLowerCase() === 'office') {
+                    <i class="fa-solid fa-briefcase"></i>
+                  } @else {
+                    <i class="fa-solid fa-map-pin"></i>
+                  }
+                  {{ addr.label }}
+                </span>
+                <button type="button" class="btn-delete-addr" (click)="deleteAddress(addr.id)" title="Delete">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+              <p class="address-text">{{ addr.fullAddress }}</p>
+            </div>
+          }
+        </div>
+
+        @if (savedAddresses.length === 0) {
+          <div class="no-address-alert">
+            <i class="fa-solid fa-location-dot" style="font-size: 2rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+            <h4>No Saved Addresses</h4>
+            <p>You haven't saved any delivery addresses yet.</p>
+          </div>
+        }
+
+        <button type="button" class="btn btn-outline w-100 mt-4" (click)="toggleNewAddressForm()">
+          <i class="fa-solid fa-plus"></i> Add New Address
+        </button>
+
+        @if (showNewAddressForm) {
+          <div class="new-address-form mt-4 animate-fade-in">
+            <h4 class="mb-3">Save a new address</h4>
+            <div class="form-group mb-3">
+              <label class="d-block mb-2 font-weight-bold">Address Label (e.g., Home, Work)</label>
+              <div class="label-badges">
+                <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Home'" (click)="newAddressLabel = 'Home'">Home</button>
+                <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Work'" (click)="newAddressLabel = 'Work'">Work</button>
+                <button type="button" class="badge-btn" [class.active]="newAddressLabel === 'Other'" (click)="newAddressLabel = 'Other'">Other</button>
+              </div>
+              <input type="text" [(ngModel)]="newAddressLabel" placeholder="Custom label" class="form-control mt-2" *ngIf="newAddressLabel !== 'Home' && newAddressLabel !== 'Work'">
+            </div>
+            
+            <div class="form-group mb-4">
+              <label class="d-block mb-2 font-weight-bold">Complete Address</label>
+              <textarea [(ngModel)]="newAddressText" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
+              <small class="text-muted mt-1 d-block">We deliver in Meerut area only.</small>
+            </div>
+            
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary flex-1" (click)="showNewAddressForm = false">Cancel</button>
+              <button type="button" class="btn btn-primary flex-1" (click)="saveNewAddress()" [disabled]="isAddingAddress || !newAddressText">
+                {{ isAddingAddress ? 'Saving...' : 'Save Address' }}
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,25 @@
+.post-content h2 {
+  font-size: 1.8rem;
+  color: var(--secondary-color);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.post-content p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+}
+
+.post-content ul, .post-content ol {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.post-content li {
+  margin-bottom: 0.5rem;
+}

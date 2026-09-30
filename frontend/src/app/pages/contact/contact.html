@@ -1,0 +1,97 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Contact <span>Us</span></h1>
+    <p class="page-subtitle">Have a question or feedback? We'd love to hear from you.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="contact-info animate-fade-in">
+        <h2 class="mb-4">Get in Touch</h2>
+        <p class="text-light mb-4">Please feel free to contact us using the form or the details below. We usually respond within 24 hours.</p>
+        
+        <div class="contact-cards">
+          <div class="contact-card">
+            <div class="card-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="card-details">
+              <h4>Address</h4>
+              <p>127, Bhatwara, Bagh Wali Gali,<br>Meerut - 250002</p>
+            </div>
+          </div>
+          
+          <div class="contact-card">
+            <div class="card-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="card-details">
+              <h4>Phone</h4>
+              <p>8218870579</p>
+            </div>
+          </div>
+          
+          <div class="contact-card">
+            <div class="card-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="card-details">
+              <h4>Email</h4>
+              <p>tusharmanusharma@gmail.com</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-placeholder mt-4">
+          <div class="map-content">
+            <i class="fa-solid fa-map"></i>
+            <p>Google Maps Placeholder</p>
+            <span>Meerut, Uttar Pradesh</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-form-container animate-fade-in" style="animation-delay: 0.2s">
+        <form class="contact-form" (ngSubmit)="sendMessage()">
+          <h3 class="form-title">Send us a Message</h3>
+          
+          @if (submitSuccess) {
+            <div class="alert" style="background: #e8f5e9; color: #2e7d32; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #2e7d32;">
+              <i class="fa-solid fa-circle-check"></i> Thank you! Your message has been sent successfully. We will get back to you soon.
+            </div>
+          }
+          
+          @if (submitError) {
+            <div class="alert" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #c62828;">
+              <i class="fa-solid fa-circle-exclamation"></i> Oops! Something went wrong. Please try again later.
+            </div>
+          }
+          
+          <div class="form-group">
+            <label for="name">Your Name *</label>
+            <input type="text" id="name" name="name" [(ngModel)]="contactData.name" class="form-control" placeholder="John Doe" required [disabled]="isSubmitting">
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" [(ngModel)]="contactData.email" class="form-control" placeholder="john@example.com" [disabled]="isSubmitting">
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" [(ngModel)]="contactData.phone" class="form-control" placeholder="+91 XXXXXXXXXX" [disabled]="isSubmitting">
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Your Message *</label>
+            <textarea id="message" name="message" [(ngModel)]="contactData.message" rows="5" class="form-control" placeholder="How can we help you?" required [disabled]="isSubmitting"></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-block" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;" [disabled]="isSubmitting">
+            @if (isSubmitting) {
+              <i class="fa-solid fa-circle-notch fa-spin"></i> Sending...
+            } @else {
+              Send Message <i class="fa-solid fa-paper-plane"></i>
+            }
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

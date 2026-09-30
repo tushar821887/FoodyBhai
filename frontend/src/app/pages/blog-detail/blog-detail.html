@@ -1,0 +1,37 @@
+@if (post) {
+  <article class="blog-detail-page animate-fade-in" style="margin-top: 4rem; padding-bottom: 4rem;">
+    <div class="container" style="max-width: 800px; margin: 0 auto;">
+      <div class="breadcrumbs mb-4" style="font-size: 0.9rem; color: var(--text-light);">
+        <a routerLink="/" style="color: var(--primary-color); text-decoration: none;">Home</a> > 
+        <a routerLink="/blog" style="color: var(--primary-color); text-decoration: none;">Blog</a> > 
+        <span>{{post.title}}</span>
+      </div>
+      
+      <h1 style="font-size: 2.5rem; line-height: 1.2; margin-bottom: 1rem; color: var(--secondary-color);">{{post.title}}</h1>
+      
+      <div class="post-meta" style="display: flex; gap: 1rem; align-items: center; color: var(--text-light); font-size: 0.9rem; margin-bottom: 2rem;">
+        <span><i class="fa-regular fa-calendar"></i> {{post.date | date:'mediumDate'}}</span>
+        <span><i class="fa-solid fa-user-pen"></i> {{post.author}}</span>
+      </div>
+
+      <img [src]="post.imageUrl" [alt]="post.title" style="width: 100%; height: auto; max-height: 500px; object-fit: cover; border-radius: 12px; margin-bottom: 3rem; box-shadow: var(--shadow-lg);">
+
+      <div class="post-content" [innerHTML]="safeContent"></div>
+
+      <div class="post-tags" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.1);">
+        <h4 style="margin-bottom: 1rem;">Tags:</h4>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          @for (tag of post.tags; track tag) {
+            <span style="background: var(--light-bg); color: var(--text-dark); padding: 0.3rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 500;">#{{tag}}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </article>
+} @else {
+  <div class="container text-center py-5" style="margin-top: 5rem;">
+    <h2>Article Not Found</h2>
+    <p>Sorry, we couldn't find the article you're looking for.</p>
+    <a routerLink="/blog" class="btn btn-primary mt-3">Back to Blog</a>
+  </div>
+}
