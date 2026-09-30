@@ -1,8 +1,10 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { Recipe } from './recipe.service';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface CartItem {
   recipe: Recipe;
@@ -19,7 +21,6 @@ export class CartService {
   public totalItems$ = this.items$.pipe(
     map(items => items.reduce((total, item) => total + item.quantity, 0))
   );
-
 
   public totalPrice$ = this.items$.pipe(
     map(items => items.reduce((total, item) => total + ((item.recipe.price || 0) * item.quantity), 0))
@@ -42,39 +43,81 @@ export class CartService {
   private toggleSubject = new BehaviorSubject<boolean>(false);
   public isOpen$ = this.toggleSubject.asObservable();
 
-
   private readonly CART_STORAGE_KEY = 'foodybhai_cart';
+  private readonly API_URL = environment.apiUrl;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     if (isPlatformBrowser(this.platformId)) {
-      const savedCart = localStorage.getItem(this.CART_STORAGE_KEY);
-      if (savedCart) {
-        try {
-          this.itemsSubject.next(JSON.parse(savedCart));
-        } catch(e) {
-          console.error('Failed to parse cart', e);
+      // Listen to auth state to sync cart
+      this.authService.isAuthenticated$.subscribe(isAuthenticated => {
+        if (isAuthenticated) {
+          this.fetchRemoteCart();
+        } else {
+          this.loadLocalCart();
         }
+      });
+    }
+  }
+
+  private loadLocalCart() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const savedCart = localStorage.getItem(this.CART_STORAGE_KEY);
+    if (savedCart) {
+      try {
+        this.itemsSubject.next(JSON.parse(savedCart));
+      } catch(e) {
+        console.error('Failed to parse cart', e);
       }
-      
-      this.items$.subscribe(items => {
-        localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(items));
+    } else {
+      this.itemsSubject.next([]);
+    }
+  }
+
+  private fetchRemoteCart() {
+    this.http.get<{ items: CartItem[] }>(`${this.API_URL}/cart`).subscribe({
+      next: (cart) => {
+        const items = cart?.items || [];
+        this.itemsSubject.next(items);
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(items));
+        }
+      },
+      error: (err) => console.error('Failed to fetch remote cart', err)
+    });
+  }
+
+  private syncCart(items: CartItem[]) {
+    this.itemsSubject.next(items);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(items));
+    }
+    
+    // If logged in, sync to backend
+    if (this.authService.isLoggedIn()) {
+      this.http.put(`${this.API_URL}/cart`, { items }).subscribe({
+        error: (err) => console.error('Failed to sync cart to server', err)
       });
     }
   }
 
   addToCart(recipe: Recipe) {
-    const currentItems = this.itemsSubject.value;
-    const existing = currentItems.find(i => i.recipe.id === recipe.id);
+    const currentItems = [...this.itemsSubject.value];
+    const existingIndex = currentItems.findIndex(i => i.recipe.id === recipe.id);
     
-    if (existing) {
-      existing.quantity += 1;
-      this.itemsSubject.next([...currentItems]);
+    if (existingIndex >= 0) {
+      currentItems[existingIndex] = {
+        ...currentItems[existingIndex],
+        quantity: currentItems[existingIndex].quantity + 1
+      };
     } else {
-      this.itemsSubject.next([...currentItems, { recipe, quantity: 1 }]);
+      currentItems.push({ recipe, quantity: 1 });
     }
     
-    // Auto-open is disabled per user request
-    // this.openCart();
+    this.syncCart(currentItems);
   }
 
   getQuantity(recipeId: number): Observable<number> {
@@ -87,8 +130,8 @@ export class CartService {
   }
 
   removeFromCart(recipeId: number) {
-    const currentItems = this.itemsSubject.value;
-    this.itemsSubject.next(currentItems.filter(i => i.recipe.id !== recipeId));
+    const currentItems = this.itemsSubject.value.filter(i => i.recipe.id !== recipeId);
+    this.syncCart(currentItems);
   }
 
   updateQuantity(recipeId: number, quantity: number) {
@@ -96,11 +139,14 @@ export class CartService {
       this.removeFromCart(recipeId);
       return;
     }
-    const currentItems = this.itemsSubject.value;
-    const existing = currentItems.find(i => i.recipe.id === recipeId);
-    if (existing) {
-      existing.quantity = quantity;
-      this.itemsSubject.next([...currentItems]);
+    const currentItems = [...this.itemsSubject.value];
+    const existingIndex = currentItems.findIndex(i => i.recipe.id === recipeId);
+    if (existingIndex >= 0) {
+      currentItems[existingIndex] = {
+        ...currentItems[existingIndex],
+        quantity
+      };
+      this.syncCart(currentItems);
     }
   }
 
@@ -123,7 +169,7 @@ export class CartService {
   }
 
   clearCart() {
-    this.itemsSubject.next([]);
+    this.syncCart([]);
   }
 
   openCart() {
@@ -142,44 +188,32 @@ export class CartService {
     const items = this.itemsSubject.value;
     if (items.length === 0) return '';
     
-    let text = `Hello Foody Bhai! I would like to place an order.
-
-`;
-    text += `*Delivery Details:*
-`;
-    text += `Name: ${name}
-`;
-    text += `Phone: ${phone}
-`;
-    text += `Address: ${address}
-
-`;
-    text += `*Order Items:*
-`;
+    let text = `Hello Foody Bhai! I would like to place an order.\n\n`;
+    text += `*Delivery Details:*\n`;
+    text += `Name: ${name}\n`;
+    text += `Phone: ${phone}\n`;
+    text += `Address: ${address}\n\n`;
+    text += `*Order Items:*\n`;
     
     let total = 0;
     items.forEach(item => {
       const itemTotal = (item.recipe.price || 0) * item.quantity;
       total += itemTotal;
-      text += `- ${item.quantity}x ${item.recipe.title} (₹${itemTotal})
-`;
+      text += `- ${item.quantity}x ${item.recipe.title} (₹${itemTotal})\n`;
     });
     
     const coupon = this.couponSubject.value.toUpperCase();
     if (coupon === 'FOODY20') {
         const discount = Math.round(total * 0.2);
         const finalTotal = total - discount;
-        text += `
-Subtotal: ₹${total}`;
-        text += `
-Discount (FOODY20): -₹${discount}`;
-        text += `
-*Total to Pay: ₹${finalTotal}*`;
+        text += `\nSubtotal: ₹${total}`;
+        text += `\nDiscount (FOODY20): -₹${discount}`;
+        text += `\n*Total to Pay: ₹${finalTotal}*`;
     } else {
-        text += `
-*Total to Pay: ₹${total}*`;
+        text += `\n*Total to Pay: ₹${total}*`;
     }
     
     return `https://wa.me/918218870579?text=${encodeURIComponent(text)}`;
   }
 }
+

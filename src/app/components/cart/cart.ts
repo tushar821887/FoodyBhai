@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CartService, CartItem } from '../../services/cart.service';
+import { OrderService } from '../../services/order.service';
+import { AuthService } from '../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-cart',
@@ -10,7 +13,7 @@ import { CartService, CartItem } from '../../services/cart.service';
   templateUrl: './cart.html',
   styleUrls: ['./cart.css']
 })
-export class CartComponent {
+export class CartComponent implements OnDestroy {
   customerName = '';
   customerPhone = '';
   deliveryAddress = '';
@@ -19,8 +22,31 @@ export class CartComponent {
   couponInput = '';
   couponError = '';
   couponSuccess = '';
+  
+  private authSub: Subscription;
+  private currentTotal = 0;
 
-  constructor(public cartService: CartService) {}
+  constructor(
+    public cartService: CartService,
+    private orderService: OrderService,
+    private authService: AuthService
+  ) {
+    this.authSub = this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.customerName = user.name;
+        this.customerPhone = user.email; // phone is not in User interface but we prefill with something if we had it
+      } else {
+        this.customerName = '';
+        this.customerPhone = '';
+      }
+    });
+    
+    this.cartService.finalPrice$.subscribe(total => this.currentTotal = total);
+  }
+
+  ngOnDestroy() {
+    if (this.authSub) this.authSub.unsubscribe();
+  }
 
   applyCoupon() {
     this.couponError = '';
@@ -84,19 +110,43 @@ export class CartComponent {
       alert("Please fill in your Name, Phone Number, and Delivery Address.");
       return;
     }
+    
     const link = this.cartService.getWhatsAppLinkWithDetails(
       this.customerName, 
       this.customerPhone, 
       this.deliveryAddress
     );
-    if (link) {
-      window.open(link, '_blank');
+
+    const finishCheckout = () => {
+      if (link) window.open(link, '_blank');
       this.cartService.clearCart();
-      this.customerName = '';
-      this.customerPhone = '';
       this.deliveryAddress = '';
       this.cartService.closeCart();
       this.closeCheckoutModal();
+    };
+
+    if (this.authService.isLoggedIn()) {
+      let items: CartItem[] = [];
+      this.cartService.items$.subscribe(i => items = i).unsubscribe();
+      
+      this.orderService.placeOrder({
+        items,
+        totalAmount: this.currentTotal,
+        deliveryDetails: {
+          name: this.customerName,
+          phone: this.customerPhone,
+          address: this.deliveryAddress
+        }
+      }).subscribe({
+        next: () => finishCheckout(),
+        error: (err) => {
+          console.error(err);
+          alert("Failed to save order to history, but we will redirect you to WhatsApp to complete it.");
+          finishCheckout();
+        }
+      });
+    } else {
+      finishCheckout();
     }
   }
 }

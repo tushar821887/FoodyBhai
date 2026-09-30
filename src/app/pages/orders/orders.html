@@ -1,0 +1,64 @@
+<div class="page-header">
+  <div class="container text-center animate-fade-in">
+    <h1 class="page-title">Order <span>History</span></h1>
+    <p class="page-subtitle">View all your past delicious orders.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container animate-fade-in">
+    @if (isLoading) {
+      <div class="text-center" style="padding: 3rem;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+        <p style="margin-top: 1rem; color: var(--text-light);">Loading your orders...</p>
+      </div>
+    } @else if (errorMessage) {
+      <div class="alert" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; border-left: 4px solid #c62828;">
+        <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+      </div>
+    } @else if (orders.length === 0) {
+      <div class="text-center" style="padding: 3rem; background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-sm);">
+        <i class="fa-solid fa-receipt" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+        <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">No orders yet</h3>
+        <p style="color: var(--text-light);">You haven't placed any orders. Time to explore our menu!</p>
+      </div>
+    } @else {
+      <div class="orders-list">
+        @for (order of orders; track order._id || order.id) {
+          <div class="order-card">
+            <div class="order-header">
+              <div>
+                <h4 style="margin: 0; color: var(--secondary-color);">Order #{{ (order._id || order.id)?.slice(-6)?.toUpperCase() }}</h4>
+                <small style="color: var(--text-light);">{{ order.createdAt | date:'medium' }}</small>
+              </div>
+              <div class="order-status" [ngClass]="order.status.toLowerCase()">
+                {{ order.status | uppercase }}
+              </div>
+            </div>
+            
+            <div class="order-items">
+              @for (item of order.items; track item.recipe.id) {
+                <div class="order-item">
+                  <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span style="font-weight: 600; color: var(--primary-color);">{{ item.quantity }}x</span>
+                    <span>{{ item.recipe.title }}</span>
+                  </div>
+                  <span style="font-weight: 500;">₹{{ (item.recipe.price || 0) * item.quantity }}</span>
+                </div>
+              }
+            </div>
+            
+            <div class="order-footer">
+              <div class="delivery-info">
+                <i class="fa-solid fa-location-dot"></i> {{ order.deliveryDetails.address }}
+              </div>
+              <div class="total-amount">
+                Total: <span>₹{{ order.totalAmount }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>
