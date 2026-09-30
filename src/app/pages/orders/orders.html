@@ -27,33 +27,69 @@
         @for (order of orders; track order._id || order.id) {
           <div class="order-card">
             <div class="order-header">
-              <div>
-                <h4 style="margin: 0; color: var(--secondary-color);">Order #{{ (order._id || order.id)?.slice(-6)?.toUpperCase() }}</h4>
-                <small style="color: var(--text-light);">{{ order.createdAt | date:'medium' }}</small>
+              <div class="order-meta">
+                <span class="order-id">Order #{{ (order._id || order.id)?.slice(-6)?.toUpperCase() }}</span>
+                <span class="order-date"><i class="fa-regular fa-calendar"></i> {{ order.createdAt | date:'medium' }}</span>
               </div>
-              <div class="order-status" [ngClass]="(order.status || 'pending').toLowerCase()">
+              <div class="order-status-badge" [ngClass]="(order.status || 'pending').toLowerCase()">
+                @if ((order.status || 'pending').toLowerCase() === 'pending') {
+                  <i class="fa-solid fa-clock"></i>
+                }
+                @if ((order.status || 'pending').toLowerCase() === 'completed') {
+                  <i class="fa-solid fa-check"></i>
+                }
                 {{ (order.status || 'pending') | uppercase }}
               </div>
             </div>
             
-            <div class="order-items">
-              @for (item of order.items; track item?.recipe?.id) {
-                <div class="order-item">
-                  <div style="display: flex; gap: 1rem; align-items: center;">
-                    <span style="font-weight: 600; color: var(--primary-color);">{{ item?.quantity }}x</span>
-                    <span>{{ item?.recipe?.title }}</span>
+            <div class="order-body">
+              <div class="order-items-list">
+                <h5 class="section-title">Items Ordered</h5>
+                @for (item of order.items; track item?.recipe?.id) {
+                  <div class="order-item-detailed">
+                    <div class="item-img-container">
+                      <img [src]="item?.recipe?.image || 'assets/images/placeholder.jpg'" alt="{{item?.recipe?.title}}" class="item-img">
+                      <span class="item-qty-badge">{{ item?.quantity }}x</span>
+                    </div>
+                    <div class="item-details">
+                      <h6 class="item-title">{{ item?.recipe?.title }}</h6>
+                      <span class="item-price">₹{{ item?.recipe?.price }}</span>
+                    </div>
+                    <div class="item-total-price">
+                      ₹{{ (item?.recipe?.price || 0) * (item?.quantity || 1) }}
+                    </div>
                   </div>
-                  <span style="font-weight: 500;">₹{{ (item?.recipe?.price || 0) * (item?.quantity || 1) }}</span>
-                </div>
-              }
-            </div>
-            
-            <div class="order-footer">
-              <div class="delivery-info">
-                <i class="fa-solid fa-location-dot"></i> {{ order?.deliveryDetails?.address }}
+                }
               </div>
-              <div class="total-amount">
-                Total: <span>₹{{ order.totalAmount }}</span>
+
+              <div class="order-divider"></div>
+
+              <div class="order-summary-section">
+                <div class="delivery-details-box">
+                  <h5 class="section-title">Delivery Details</h5>
+                  <div class="detail-row">
+                    <i class="fa-solid fa-user"></i>
+                    <span>{{ order?.deliveryDetails?.name || authService.getCurrentUser()?.name }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <i class="fa-solid fa-phone"></i>
+                    <span>{{ order?.deliveryDetails?.phone || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-row address-row">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>{{ order?.deliveryDetails?.address || 'N/A' }}</span>
+                  </div>
+                </div>
+
+                <div class="price-summary-box">
+                  <div class="price-row total-row">
+                    <span>Total Amount</span>
+                    <span class="total-value">₹{{ order.totalAmount }}</span>
+                  </div>
+                  <div class="payment-mode">
+                    <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> Ordered via WhatsApp
+                  </div>
+                </div>
               </div>
             </div>
           </div>
