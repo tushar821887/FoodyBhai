@@ -37,9 +37,9 @@ async function bootstrap() {
   );
 
   const port = configService.get<number>('PORT', 3000);
-  await app.listen(port);
-  logger.log(`🚀 Foody Bhai Backend running on http://localhost:${port}`);
-  logger.log(`📡 API available at http://localhost:${port}/api`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`🚀 Foody Bhai Backend running on http://0.0.0.0:${port}`);
+  logger.log(`📡 API available at http://0.0.0.0:${port}/api`);
 }
 
 bootstrap();
