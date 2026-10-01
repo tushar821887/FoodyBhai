@@ -51,10 +51,10 @@ export class User {
   @Prop({ required: true })
   passwordHash: string;
 
-  @Prop({ type: [AddressSchema], default: [] })
   @Prop({ default: 'user', enum: ['user', 'admin'] })
   role: string;
 
+  @Prop({ type: [AddressSchema], default: [] })
   addresses: Address[];
 }
 
