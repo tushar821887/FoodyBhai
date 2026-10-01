@@ -18,6 +18,7 @@ import { Subscription } from 'rxjs';
 export class CartComponent implements OnDestroy {
   customerName = '';
   customerPhone = '';
+  orderType: 'delivery' | 'pickup' = 'delivery';
   
   // Address properties
   deliveryAddress = ''; // Fallback for guest users
@@ -131,13 +132,15 @@ export class CartComponent implements OnDestroy {
         alert("Please fill in your Name and Phone Number.");
         return;
       }
-      if (this.authService.isLoggedIn() && !this.selectedAddressId && this.savedAddresses.length > 0) {
-        alert("Please select a delivery address.");
-        return;
-      }
-      if (!this.authService.isLoggedIn() && !this.deliveryAddress) {
-        alert("Please provide a delivery address.");
-        return;
+      if (this.orderType === 'delivery') {
+        if (this.authService.isLoggedIn() && !this.selectedAddressId && this.savedAddresses.length > 0) {
+          alert("Please select a delivery address.");
+          return;
+        }
+        if (!this.authService.isLoggedIn() && !this.deliveryAddress) {
+          alert("Please provide a delivery address.");
+          return;
+        }
       }
     }
     
@@ -221,22 +224,27 @@ export class CartComponent implements OnDestroy {
     }
 
     let finalAddress = this.deliveryAddress;
-    if (this.savedAddresses.length > 0) {
-      if (!this.selectedAddressId) {
-        alert("Please select a delivery address.");
+    
+    if (this.orderType === 'delivery') {
+      if (this.savedAddresses.length > 0) {
+        if (!this.selectedAddressId) {
+          alert("Please select a delivery address.");
+          return;
+        }
+        const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
+        if (selected) {
+          finalAddress = selected.fullAddress;
+        }
+      } else {
+        alert("Please add a delivery address.");
         return;
       }
-      const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
-      if (selected) {
-        finalAddress = selected.fullAddress;
-      }
     } else {
-      alert("Please add a delivery address.");
-      return;
+      finalAddress = 'Self Pickup';
     }
 
     if (!this.customerName || !this.customerPhone || !finalAddress) {
-      alert("Please fill in your Name, Phone Number, and Delivery Address.");
+      alert("Please fill in your Name and Phone Number.");
       return;
     }
 
@@ -246,6 +254,7 @@ export class CartComponent implements OnDestroy {
     this.orderService.placeOrder({
       items,
       totalAmount: this.currentTotal,
+      orderType: this.orderType,
       deliveryDetails: {
         name: this.customerName,
         phone: this.customerPhone,

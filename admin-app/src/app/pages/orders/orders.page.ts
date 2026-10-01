@@ -83,6 +83,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.filterOrders();
   }
 
+  get activeOrdersCount() {
+    return this.orders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status)).length;
+  }
+
   filterOrders() {
     if (this.currentTab === 'pending') {
       this.filteredOrders = this.orders.filter(o => o.status === 'pending');
