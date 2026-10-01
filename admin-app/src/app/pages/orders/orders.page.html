@@ -524,24 +524,24 @@
       </button>
     </div>
   </div>
-
-  <!-- Mobile Bottom Navigation -->
-  <nav class="mobile-nav">
-    <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
-      <i class="icon">📊</i>
-      <span>Orders</span>
-    </a>
-    <a class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
-      <i class="icon">🛵</i>
-      <span>Agents</span>
-    </a>
-    <a class="nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
-      <i class="icon">🍽️</i>
-      <span>Menu</span>
-    </a>
-    <a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
-      <i class="icon">⚙️</i>
-      <span>Settings</span>
-    </a>
-  </nav>
 </div>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-nav">
+  <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
+    <i class="icon">📊</i>
+    <span>Orders</span>
+  </a>
+  <a class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
+    <i class="icon">🛵</i>
+    <span>Agents</span>
+  </a>
+  <a class="nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
+    <i class="icon">🍽️</i>
+    <span>Menu</span>
+  </a>
+  <a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
+    <i class="icon">⚙️</i>
+    <span>Settings</span>
+  </a>
+</nav>
