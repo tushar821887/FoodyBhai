@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { AgentsModule } from './agents/agents.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { RecipesModule } from './recipes/recipes.module';
@@ -54,6 +55,7 @@ import { RecipesModule } from './recipes/recipes.module';
 
     AuthModule,
     UsersModule,
+    AgentsModule,
     CartModule,
     OrdersModule,
     RecipesModule

@@ -26,10 +26,13 @@ export class OrdersService {
     return this.orderModel.find().populate('userId', 'name email phone').sort({ createdAt: -1 }).exec();
   }
 
-  async updateOrderStatus(orderId: string, status: string, preparationTime?: number): Promise<OrderDocument> {
+  async updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Promise<OrderDocument> {
     const updateData: any = { status };
     if (preparationTime !== undefined) {
       updateData.preparationTime = preparationTime;
+    }
+    if (deliveryAgent) {
+      updateData.deliveryAgent = deliveryAgent;
     }
 
     const order = await this.orderModel.findByIdAndUpdate(
