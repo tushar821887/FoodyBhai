@@ -21,11 +21,15 @@ async function bootstrap() {
       const allowedOrigins = [
         'https://foodybhai.in',
         'https://www.foodybhai.in',
-        'https://api.foodybhai.in'
+        'https://api.foodybhai.in',
+        'https://admin.foodybhai.in',
+        'http://localhost',
+        'capacitor://localhost',
+        'ionic://localhost'
       ];
       
       // Allow any localhost port for development
-      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || allowedOrigins.includes(origin)) {
+      if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         const frontendUrls = configService.get<string>('FRONTEND_URL', '').split(',').map(url => url.trim());
