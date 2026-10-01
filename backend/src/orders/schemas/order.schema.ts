@@ -38,8 +38,17 @@ export class Order {
   @Prop({ type: DeliveryDetails, required: true })
   deliveryDetails: DeliveryDetails;
 
-  @Prop({ required: true, default: 'pending', enum: ['pending', 'processing', 'completed', 'cancelled'] })
+  @Prop({ required: true, default: 'pending', enum: ['pending', 'preparing', 'ready', 'out_for_delivery', 'delivered', 'rejected', 'cancelled'] })
   status: string;
+
+  @Prop({ type: Number, default: 0 })
+  preparationTime: number; // Time in minutes set by admin when accepting
+
+  @Prop({ required: true, default: 'cod', enum: ['cod', 'online'] })
+  paymentMethod: string;
+
+  @Prop({ required: true, default: 'pending', enum: ['pending', 'paid', 'failed'] })
+  paymentStatus: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

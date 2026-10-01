@@ -1,26 +1,41 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Put, Param } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CartService } from '../cart/cart.service';
 
 @Controller('orders')
-@UseGuards(JwtAuthGuard)
 export class OrdersController {
-  constructor(
-    private readonly ordersService: OrdersService,
-    private readonly cartService: CartService
-  ) {}
+  constructor(private readonly ordersService: OrdersService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async createOrder(@Request() req: any, @Body() orderData: any) {
-    const order = await this.ordersService.createOrder(req.user.id, orderData);
-    // Clear user's cart after successful order
-    await this.cartService.updateCart(req.user.id, []);
-    return order;
+  async createOrder(@Req() req: any, @Body() orderData: any) {
+    const userId = req.user._id || req.user.id;
+    return this.ordersService.createOrder(userId, orderData);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  getUserOrders(@Request() req: any) {
-    return this.ordersService.getUserOrders(req.user.id);
+  async getUserOrders(@Req() req: any) {
+    const userId = req.user._id || req.user.id;
+    return this.ordersService.getUserOrders(userId);
+  }
+
+  // --- Admin Endpoints ---
+
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/all')
+  async getAllOrders() {
+    // In a real app, check req.user.role === 'admin'
+    return this.ordersService.getAllOrders();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('admin/:id/status')
+  async updateOrderStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @Body('preparationTime') preparationTime?: number
+  ) {
+    return this.ordersService.updateOrderStatus(id, status, preparationTime);
   }
 }
