@@ -215,64 +215,53 @@ export class CartComponent implements OnDestroy {
 
   // --- Checkout ---
   checkout() {
-    let finalAddress = this.deliveryAddress;
+    if (!this.authService.isLoggedIn()) {
+      this.uiService.openAuthModal();
+      return;
+    }
 
-    if (this.authService.isLoggedIn()) {
-      if (this.savedAddresses.length > 0) {
-        if (!this.selectedAddressId) {
-          alert("Please select a delivery address.");
-          return;
-        }
-        const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
-        if (selected) {
-          finalAddress = selected.fullAddress;
-        }
-      } else {
-        alert("Please add a delivery address.");
+    let finalAddress = this.deliveryAddress;
+    if (this.savedAddresses.length > 0) {
+      if (!this.selectedAddressId) {
+        alert("Please select a delivery address.");
         return;
       }
+      const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
+      if (selected) {
+        finalAddress = selected.fullAddress;
+      }
+    } else {
+      alert("Please add a delivery address.");
+      return;
     }
 
     if (!this.customerName || !this.customerPhone || !finalAddress) {
       alert("Please fill in your Name, Phone Number, and Delivery Address.");
       return;
     }
+
+    let items: CartItem[] = [];
+    this.cartService.items$.subscribe(i => items = i).unsubscribe();
     
-    const link = this.cartService.getWhatsAppLinkWithDetails(
-      this.customerName, 
-      this.customerPhone, 
-      finalAddress
-    );
-
-    const finishCheckout = () => {
-      if (link) window.open(link, '_blank');
-      this.cartService.clearCart();
-      this.deliveryAddress = '';
-      this.router.navigate(['/orders']); // Redirect to orders page
-    };
-
-    if (this.authService.isLoggedIn()) {
-      let items: CartItem[] = [];
-      this.cartService.items$.subscribe(i => items = i).unsubscribe();
-      
-      this.orderService.placeOrder({
-        items,
-        totalAmount: this.currentTotal,
-        deliveryDetails: {
-          name: this.customerName,
-          phone: this.customerPhone,
-          address: finalAddress
-        }
-      }).subscribe({
-        next: () => finishCheckout(),
-        error: (err) => {
-          console.error(err);
-          alert("Failed to save order to history, but we will redirect you to WhatsApp to complete it.");
-          finishCheckout();
-        }
-      });
-    } else {
-      finishCheckout();
-    }
+    this.orderService.placeOrder({
+      items,
+      totalAmount: this.currentTotal,
+      deliveryDetails: {
+        name: this.customerName,
+        phone: this.customerPhone,
+        address: finalAddress
+      }
+    }).subscribe({
+      next: () => {
+        alert("Order placed successfully!");
+        this.cartService.clearCart();
+        this.deliveryAddress = '';
+        this.router.navigate(['/orders']);
+      },
+      error: (err) => {
+        console.error(err);
+        alert("Failed to place order. Please try again.");
+      }
+    });
   }
 }
