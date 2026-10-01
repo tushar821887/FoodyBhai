@@ -246,7 +246,10 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   addRecipe() {
-    if(!this.newItem.title || !this.newItem.price) return;
+    if(!this.newItem.title || !this.newItem.price || !this.newItem.description) {
+      alert('Please fill out Title, Price, and Description');
+      return;
+    }
     this.newItem.slug = this.newItem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     this.api.addRecipe(this.newItem).subscribe(() => {
       this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true };
