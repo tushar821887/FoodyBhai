@@ -18,6 +18,8 @@ export interface Order {
   preparationTime: number;
   paymentMethod: string;
   paymentStatus: string;
+  orderType: string;
+  deliveryAgent?: { name: string; phone: string };
   items: any[];
   createdAt: string;
 }
