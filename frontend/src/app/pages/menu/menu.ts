@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, Inject, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { MenuCard } from '../../components/menu-card/menu-card';
@@ -24,12 +24,14 @@ export class MenuComponent implements OnInit {
 
   private recipeService = inject(RecipeService);
   private platformId = inject(PLATFORM_ID);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     // Load categories from API
     this.recipeService.getCategories().subscribe(cats => {
       console.log('[DEBUG] Categories loaded:', cats.length);
       this.categories = [{name: 'All', slug: 'all'}, ...cats];
+      this.cdr.detectChanges();
     });
 
     // Load recipes from API
@@ -41,10 +43,12 @@ export class MenuComponent implements OnInit {
         this.filteredItems = items;
         this.isLoading = false;
         console.log('[DEBUG] isLoading is now false. filteredItems:', this.filteredItems.length);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('[DEBUG] Recipes load error:', err);
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
