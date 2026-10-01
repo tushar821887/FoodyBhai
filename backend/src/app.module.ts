@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AgentsModule } from './agents/agents.module';
+import { CategoriesModule } from './categories/categories.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { RecipesModule } from './recipes/recipes.module';
@@ -56,6 +57,7 @@ import { RecipesModule } from './recipes/recipes.module';
     AuthModule,
     UsersModule,
     AgentsModule,
+    CategoriesModule,
     CartModule,
     OrdersModule,
     RecipesModule
