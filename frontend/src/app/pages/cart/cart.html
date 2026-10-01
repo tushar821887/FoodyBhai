@@ -24,7 +24,7 @@
         <div class="step-line" [class.completed]="currentStep > 1"></div>
         <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="setStep(2)">
           <div class="step-icon"><i class="fa-solid fa-location-dot"></i></div>
-          <span>Delivery Details</span>
+          <span>Details</span>
         </div>
         <div class="step-line" [class.completed]="currentStep > 2"></div>
         <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3" (click)="setStep(3)">
@@ -36,7 +36,7 @@
       <div class="cart-layout">
         <!-- Left Side: Main Content depending on step -->
         <div class="cart-items-section">
-          
+
           <!-- STEP 1: CART ITEMS -->
           @if (currentStep === 1) {
             <div class="cart-card animate-fade-in">
@@ -59,32 +59,44 @@
                     </div>
                   </div>
                 }
-                }
+              </div>
             </div>
           }
 
-          <!-- STEP 2: DELIVERY DETAILS -->
+          <!-- STEP 2: DELIVERY / PICKUP DETAILS -->
           @if (currentStep === 2) {
             <div class="cart-card animate-fade-in">
-              <h4 class="cart-card-title"><i class="fa-solid" [ngClass]="orderType === 'delivery' ? 'fa-truck' : 'fa-person-walking-luggage'"></i> {{ orderType === 'delivery' ? 'Delivery Details' : 'Pickup Details' }}</h4>
+              <h4 class="cart-card-title">
+                <i class="fa-solid" [ngClass]="orderType === 'delivery' ? 'fa-truck' : 'fa-person-walking-luggage'"></i>
+                {{ orderType === 'delivery' ? 'Delivery Details' : 'Pickup Details' }}
+              </h4>
               <div class="checkout-form">
-                <div class="form-row">
+
+                <!-- Order Type Toggle -->
                 <div class="form-group mb-4 w-100">
                   <label style="display: block; margin-bottom: 8px;">Order Type *</label>
                   <div style="display: flex; gap: 10px;">
-                    <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" [style.border-color]="orderType === 'delivery' ? 'var(--primary-color)' : '#e2e8f0'" [style.background]="orderType === 'delivery' ? '#fff0f2' : 'transparent'">
+                    <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;"
+                           [style.border-color]="orderType === 'delivery' ? 'var(--primary-color)' : '#e2e8f0'"
+                           [style.background]="orderType === 'delivery' ? '#fff0f2' : 'transparent'">
                       <input type="radio" name="orderType" value="delivery" [(ngModel)]="orderType" style="display: none;">
-                      <i class="fa-solid fa-motorcycle" style="margin-right: 5px;" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#64748b'"></i> 
-                      <span [style.font-weight]="orderType === 'delivery' ? '600' : 'normal'" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#334155'">Delivery</span>
+                      <i class="fa-solid fa-motorcycle" style="margin-right: 5px;" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#64748b'"></i>
+                      <span [style.font-weight]="orderType === 'delivery' ? '600' : 'normal'"
+                            [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#334155'">Delivery</span>
                     </label>
-                    <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" [style.border-color]="orderType === 'pickup' ? 'var(--primary-color)' : '#e2e8f0'" [style.background]="orderType === 'pickup' ? '#fff0f2' : 'transparent'">
+                    <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;"
+                           [style.border-color]="orderType === 'pickup' ? 'var(--primary-color)' : '#e2e8f0'"
+                           [style.background]="orderType === 'pickup' ? '#fff0f2' : 'transparent'">
                       <input type="radio" name="orderType" value="pickup" [(ngModel)]="orderType" style="display: none;">
-                      <i class="fa-solid fa-person-walking-luggage" style="margin-right: 5px;" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#64748b'"></i> 
-                      <span [style.font-weight]="orderType === 'pickup' ? '600' : 'normal'" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#334155'">Self Pickup</span>
+                      <i class="fa-solid fa-person-walking-luggage" style="margin-right: 5px;" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#64748b'"></i>
+                      <span [style.font-weight]="orderType === 'pickup' ? '600' : 'normal'"
+                            [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#334155'">Self Pickup</span>
                     </label>
                   </div>
                 </div>
 
+                <!-- Name & Phone -->
+                <div class="form-row">
                   <div class="form-group mb-3 w-100">
                     <label>Full Name *</label>
                     <input type="text" [(ngModel)]="customerName" placeholder="e.g. Rahul Sharma" class="form-control">
@@ -95,65 +107,68 @@
                   </div>
                 </div>
 
+                <!-- DELIVERY: show address picker -->
                 @if (orderType === 'delivery') {
                   @if (authService.isLoggedIn()) {
-                  <div class="form-group mb-2">
-                    <label>Delivery Address *</label>
-                    
-                    @if (selectedAddress) {
-                      <div class="selected-address-box mb-3">
-                        <div class="address-header" style="border: none; padding-bottom: 0; margin-bottom: 0.5rem;">
-                          <span class="address-label">
-                            @if (selectedAddress.label.toLowerCase() === 'home') {
-                              <i class="fa-solid fa-house"></i>
-                            } @else if (selectedAddress.label.toLowerCase() === 'work' || selectedAddress.label.toLowerCase() === 'office') {
-                              <i class="fa-solid fa-briefcase"></i>
-                            } @else {
-                              <i class="fa-solid fa-map-pin"></i>
-                            }
-                            {{ selectedAddress.label }}
-                          </span>
+                    <div class="form-group mb-2">
+                      <label>Delivery Address *</label>
+                      @if (selectedAddress) {
+                        <div class="selected-address-box mb-3">
+                          <div class="address-header" style="border: none; padding-bottom: 0; margin-bottom: 0.5rem;">
+                            <span class="address-label">
+                              @if (selectedAddress.label.toLowerCase() === 'home') {
+                                <i class="fa-solid fa-house"></i>
+                              } @else if (selectedAddress.label.toLowerCase() === 'work' || selectedAddress.label.toLowerCase() === 'office') {
+                                <i class="fa-solid fa-briefcase"></i>
+                              } @else {
+                                <i class="fa-solid fa-map-pin"></i>
+                              }
+                              {{ selectedAddress.label }}
+                            </span>
+                          </div>
+                          <p class="address-text">{{ selectedAddress.fullAddress }}</p>
                         </div>
-                        <p class="address-text">{{ selectedAddress.fullAddress }}</p>
-                      </div>
-                      <button type="button" class="btn btn-outline w-100" (click)="openAddressModal()">
-                        <i class="fa-solid fa-pen"></i> Change Delivery Address
-                      </button>
-                    } @else {
-                      <button type="button" class="btn btn-primary w-100 mb-2 py-3" style="font-size: 1.05rem;" (click)="openAddressModal()">
-                        <i class="fa-solid fa-location-dot me-2"></i> Choose Delivery Address
-                      </button>
-                    }
-                  </div>
-                } @else {
-                  <div class="form-group mb-2">
-                    <label>Complete Address *</label>
-                    <textarea [(ngModel)]="deliveryAddress" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
-                    <small class="text-muted mt-2 d-block"><i class="fa-solid fa-circle-info"></i> We deliver in Meerut area only.</small>
-                    
-                    <div class="mt-3 p-3 bg-light rounded text-center">
-                      <p class="mb-2 text-sm text-muted">Want to save your address for faster checkout?</p>
-                      <a href="javascript:void(0)" (click)="uiService.openAuthModal()" class="text-primary fw-bold" style="text-decoration: none;">Login or Register</a>
+                        <button type="button" class="btn btn-outline w-100" (click)="openAddressModal()">
+                          <i class="fa-solid fa-pen"></i> Change Delivery Address
+                        </button>
+                      } @else {
+                        <button type="button" class="btn btn-primary w-100 mb-2 py-3" style="font-size: 1.05rem;" (click)="openAddressModal()">
+                          <i class="fa-solid fa-location-dot me-2"></i> Choose Delivery Address
+                        </button>
+                      }
                     </div>
-                  </div>
-                }
+                  } @else {
+                    <div class="form-group mb-2">
+                      <label>Complete Address *</label>
+                      <textarea [(ngModel)]="deliveryAddress" placeholder="House/Flat No., Street, Landmark..." class="form-control" rows="3"></textarea>
+                      <small class="text-muted mt-2 d-block"><i class="fa-solid fa-circle-info"></i> We deliver in Meerut area only.</small>
+                      <div class="mt-3 p-3 bg-light rounded text-center">
+                        <p class="mb-2 text-sm text-muted">Want to save your address for faster checkout?</p>
+                        <a href="javascript:void(0)" (click)="uiService.openAuthModal()" class="text-primary fw-bold" style="text-decoration: none;">Login or Register</a>
+                      </div>
+                    </div>
+                  }
                 }
 
+                <!-- PICKUP: show restaurant address card -->
                 @if (orderType === 'pickup') {
-                  <div class="form-group mb-2 mt-4">
+                  <div class="form-group mb-2 mt-3">
                     <label>Pickup Location</label>
                     <div class="p-3 bg-light rounded" style="border: 1px solid var(--border-color); display: flex; gap: 15px; align-items: flex-start;">
-                      <div style="width: 40px; height: 40px; background: #fff0f2; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                      <div style="width: 44px; height: 44px; background: #fff0f2; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                         <i class="fa-solid fa-store"></i>
                       </div>
                       <div>
                         <h6 style="margin: 0 0 5px 0; font-weight: 700; color: #334155;">Foody Bhai Kitchen</h6>
-                        <p style="margin: 0; color: #64748b; font-size: 0.95rem; line-height: 1.5;">123 Food Street, Phase 1<br>Meerut, Uttar Pradesh 250001</p>
-                        <a href="https://maps.google.com" target="_blank" style="display: inline-block; margin-top: 8px; font-size: 0.85rem; font-weight: 600; color: var(--primary-color); text-decoration: none;"><i class="fa-solid fa-location-arrow"></i> Get Directions</a>
+                        <p style="margin: 0; color: #64748b; font-size: 0.95rem; line-height: 1.6;">226, Bhatwara, Budhana Gate<br>Meerut, Uttar Pradesh 250001</p>
+                        <a href="https://maps.app.goo.gl/foodyBhai" target="_blank" style="display: inline-block; margin-top: 8px; font-size: 0.85rem; font-weight: 600; color: var(--primary-color); text-decoration: none;">
+                          <i class="fa-solid fa-location-arrow"></i> Get Directions
+                        </a>
                       </div>
                     </div>
                   </div>
                 }
+
               </div>
             </div>
           }
@@ -162,7 +177,7 @@
           @if (currentStep === 3) {
             <div class="cart-card animate-fade-in">
               <h4 class="cart-card-title"><i class="fa-solid fa-clipboard-check"></i> Final Review</h4>
-              
+
               <div class="review-block mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <h5 class="m-0" style="color: var(--secondary-color);">{{ orderType === 'delivery' ? 'Delivery Details' : 'Pickup Details' }}</h5>
@@ -171,9 +186,9 @@
                 <div class="p-3 bg-light rounded" style="border: 1px solid var(--border-color);">
                   <p class="mb-1"><strong>Name:</strong> {{ customerName }}</p>
                   <p class="mb-1"><strong>Phone:</strong> {{ customerPhone }}</p>
-                  <p class="mb-0"><strong>Address:</strong> 
+                  <p class="mb-0"><strong>Address:</strong>
                     @if (orderType === 'pickup') {
-                      Foody Bhai Kitchen, 123 Food Street, Meerut
+                      Foody Bhai Kitchen, 226 Bhatwara, Budhana Gate, Meerut
                     } @else if (authService.isLoggedIn() && selectedAddress) {
                       {{ selectedAddress.fullAddress }} ({{ selectedAddress.label }})
                     } @else {
@@ -208,7 +223,7 @@
         <div class="cart-summary-section">
           <div class="cart-card sticky-summary">
             <h4 class="cart-card-title">Order Summary</h4>
-            
+
             @if (currentStep === 1) {
               <div class="cart-coupon-box animate-fade-in">
                 @if (cartService.coupon$ | async) {
@@ -240,10 +255,10 @@
                 <span>₹{{cartService.totalPrice$ | async}}</span>
               </div>
               @if (orderType === 'delivery') {
-              <div class="total-row text-success">
-                <span>Delivery Fee</span>
-                <span>FREE</span>
-              </div>
+                <div class="total-row text-success">
+                  <span>Delivery Fee</span>
+                  <span>FREE</span>
+                </div>
               }
               @if ((cartService.discount$ | async)! > 0) {
                 <div class="total-row text-success">
@@ -265,7 +280,7 @@
 
             <!-- Step Action Buttons -->
             @if (currentStep === 1) {
-              <button class="btn btn-primary w-100 btn-lg" 
+              <button class="btn btn-primary w-100 btn-lg"
                       [disabled]="(cartService.totalPrice$ | async)! < 100"
                       (click)="nextStep()">
                 Proceed to Details <i class="fa-solid fa-arrow-right ms-2"></i>
@@ -300,7 +315,7 @@
         <h4 style="margin: 0;">Manage Delivery Address</h4>
         <button class="btn-close" (click)="closeAddressModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      
+
       <div class="modal-tabs">
         <button class="modal-tab" [class.active]="activeModalTab === 'saved'" (click)="switchModalTab('saved')">
           Saved Addresses ({{ savedAddresses.length }})
