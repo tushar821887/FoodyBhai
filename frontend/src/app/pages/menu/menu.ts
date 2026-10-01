@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { MenuCard } from '../../components/menu-card/menu-card';
 import { RecipeService, Recipe } from '../../services/recipe.service';
@@ -18,18 +19,28 @@ export class MenuComponent implements OnInit {
   searchQuery: string = '';
   vegOnly: boolean = false;
 
+  isLoading = true;
+  skeletonItems = [1, 2, 3, 4, 5, 6]; // 6 skeleton cards
+
   private recipeService = inject(RecipeService);
+  private platformId = inject(PLATFORM_ID);
 
   ngOnInit() {
-    // Load categories from API then prepend "All"
+    // Load categories from API
     this.recipeService.getCategories().subscribe(cats => {
       this.categories = [{name: 'All', slug: 'all'}, ...cats];
     });
 
     // Load recipes from API
-    this.recipeService.getRecipes().subscribe(items => {
-      this.allItems = items;
-      this.filteredItems = items;
+    this.recipeService.getRecipes().subscribe({
+      next: (items) => {
+        this.allItems = items;
+        this.filteredItems = items;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
     });
   }
 
