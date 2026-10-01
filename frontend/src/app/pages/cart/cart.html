@@ -296,7 +296,7 @@
               <div class="d-flex gap-2 mb-3">
                 <button class="btn btn-secondary flex-1 btn-lg" (click)="prevStep()">Back</button>
                 <button class="btn btn-primary flex-1 btn-lg" (click)="checkout()">
-                  Checkout
+                  <i class="fa-solid fa-lock me-2"></i> Proceed to Pay
                 </button>
               </div>
               <small class="text-muted text-center d-block"><i class="fa-solid fa-shield-halved"></i> Secure checkout via FoodyBhai</small>
@@ -385,5 +385,136 @@
         }
       </div>
     </div>
+  </div>
+}
+
+<!-- ===================== PAYMENT MODAL ===================== -->
+@if (showPaymentModal) {
+  <div class="modal-overlay payment-modal-overlay" (click)="closePaymentModal()">
+    <div class="payment-modal-container" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="payment-modal-header">
+        <div class="payment-modal-icon">
+          <i class="fa-solid fa-credit-card"></i>
+        </div>
+        <div>
+          <h3 class="payment-modal-title">Choose Payment Method</h3>
+          <p class="payment-modal-subtitle">Total: <strong>₹{{ currentTotal }}</strong></p>
+        </div>
+        <button class="payment-close-btn" (click)="closePaymentModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Payment Options -->
+      <div class="payment-options">
+
+        <!-- Online Option -->
+        <div class="payment-option-card" [class.selected]="paymentMethod === 'online'" (click)="paymentMethod = 'online'; codConfirmed = false">
+          <div class="payment-option-radio">
+            <div class="radio-circle" [class.active]="paymentMethod === 'online'">
+              @if (paymentMethod === 'online') { <i class="fa-solid fa-check"></i> }
+            </div>
+          </div>
+          <div class="payment-option-icon online-icon">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div class="payment-option-info">
+            <span class="payment-option-title">Online Payment</span>
+            <span class="payment-option-desc">Pay via UPI / QR Code</span>
+          </div>
+          <span class="payment-option-badge online-badge">Recommended</span>
+        </div>
+
+        <!-- COD Option -->
+        <div class="payment-option-card" [class.selected]="paymentMethod === 'cod'" (click)="paymentMethod = 'cod'">
+          <div class="payment-option-radio">
+            <div class="radio-circle" [class.active]="paymentMethod === 'cod'">
+              @if (paymentMethod === 'cod') { <i class="fa-solid fa-check"></i> }
+            </div>
+          </div>
+          <div class="payment-option-icon cod-icon">
+            <i class="fa-solid fa-money-bill-wave"></i>
+          </div>
+          <div class="payment-option-info">
+            <span class="payment-option-title">Cash on Delivery</span>
+            <span class="payment-option-desc">Pay when your order arrives</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Online: QR section -->
+      @if (paymentMethod === 'online') {
+        <div class="qr-section animate-fade-in">
+          <p class="qr-instruction">Scan this QR code or pay to UPI ID below</p>
+          <div class="qr-wrapper">
+            @if (qrImageUrl) {
+              <img [src]="qrImageUrl" alt="Payment QR Code" class="qr-image">
+            } @else {
+              <div class="qr-placeholder">
+                <i class="fa-solid fa-qrcode"></i>
+                <p>QR code not set. Please contact the restaurant.</p>
+              </div>
+            }
+          </div>
+          <div class="upi-id-box">
+            <i class="fa-solid fa-at"></i>
+            <span class="upi-id-text">{{ upiId }}</span>
+            <button class="upi-copy-btn" (click)="$event.stopPropagation()">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+          <p class="qr-note">
+            <i class="fa-solid fa-circle-info"></i>
+            After paying, click "Place Order" below. We'll verify your payment.
+          </p>
+        </div>
+      }
+
+      <!-- COD: Confirmation checkbox -->
+      @if (paymentMethod === 'cod') {
+        <div class="cod-section animate-fade-in">
+          <div class="cod-info-card">
+            <i class="fa-solid fa-hand-holding-dollar cod-big-icon"></i>
+            <div>
+              <h6>Cash on Delivery Selected</h6>
+              <p>Please keep exact change of <strong>₹{{ currentTotal }}</strong> ready when your order arrives.</p>
+            </div>
+          </div>
+          <label class="cod-confirm-label">
+            <input type="checkbox" [(ngModel)]="codConfirmed" class="cod-checkbox">
+            <span>I agree to pay <strong>₹{{ currentTotal }}</strong> in cash upon delivery / pickup.</span>
+          </label>
+        </div>
+      }
+
+      <!-- Action Button -->
+      <button class="btn-place-order"
+              [disabled]="isPlacingOrder || (paymentMethod === 'cod' && !codConfirmed)"
+              (click)="confirmPaymentAndPlaceOrder()">
+        @if (isPlacingOrder) {
+          <i class="fa-solid fa-spinner fa-spin me-2"></i> Placing Order...
+        } @else if (paymentMethod === 'online') {
+          <i class="fa-solid fa-check me-2"></i> I've Paid — Place Order
+        } @else {
+          <i class="fa-solid fa-bag-shopping me-2"></i> Place Order (COD)
+        }
+      </button>
+
+    </div>
+  </div>
+}
+
+<!-- ===================== TOAST NOTIFICATION ===================== -->
+@if (toastVisible) {
+  <div class="toast-notification" [class.toast-success]="toastType === 'success'" [class.toast-error]="toastType === 'error'" [class.toast-info]="toastType === 'info'">
+    <div class="toast-icon">
+      @if (toastType === 'success') { <i class="fa-solid fa-circle-check"></i> }
+      @if (toastType === 'error') { <i class="fa-solid fa-circle-exclamation"></i> }
+      @if (toastType === 'info') { <i class="fa-solid fa-circle-info"></i> }
+    </div>
+    <span class="toast-text">{{ toastMessage }}</span>
+    <button class="toast-close" (click)="toastVisible = false"><i class="fa-solid fa-xmark"></i></button>
   </div>
 }
