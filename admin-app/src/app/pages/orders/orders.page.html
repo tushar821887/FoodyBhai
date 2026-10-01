@@ -1,76 +1,126 @@
-<div class="page-container">
-  <!-- Top App Bar -->
-  <div class="app-bar">
-    <div class="app-bar-title">FoodyBhai Admin</div>
-  </div>
+<div class="dashboard-layout">
+  <!-- Desktop Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="assets/logo.png" alt="FoodyBhai" onerror="this.src='https://via.placeholder.com/150x50?text=FoodyBhai'">
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active">
+        <i class="icon">📊</i>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item">
+        <i class="icon">🍽️</i>
+        <span>Menu</span>
+      </a>
+      <a class="nav-item">
+        <i class="icon">⚙️</i>
+        <span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <i class="icon">🚪</i> Logout
+      </button>
+    </div>
+  </aside>
 
-  <!-- Tabs -->
-  <div class="tabs-header">
-    <button class="tab-btn" [class.active]="currentTab === 'pending'" (click)="setTab('pending')">
-      New Orders
-      <span class="badge" *ngIf="(orders | filterStatus:'pending').length">{{ (orders | filterStatus:'pending').length }}</span>
-    </button>
-    <button class="tab-btn" [class.active]="currentTab === 'preparing'" (click)="setTab('preparing')">Active</button>
-    <button class="tab-btn" [class.active]="currentTab === 'completed'" (click)="setTab('completed')">History</button>
-  </div>
-
-  <!-- Order List -->
-  <div class="order-list">
-    <div class="empty-state" *ngIf="filteredOrders.length === 0">
-      <div class="icon">🍽️</div>
-      <p>No orders in this section.</p>
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-bar">
+      <div class="greeting">
+        <h2>Welcome, Admin</h2>
+        <p>Here's what's happening in your kitchen today.</p>
+      </div>
+      <div class="top-bar-actions">
+        <button class="logout-btn-mobile" (click)="logout()">Logout</button>
+      </div>
     </div>
 
-    <div class="order-card" *ngFor="let order of filteredOrders">
-      <div class="order-header">
-        <span class="order-id">#{{ order._id.slice(-6).toUpperCase() }}</span>
-        <span class="status-badge" [style.background]="getStatusBadge(order.status).color">
-          {{ getStatusBadge(order.status).label }}
-        </span>
+    <!-- Stats row -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">New Orders</div>
+        <div class="stat-value">{{ (orders | filterStatus:'pending').length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Preparing</div>
+        <div class="stat-value">{{ (orders | filterStatus:'preparing').length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Ready</div>
+        <div class="stat-value">{{ (orders | filterStatus:'ready').length }}</div>
+      </div>
+    </div>
+
+    <!-- Orders Area -->
+    <div class="orders-section">
+      <div class="tabs-header">
+        <button class="tab-btn" [class.active]="currentTab === 'pending'" (click)="setTab('pending')">
+          New Orders
+          <span class="badge" *ngIf="(orders | filterStatus:'pending').length">{{ (orders | filterStatus:'pending').length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="currentTab === 'preparing'" (click)="setTab('preparing')">Active</button>
+        <button class="tab-btn" [class.active]="currentTab === 'completed'" (click)="setTab('completed')">History</button>
       </div>
 
-      <div class="order-time">{{ order.createdAt | date:'shortTime' }} • {{ order.createdAt | date:'dd MMM' }}</div>
-      
-      <div class="customer-info">
-        <strong>{{ order.deliveryDetails.name }}</strong><br>
-        📞 {{ order.deliveryDetails.phone }}<br>
-        📍 {{ order.deliveryDetails.address }}
-      </div>
-
-      <div class="order-items">
-        <div class="item" *ngFor="let item of order.items">
-          <span class="qty">{{ item.quantity }}x</span> {{ item.recipe.name || 'Custom Item' }}
-        </div>
-      </div>
-
-      <div class="order-footer">
-        <div class="payment-info">
-          <span class="total">₹{{ order.totalAmount }}</span>
-          <span class="pay-method" [class.paid]="order.paymentStatus === 'paid'">
-            {{ order.paymentMethod === 'online' ? 'Online' : 'COD' }} ({{ order.paymentStatus }})
-          </span>
-        </div>
-        
-        <!-- Action Buttons depending on status -->
-        <div class="action-buttons" *ngIf="order.status === 'pending'">
-          <button class="btn btn-outline-danger" (click)="rejectOrder(order._id)">Reject</button>
-          <button class="btn btn-primary" (click)="openAcceptModal(order._id)">Accept</button>
+      <div class="order-list" [class.empty]="filteredOrders.length === 0">
+        <div class="empty-state" *ngIf="filteredOrders.length === 0">
+          <div class="icon">🍽️</div>
+          <p>No orders in this section.</p>
         </div>
 
-        <div class="action-buttons" *ngIf="order.status === 'preparing'">
-          <button class="btn btn-success" (click)="updateStatus(order._id, 'ready')">Mark Ready</button>
-        </div>
+        <div class="order-card" *ngFor="let order of filteredOrders">
+          <div class="order-header">
+            <span class="order-id">#{{ order._id.slice(-6).toUpperCase() }}</span>
+            <span class="status-badge" [style.background]="getStatusBadge(order.status).color">
+              {{ getStatusBadge(order.status).label }}
+            </span>
+          </div>
 
-        <div class="action-buttons" *ngIf="order.status === 'ready'">
-          <button class="btn btn-info" (click)="updateStatus(order._id, 'out_for_delivery')">Out for Delivery</button>
-        </div>
+          <div class="order-time">{{ order.createdAt | date:'shortTime' }} • {{ order.createdAt | date:'dd MMM' }}</div>
+          
+          <div class="customer-info">
+            <strong>{{ order.deliveryDetails.name }}</strong><br>
+            📞 {{ order.deliveryDetails.phone }}<br>
+            📍 {{ order.deliveryDetails.address }}
+          </div>
 
-        <div class="action-buttons" *ngIf="order.status === 'out_for_delivery'">
-          <button class="btn btn-dark" (click)="updateStatus(order._id, 'delivered')">Mark Delivered</button>
+          <div class="order-items">
+            <div class="item" *ngFor="let item of order.items">
+              <span class="qty">{{ item.quantity }}x</span> {{ item.recipe.name || 'Custom Item' }}
+            </div>
+          </div>
+
+          <div class="order-footer">
+            <div class="payment-info">
+              <span class="total">₹{{ order.totalAmount }}</span>
+              <span class="pay-method" [class.paid]="order.paymentStatus === 'paid'">
+                {{ order.paymentMethod === 'online' ? 'Online' : 'COD' }} ({{ order.paymentStatus }})
+              </span>
+            </div>
+            
+            <div class="action-buttons" *ngIf="order.status === 'pending'">
+              <button class="btn btn-outline-danger" (click)="rejectOrder(order._id)">Reject</button>
+              <button class="btn btn-primary" (click)="openAcceptModal(order._id)">Accept</button>
+            </div>
+
+            <div class="action-buttons" *ngIf="order.status === 'preparing'">
+              <button class="btn btn-success" (click)="updateStatus(order._id, 'ready')">Mark Ready</button>
+            </div>
+
+            <div class="action-buttons" *ngIf="order.status === 'ready'">
+              <button class="btn btn-info" (click)="updateStatus(order._id, 'out_for_delivery')">Out for Delivery</button>
+            </div>
+
+            <div class="action-buttons" *ngIf="order.status === 'out_for_delivery'">
+              <button class="btn btn-dark" (click)="updateStatus(order._id, 'delivered')">Mark Delivered</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </div>
 
 <!-- Accept / Prep Time Modal -->
