@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type AgentDocument = HydratedDocument<Agent>;
 
-@Schema({ timestamps: true, toJSON: { transform: (doc, ret) => { ret.id = ret._id; delete ret._id; delete ret.__v; return ret; } } })
+@Schema({ timestamps: true, toJSON: { transform: (doc: any, ret: any) => { ret.id = ret._id.toString(); delete ret._id; delete ret.__v; return ret; } } })
 export class Agent {
   @Prop({ required: true })
   name: string;
