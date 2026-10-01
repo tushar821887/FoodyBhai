@@ -1,0 +1,64 @@
+<div class="auth-modal-overlay" (click)="closeModal()">
+  <div class="auth-modal-container" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeModal()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    
+    <div class="auth-modal-header">
+      <h2>{{ isLoginMode ? 'YOUR ACCOUNT' : 'CREATE ACCOUNT' }}</h2>
+    </div>
+
+    <form class="auth-modal-form" (ngSubmit)="onSubmit()">
+      
+      @if (errorMessage) {
+        <div class="alert error">{{ errorMessage }}</div>
+      }
+
+      @if (!isLoginMode) {
+        <div class="form-group">
+          <input type="text" id="name" name="name" [(ngModel)]="formData.name" placeholder="Full Name *" required>
+        </div>
+        <div class="form-group">
+          <input type="tel" id="phone" name="phone" [(ngModel)]="formData.phone" placeholder="Phone Number (Optional)">
+        </div>
+      }
+
+      <div class="form-group">
+        <input type="email" id="email" name="email" [(ngModel)]="formData.email" placeholder="Account Email *" required>
+      </div>
+
+      <div class="form-group">
+        <input type="password" id="password" name="password" [(ngModel)]="formData.password" placeholder="Account Password *" required>
+      </div>
+
+      @if (!isLoginMode) {
+        <div class="form-group">
+          <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="formData.confirmPassword" placeholder="Confirm Password *" required>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="terms" required>
+          <label for="terms">By clicking 'Register', I agree to the <a href="javascript:void(0)">Terms of Use</a> & <a href="javascript:void(0)">Privacy Policy</a>.</label>
+        </div>
+      } @else {
+        <div class="form-check">
+          <input type="checkbox" id="newsletter">
+          <label for="newsletter">Subscribe to Email Newsletter » get your 20% coupon! <br> <small>I want to receive regular news, trends & offers from Foody Bhai. You can unsubscribe at any time.</small></label>
+        </div>
+      }
+
+      <button type="submit" class="submit-btn" [disabled]="isLoading">
+        @if (isLoading) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Please wait...
+        } @else {
+          {{ isLoginMode ? 'Login' : 'Register' }}
+        }
+      </button>
+
+      <div class="auth-modal-footer">
+        <a href="javascript:void(0)" (click)="toggleMode()" class="toggle-link">
+          {{ isLoginMode ? 'New here? Create an account' : 'Already have an account? Login' }}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>

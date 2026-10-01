@@ -32,18 +32,6 @@
         <li><a routerLink="/menu" routerLinkActive="active">Menu</a></li>
         <li><a routerLink="/about" routerLinkActive="active">About</a></li>
         <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
-        
-        <!-- Auth Links -->
-        @if (authService.isAuthenticated$ | async) {
-          <li><a routerLink="/orders" routerLinkActive="active">Orders</a></li>
-          <li><a routerLink="/addresses" routerLinkActive="active">Addresses</a></li>
-          <li style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: var(--primary-color); font-weight: 600;"><i class="fa-solid fa-user"></i> {{(authService.currentUser$ | async)?.name}}</span>
-            <a href="javascript:void(0)" (click)="logout()" style="color: var(--text-light); margin-left: 0.5rem;" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></a>
-          </li>
-        } @else {
-          <li><a routerLink="/login" routerLinkActive="active" class="login-btn"><i class="fa-solid fa-user"></i> Login</a></li>
-        }
       </ul>
     </nav>
     
@@ -52,12 +40,50 @@
         <a href="tel:8218870579" class="header-phone">
           <i class="fa-solid fa-phone"></i> +91 8218870579
         </a>
+        
         <a routerLink="/cart" class="cart-toggle-btn" style="text-decoration: none;">
           <i class="fa-solid fa-cart-shopping"></i>
           @if ((cartService.totalItems$ | async)! > 0) {
             <span class="cart-badge">{{cartService.totalItems$ | async}}</span>
           }
+          <span class="action-label">Cart</span>
         </a>
+
+        @if (authService.isAuthenticated$ | async) {
+          <div class="account-dropdown-wrapper">
+            <button class="account-toggle-btn" (click)="toggleAccountDropdown($event)">
+              <div class="account-icon-wrapper">
+                <i class="fa-solid fa-user"></i>
+                <i class="fa-solid fa-circle-check account-badge"></i>
+              </div>
+              <span class="action-label">Account</span>
+            </button>
+
+            @if (isAccountDropdownOpen) {
+              <div class="account-dropdown-menu">
+                <div class="dropdown-header">
+                  <span class="user-name">{{ (authService.currentUser$ | async)?.name }}</span>
+                  <span class="user-email">{{ (authService.currentUser$ | async)?.email }}</span>
+                </div>
+                <a routerLink="/orders" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+                  <i class="fa-regular fa-folder-open"></i> My Orders
+                </a>
+                <a routerLink="/addresses" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+                  <i class="fa-regular fa-address-book"></i> My Addresses
+                </a>
+                <a routerLink="/profile" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+                  <i class="fa-regular fa-user"></i> My Account
+                </a>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item logout-btn" (click)="logout()">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <button class="login-header-btn" (click)="openAuthModal()">Login</button>
+        }
       </div>
     </div>
   </div>
@@ -89,7 +115,7 @@
       <span>Logout</span>
     </a>
   } @else {
-    <a routerLink="/login" routerLinkActive="active" class="nav-item">
+    <a href="javascript:void(0)" (click)="openAuthModal()" class="nav-item">
       <i class="fa-solid fa-user"></i>
       <span>Login</span>
     </a>
@@ -102,3 +128,7 @@
     }
   </a>
 </div>
+
+@if (isAuthModalOpen) {
+  <app-auth-modal (close)="closeAuthModal()"></app-auth-modal>
+}
