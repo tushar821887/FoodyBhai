@@ -1,0 +1,6 @@
+Backend schema updated with:
+- preparationTime
+- paymentMethod
+- paymentStatus
+- new status enum values
+Controller and Service updated to support Admin endpoints.

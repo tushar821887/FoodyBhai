@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FoodyBhai Admin</string>
+    <string name="title_activity_main">FoodyBhai Admin</string>
+    <string name="package_name">com.foodybhai.admin</string>
+    <string name="custom_url_scheme">com.foodybhai.admin</string>
+</resources>
