@@ -29,24 +29,20 @@ export class MenuComponent implements OnInit {
   ngOnInit() {
     // Load categories from API
     this.recipeService.getCategories().subscribe(cats => {
-      console.log('[DEBUG] Categories loaded:', cats.length);
       this.categories = [{name: 'All', slug: 'all'}, ...cats];
       this.cdr.detectChanges();
     });
 
     // Load recipes from API
-    console.log('[DEBUG] Fetching recipes...');
     this.recipeService.getRecipes().subscribe({
       next: (items) => {
-        console.log('[DEBUG] Recipes loaded:', items.length);
         this.allItems = items;
         this.filteredItems = items;
         this.isLoading = false;
-        console.log('[DEBUG] isLoading is now false. filteredItems:', this.filteredItems.length);
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('[DEBUG] Recipes load error:', err);
+        console.error('Failed to load recipes', err);
         this.isLoading = false;
         this.cdr.detectChanges();
       }
