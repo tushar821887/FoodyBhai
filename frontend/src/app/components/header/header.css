@@ -360,7 +360,7 @@
 
 /* New Auth UI Styles */
 .login-header-btn {
-  background-color: #6c5ce7;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   padding: 0.6rem 1.5rem;
@@ -370,13 +370,13 @@
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2);
+  box-shadow: 0 4px 6px rgba(255, 71, 87, 0.2);
 }
 
 .login-header-btn:hover {
-  background-color: #5a4bcf;
+  background-color: var(--secondary-color);
   transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(108, 92, 231, 0.3);
+  box-shadow: 0 6px 12px rgba(255, 71, 87, 0.3);
 }
 
 .action-label {
@@ -423,7 +423,7 @@
   bottom: -2px;
   right: -4px;
   font-size: 0.65rem;
-  color: #6c5ce7;
+  color: var(--primary-color);
   background: white;
   border-radius: 50%;
 }
