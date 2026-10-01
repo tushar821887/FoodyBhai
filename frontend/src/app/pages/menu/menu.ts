@@ -13,15 +13,20 @@ export class MenuComponent implements OnInit {
   allItems: Recipe[] = [];
   filteredItems: Recipe[] = [];
   categories: {name: string, slug: string}[] = [];
-  
+
   activeCategory: string = 'All';
   searchQuery: string = '';
   vegOnly: boolean = false;
-  
+
   private recipeService = inject(RecipeService);
 
   ngOnInit() {
-    this.categories = [{name: 'All', slug: 'all'}, ...this.recipeService.getCategories()];
+    // Load categories from API then prepend "All"
+    this.recipeService.getCategories().subscribe(cats => {
+      this.categories = [{name: 'All', slug: 'all'}, ...cats];
+    });
+
+    // Load recipes from API
     this.recipeService.getRecipes().subscribe(items => {
       this.allItems = items;
       this.filteredItems = items;
@@ -52,16 +57,10 @@ export class MenuComponent implements OnInit {
 
   applyFilters() {
     this.filteredItems = this.allItems.filter(item => {
-      // Category filter
       const matchCategory = this.activeCategory === 'All' || item.category === this.activeCategory;
-      
-      // Search filter
-      const matchSearch = item.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+      const matchSearch = item.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
                           item.description.toLowerCase().includes(this.searchQuery.toLowerCase());
-      
-      // Veg filter
       const matchVeg = !this.vegOnly || item.isVeg;
-      
       return matchCategory && matchSearch && matchVeg;
     });
   }
