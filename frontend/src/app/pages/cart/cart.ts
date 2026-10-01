@@ -5,6 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 import { CartService, CartItem } from '../../services/cart.service';
 import { OrderService } from '../../services/order.service';
 import { AuthService, Address } from '../../services/auth.service';
+import { UiService } from '../../services/ui.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -38,6 +39,7 @@ export class CartComponent implements OnDestroy {
     public cartService: CartService,
     private orderService: OrderService,
     public authService: AuthService,
+    public uiService: UiService,
     private router: Router
   ) {
     // Optionally fetch full profile if we only have partial user stored

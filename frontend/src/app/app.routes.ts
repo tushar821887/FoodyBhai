@@ -2,8 +2,6 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home').then(m => m.Home) },
-  { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent) },
-  { path: 'register', loadComponent: () => import('./pages/register/register').then(m => m.RegisterComponent) },
   { path: 'recipe/:slug', loadComponent: () => import('./pages/recipe-detail/recipe-detail').then(m => m.RecipeDetail) },
   { path: 'category/:slug', loadComponent: () => import('./pages/category/category').then(m => m.Category) },
   { path: 'menu', loadComponent: () => import('./pages/menu/menu').then(m => m.MenuComponent) },
