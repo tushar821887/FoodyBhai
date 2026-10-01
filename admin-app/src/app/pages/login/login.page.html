@@ -1,0 +1,31 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo">
+      <img src="assets/logo.png" alt="FoodyBhai Admin" onerror="this.src='https://via.placeholder.com/150x50?text=FoodyBhai'"/>
+    </div>
+    <h2>Admin Portal</h2>
+    <p class="subtitle">Sign in to manage orders</p>
+    
+    <div class="alert error" *ngIf="error">{{ error }}</div>
+    
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" [(ngModel)]="email" name="email" required placeholder="admin@foodybhai.com">
+      </div>
+      
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" name="password" required placeholder="••••••••">
+      </div>
+      
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+        {{ isLoading ? 'Signing In...' : 'Sign In' }}
+      </button>
+    </form>
+    
+    <div class="login-footer">
+      <p>Protected Area. Authorized Personnel Only.</p>
+    </div>
+  </div>
+</div>

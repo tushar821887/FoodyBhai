@@ -59,6 +59,11 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
+  logout() {
+    this.api.logout();
+    window.location.href = '/login';
+  }
+
   openAcceptModal(orderId: string) {
     this.selectedOrderId = orderId;
     this.prepTimeInput = 15;
