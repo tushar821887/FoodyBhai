@@ -12,12 +12,12 @@ export class CategoriesService {
     return this.categoryModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  async create(data: any): Promise<CategoryDocument> {
+  async create(data: any): Promise<CategoryDocument | null> {
     const created = new this.categoryModel(data);
     return created.save();
   }
 
-  async update(id: string, data: any): Promise<CategoryDocument> {
+  async update(id: string, data: any): Promise<CategoryDocument | null> {
     return this.categoryModel.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 

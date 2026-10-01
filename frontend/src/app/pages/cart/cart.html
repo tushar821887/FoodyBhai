@@ -59,6 +59,7 @@
                     </div>
                   </div>
                 }
+                }
               </div>
             </div>
           }
@@ -66,9 +67,25 @@
           <!-- STEP 2: DELIVERY DETAILS -->
           @if (currentStep === 2) {
             <div class="cart-card animate-fade-in">
-              <h4 class="cart-card-title"><i class="fa-solid fa-truck"></i> Delivery Details</h4>
+              <h4 class="cart-card-title"><i class="fa-solid" [ngClass]="orderType === 'delivery' ? 'fa-truck' : 'fa-person-walking-luggage'"></i> {{ orderType === 'delivery' ? 'Delivery Details' : 'Pickup Details' }}</h4>
               <div class="checkout-form">
                 <div class="form-row">
+                <div class="form-group mb-4 w-100">
+                  <label style="display: block; margin-bottom: 8px;">Order Type *</label>
+                  <div style="display: flex; gap: 10px;">
+                    <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" [style.border-color]="orderType === 'delivery' ? 'var(--primary-color)' : '#e2e8f0'" [style.background]="orderType === 'delivery' ? '#fff0f2' : 'transparent'">
+                      <input type="radio" name="orderType" value="delivery" [(ngModel)]="orderType" style="display: none;">
+                      <i class="fa-solid fa-motorcycle" style="margin-right: 5px;" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#64748b'"></i> 
+                      <span [style.font-weight]="orderType === 'delivery' ? '600' : 'normal'" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#334155'">Delivery</span>
+                    </label>
+                    <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" [style.border-color]="orderType === 'pickup' ? 'var(--primary-color)' : '#e2e8f0'" [style.background]="orderType === 'pickup' ? '#fff0f2' : 'transparent'">
+                      <input type="radio" name="orderType" value="pickup" [(ngModel)]="orderType" style="display: none;">
+                      <i class="fa-solid fa-person-walking-luggage" style="margin-right: 5px;" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#64748b'"></i> 
+                      <span [style.font-weight]="orderType === 'pickup' ? '600' : 'normal'" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#334155'">Self Pickup</span>
+                    </label>
+                  </div>
+                </div>
+
                   <div class="form-group mb-3 w-100">
                     <label>Full Name *</label>
                     <input type="text" [(ngModel)]="customerName" placeholder="e.g. Rahul Sharma" class="form-control">
@@ -79,7 +96,8 @@
                   </div>
                 </div>
 
-                @if (authService.isLoggedIn()) {
+                @if (orderType === 'delivery') {
+                  @if (authService.isLoggedIn()) {
                   <div class="form-group mb-2">
                     <label>Delivery Address *</label>
                     
@@ -120,6 +138,7 @@
                     </div>
                   </div>
                 }
+                }
               </div>
             </div>
           }
@@ -131,7 +150,7 @@
               
               <div class="review-block mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <h5 class="m-0" style="color: var(--secondary-color);">Delivery Details</h5>
+                  <h5 class="m-0" style="color: var(--secondary-color);">{{ orderType === 'delivery' ? 'Delivery Details' : 'Pickup Details' }}</h5>
                   <button class="btn btn-sm btn-outline-secondary" (click)="setStep(2)" style="padding: 0.25rem 0.75rem; font-size: 0.85rem;">Edit</button>
                 </div>
                 <div class="p-3 bg-light rounded" style="border: 1px solid var(--border-color);">
@@ -203,10 +222,12 @@
                 <span>Item Total</span>
                 <span>₹{{cartService.totalPrice$ | async}}</span>
               </div>
+              @if (orderType === 'delivery') {
               <div class="total-row text-success">
                 <span>Delivery Fee</span>
                 <span>FREE</span>
               </div>
+              }
               @if ((cartService.discount$ | async)! > 0) {
                 <div class="total-row text-success">
                   <span>Discount</span>
@@ -242,8 +263,8 @@
             } @else if (currentStep === 3) {
               <div class="d-flex gap-2 mb-3">
                 <button class="btn btn-secondary flex-1 btn-lg" (click)="prevStep()">Back</button>
-                <button class="btn btn-primary flex-1 btn-lg" style="background: #25D366; border-color: #25D366;" (click)="checkout()">
-                  Checkout <i class="fa-brands fa-whatsapp ms-2"></i>
+                <button class="btn btn-primary flex-1 btn-lg" (click)="checkout()">
+                  Checkout
                 </button>
               </div>
               <small class="text-muted text-center d-block"><i class="fa-solid fa-shield-halved"></i> Secure checkout via FoodyBhai</small>
