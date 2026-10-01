@@ -41,6 +41,7 @@ export class OrdersPage implements OnInit, OnDestroy {
         const pendingOrders = data.filter(o => o.status === 'pending').length;
         if (this.lastPendingCount !== -1 && pendingOrders > this.lastPendingCount) {
           this.playNotificationSound();
+          alert('🔔 New Order Arrived!');
         }
         this.lastPendingCount = pendingOrders;
         
@@ -53,28 +54,27 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   playNotificationSound() {
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioContext();
+      // Use HTML5 Audio for better browser compatibility
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      const playPromise = audio.play();
       
-      const playBeep = (time) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime + time);
-        gain.gain.setValueAtTime(0.5, ctx.currentTime + time);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + 0.3);
-        
-        osc.start(ctx.currentTime + time);
-        osc.stop(ctx.currentTime + time + 0.3);
-      };
-      
-      playBeep(0);
-      playBeep(0.4);
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.warn('Browser autoplay policy blocked the sound. Click anywhere on the dashboard to enable sounds.', error);
+          // Fallback to oscillator if allowed
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          const ctx = new AudioContext();
+          ctx.resume().then(() => {
+            const osc = ctx.createOscillator();
+            osc.connect(ctx.destination);
+            osc.frequency.value = 880;
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+          });
+        });
+      }
     } catch(e) {
-      console.log('Audio not supported', e);
+      console.error('Audio error', e);
     }
   }
 
