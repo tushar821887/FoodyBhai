@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Hero } from '../../components/hero/hero';
 import { MenuCard } from '../../components/menu-card/menu-card';
@@ -6,7 +7,7 @@ import { RecipeService, Recipe } from '../../services/recipe.service';
 
 @Component({
   selector: 'app-home',
-  imports: [Hero, RouterLink, MenuCard],
+  imports: [CommonModule, Hero, RouterLink, MenuCard],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -16,9 +17,13 @@ export class Home implements OnInit {
   private recipeService = inject(RecipeService);
 
   ngOnInit() {
-    this.categories = this.recipeService.getCategories();
+    // Load categories from API
+    this.recipeService.getCategories().subscribe(cats => {
+      this.categories = cats;
+    });
+
+    // Load recipes from API
     this.recipeService.getRecipes().subscribe(items => {
-      // Get a few popular items for home page
       this.popularItems = items.slice(0, 4);
     });
   }
