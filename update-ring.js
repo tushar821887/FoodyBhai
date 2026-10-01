@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+const fs = require('fs');
+
+const path = 'admin-app/src/app/pages/orders/orders.page.ts';
+let content = fs.readFileSync(path, 'utf8');
+
+// Replace everything inside the class definition, or just rewrite it
+// Let's just rewrite the whole file to be safe and clean since there's lots of state.
+
+const newContent = `import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FilterStatusPipe } from '../../pipes/filter-status.pipe';
 import { FormsModule } from '@angular/forms';
@@ -134,3 +142,6 @@ export class OrdersPage implements OnInit, OnDestroy {
     return map[status] || { label: status, color: '#95a5a6' };
   }
 }
+`;
+
+fs.writeFileSync(path, newContent);
