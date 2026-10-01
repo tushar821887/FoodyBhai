@@ -31,15 +31,17 @@
 
   <!-- Main Content -->
   <main class="main-content">
+    <!-- Mobile Sticky Header -->
+    <div class="mobile-universal-header">
+      <img src="assets/logo.png" alt="FoodyBhai" onerror="this.src='https://via.placeholder.com/100x30?text=FoodyBhai'">
+      <button class="logout-btn-mobile" (click)="logout()">Logout</button>
+    </div>
     <!-- DASHBOARD VIEW -->
     <ng-container *ngIf="currentView === 'dashboard'">
     <div class="top-bar">
       <div class="greeting">
         <h2>Welcome, Admin</h2>
         <p>Here's what's happening in your kitchen today.</p>
-      </div>
-      <div class="top-bar-actions">
-        <button class="logout-btn-mobile" (click)="logout()">Logout</button>
       </div>
     </div>
 
@@ -290,7 +292,7 @@
               <div class="icon-circle">🔗</div>
               <div><h3>Map Items to Categories</h3></div>
             </div>
-            <div style="padding: 20px; display: flex; gap: 20px;">
+            <div class="category-mapping-container" style="padding: 20px; display: flex; gap: 20px;">
               
               <!-- Category Selector -->
               <div style="flex: 1;">
