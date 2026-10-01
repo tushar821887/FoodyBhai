@@ -60,7 +60,10 @@
           New Orders
           <span class="badge" *ngIf="(orders | filterStatus:'pending').length">{{ (orders | filterStatus:'pending').length }}</span>
         </button>
-        <button class="tab-btn" [class.active]="currentTab === 'preparing'" (click)="setTab('preparing')">Active</button>
+        <button class="tab-btn" [class.active]="currentTab === 'preparing'" (click)="setTab('preparing')">
+          Active
+          <span class="badge" *ngIf="activeOrdersCount > 0">{{ activeOrdersCount }}</span>
+        </button>
         <button class="tab-btn" [class.active]="currentTab === 'completed'" (click)="setTab('completed')">History</button>
       </div>
 
@@ -78,7 +81,11 @@
             </span>
           </div>
 
-          <div class="order-time">{{ order.createdAt | date:'shortTime' }} • {{ order.createdAt | date:'dd MMM' }}</div>
+          <div class="order-time">{{ order.createdAt | date:'shortTime' }} • {{ order.createdAt | date:'dd MMM' }}
+            <span class="order-type-badge" [class.pickup]="order.orderType === 'pickup'">
+              {{ order.orderType === 'pickup' ? '🚶 Pickup' : '🛵 Delivery' }}
+            </span>
+          </div>
           
           <div class="customer-info">
             <strong>{{ order.deliveryDetails.name }}</strong><br>
@@ -89,6 +96,9 @@
           <div class="order-items">
             <div class="item" *ngFor="let item of order.items">
               <span class="qty">{{ item.quantity }}x</span> {{ item.recipe.name || 'Custom Item' }}
+              <span class="item-price" *ngIf="item.recipe.price">
+                (₹{{ item.recipe.price }} = ₹{{ item.quantity * item.recipe.price }})
+              </span>
             </div>
           </div>
 

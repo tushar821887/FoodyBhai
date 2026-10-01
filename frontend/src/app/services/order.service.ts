@@ -17,6 +17,7 @@ export interface Order {
   items: CartItem[];
   totalAmount: number;
   deliveryDetails: DeliveryDetails;
+  orderType: string;
   status: string;
   createdAt?: string;
 }
@@ -29,7 +30,7 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  placeOrder(orderData: { items: CartItem[], totalAmount: number, deliveryDetails: DeliveryDetails }): Observable<Order> {
+  placeOrder(orderData: { items: CartItem[], totalAmount: number, deliveryDetails: DeliveryDetails, orderType: string }): Observable<Order> {
     return this.http.post<Order>(`${this.API_URL}/orders`, orderData);
   }
 
