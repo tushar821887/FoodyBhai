@@ -253,6 +253,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  getItemCount(categoryName: string): number {
+    return this.recipes.filter(r => r.category === categoryName).length;
+  }
+
   deleteCategory(id: string) {
     if(confirm('Delete this category?')) {
       this.api.deleteCategory(id).subscribe(() => this.fetchCategories());
