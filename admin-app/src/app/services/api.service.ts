@@ -61,15 +61,15 @@ export class ApiService {
   }
   
   getAgents() {
-    return this.http.get<Agent[]>(`${this.apiUrl}/agents`);
+    return this.http.get<Agent[]>(`${this.apiUrl}/agents`, this.getHeaders());
   }
 
   addAgent(name: string, phone: string) {
-    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone });
+    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone }, this.getHeaders());
   }
 
   deleteAgent(id: string) {
-    return this.http.delete(`${this.apiUrl}/agents/${id}`);
+    return this.http.delete(`${this.apiUrl}/agents/${id}`, this.getHeaders());
   }
 
   logout() {
