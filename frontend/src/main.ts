@@ -1,6 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
+import { App } from './app/app';
 
 window.onerror = function(message, source, lineno, colno, error) {
   const errDiv = document.createElement('div');
@@ -17,7 +17,7 @@ window.onerror = function(message, source, lineno, colno, error) {
   document.body.appendChild(errDiv);
 };
 
-bootstrapApplication(AppComponent, appConfig)
+bootstrapApplication(App, appConfig)
   .catch((err) => {
     const errDiv = document.createElement('div');
     errDiv.style.position = 'fixed';

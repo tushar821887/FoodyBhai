@@ -28,17 +28,22 @@ export class MenuComponent implements OnInit {
   ngOnInit() {
     // Load categories from API
     this.recipeService.getCategories().subscribe(cats => {
+      console.log('[DEBUG] Categories loaded:', cats.length);
       this.categories = [{name: 'All', slug: 'all'}, ...cats];
     });
 
     // Load recipes from API
+    console.log('[DEBUG] Fetching recipes...');
     this.recipeService.getRecipes().subscribe({
       next: (items) => {
+        console.log('[DEBUG] Recipes loaded:', items.length);
         this.allItems = items;
         this.filteredItems = items;
         this.isLoading = false;
+        console.log('[DEBUG] isLoading is now false. filteredItems:', this.filteredItems.length);
       },
-      error: () => {
+      error: (err) => {
+        console.error('[DEBUG] Recipes load error:', err);
         this.isLoading = false;
       }
     });
