@@ -1031,3 +1031,161 @@
     padding-bottom: 70px !important; /* Space for mobile nav */
   }
 }
+
+/* Global Mobile Fixes */
+@media (max-width: 768px) {
+  .settings-form-modern {
+    grid-template-columns: 1fr !important;
+  }
+  .form-group {
+    flex-direction: column !important;
+  }
+  .add-agent-card .form-group input,
+  .add-agent-card .form-group button {
+    width: 100% !important;
+  }
+  .agent-list .agent-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+  .agent-list .agent-item button {
+    width: 100%;
+  }
+  
+  /* Sticky Header for Mobile */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    padding: 16px;
+    margin: -16px -16px 20px -16px;
+    z-index: 100;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+/* Additional Mobile Layout Fixes */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100vw;
+  }
+  
+  .main-content {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  /* Make sure flex rows wrap */
+  .category-mapping-container {
+    flex-direction: column !important;
+  }
+  .category-mapping-container > div:nth-child(2) {
+    border-left: none !important;
+    padding-left: 0 !important;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px !important;
+  }
+
+  /* Fix the settings grid */
+  .settings-form-modern {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .form-group {
+    flex-direction: column !important;
+  }
+
+  .recipe-list-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    position: relative;
+  }
+  
+  .recipe-list-item > div:nth-child(3) {
+    text-align: left !important;
+    margin: 10px 0;
+  }
+  
+  .recipe-list-item > div:nth-child(4) {
+    flex-direction: row !important;
+    width: 100%;
+  }
+  
+  .recipe-list-item > div:nth-child(4) button {
+    flex: 1;
+  }
+
+  /* Admin Header Sticky */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    padding: 16px;
+    margin: -16px -16px 20px -16px;
+    z-index: 100;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .greeting h2 {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .greeting p {
+    font-size: 12px;
+  }
+
+  .logout-btn-mobile {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .agent-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .btn-delete {
+    width: 100%;
+    padding: 10px;
+  }
+}
+
+.mobile-universal-header {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-universal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    padding: 12px 16px;
+    margin: -16px -16px 20px -16px;
+    z-index: 1000;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+  
+  .mobile-universal-header img {
+    height: 32px;
+  }
+  
+  /* Remove the old sticky from top-bar so they don't overlap */
+  .top-bar {
+    position: relative !important;
+    top: auto !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 0 20px 0 !important;
+    border-bottom: none !important;
+  }
+}
