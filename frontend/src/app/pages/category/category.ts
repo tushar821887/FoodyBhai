@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
@@ -22,13 +23,13 @@ export class Category implements OnInit {
   private recipeService = inject(RecipeService);
   private meta = inject(Meta);
   private title = inject(Title);
+  private platformId = inject(PLATFORM_ID);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.categorySlug = params.get('slug') || '';
       this.isLoading = true;
 
-      // Load categories from API to resolve slug → name
       this.recipeService.getCategories().subscribe(categories => {
         const category = categories.find(c => c.slug === this.categorySlug);
 
@@ -37,18 +38,15 @@ export class Category implements OnInit {
           this.categoryDesc = category.description;
           this.setSeoTags();
 
-          // Load recipes for this category
-          this.recipeService.getRecipesByCategory(this.categoryName).subscribe(recipes => {
-            this.recipes = recipes;
-            this.isLoading = false;
+          this.recipeService.getRecipesByCategory(this.categoryName).subscribe({
+            next: recipes => { this.recipes = recipes; this.isLoading = false; },
+            error: () => { this.isLoading = false; }
           });
         } else {
-          // Slug not found — try matching by the slug pattern from category name
+          // Fallback: match slug pattern from recipe category
           this.recipeService.getRecipes().subscribe(all => {
-            const slugLower = this.categorySlug.replace(/-/g, ' ');
             const matched = all.filter(r =>
-              r.category.toLowerCase().replace(/[&]/g, 'and').replace(/\s+/g, '-') === this.categorySlug ||
-              r.category.toLowerCase().includes(slugLower)
+              r.category.toLowerCase().replace(/[&]/g, 'and').replace(/\s+/g, '-') === this.categorySlug
             );
             if (matched.length > 0) {
               this.categoryName = matched[0].category;
@@ -64,6 +62,6 @@ export class Category implements OnInit {
 
   private setSeoTags() {
     this.title.setTitle(`${this.categoryName} | Foody Bhai`);
-    this.meta.updateTag({ name: 'description', content: `Order delicious ${this.categoryName} from Foody Bhai, Meerut. ${this.categoryDesc}` });
+    this.meta.updateTag({ name: 'description', content: `Order ${this.categoryName} from Foody Bhai, Meerut. ${this.categoryDesc}` });
   }
 }
