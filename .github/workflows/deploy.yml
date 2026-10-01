@@ -17,21 +17,38 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
           
-      - name: Install dependencies
+      # FRONTEND BUILD & DEPLOY
+      - name: Install Frontend dependencies
         run: npm ci
         working-directory: ./frontend
         
-      - name: Build with Angular
+      - name: Build Frontend
         run: npm run build -- --configuration production
         working-directory: ./frontend
         
-      - name: Deploy to Hostinger via FTP
+      - name: Deploy Frontend to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: frontend/dist/foody-bhai/browser/
+          
+      # ADMIN APP BUILD & DEPLOY
+      - name: Install Admin App dependencies
+        run: npm ci
+        working-directory: ./admin-app
+        
+      - name: Build Admin App
+        run: npm run build -- --configuration production
+        working-directory: ./admin-app
+        
+      - name: Deploy Admin App to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: admin-app/dist/admin-app/
+          server-dir: ./admin/
