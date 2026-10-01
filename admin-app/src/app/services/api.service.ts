@@ -79,6 +79,10 @@ export class ApiService {
   addCategory(name: string, description?: string) {
     return this.http.post<any>(`${this.apiUrl}/categories`, { name, description }, this.getHeaders());
   }
+  updateCategory(id: string, name: string, description?: string) {
+    return this.http.put<any>(`${this.apiUrl}/categories/${id}`, { name, description }, this.getHeaders());
+  }
+
   deleteCategory(id: string) {
     return this.http.delete(`${this.apiUrl}/categories/${id}`, this.getHeaders());
   }

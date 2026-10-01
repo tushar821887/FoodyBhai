@@ -39,6 +39,12 @@ export class OrdersPage implements OnInit, OnDestroy {
   // Mapping
   selectedMappingCategory = '';
   
+  // Edit State
+  editingCategory: any = null;
+  
+  editingRecipe: any = null;
+  showEditRecipeModal = false;
+  
   agents: any[] = [];
   newAgentName = '';
   newAgentPhone = '';
@@ -235,6 +241,18 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  editCategory(cat: any) {
+    this.editingCategory = { ...cat };
+  }
+
+  saveCategoryEdit() {
+    if(!this.editingCategory) return;
+    this.api.updateCategory(this.editingCategory.id, this.editingCategory.name, this.editingCategory.description).subscribe(() => {
+      this.editingCategory = null;
+      this.fetchCategories();
+    });
+  }
+
   deleteCategory(id: string) {
     if(confirm('Delete this category?')) {
       this.api.deleteCategory(id).subscribe(() => this.fetchCategories());
@@ -255,6 +273,20 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true };
       this.fetchRecipes();
       alert('Item added successfully');
+    });
+  }
+
+  editRecipe(recipe: any) {
+    this.editingRecipe = { ...recipe };
+    this.showEditRecipeModal = true;
+  }
+
+  saveRecipeEdit() {
+    if(!this.editingRecipe) return;
+    this.api.updateRecipe(this.editingRecipe.id || this.editingRecipe._id, this.editingRecipe).subscribe(() => {
+      this.showEditRecipeModal = false;
+      this.editingRecipe = null;
+      this.fetchRecipes();
     });
   }
 

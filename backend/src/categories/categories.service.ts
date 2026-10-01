@@ -17,6 +17,10 @@ export class CategoriesService {
     return created.save();
   }
 
+  async update(id: string, data: any): Promise<CategoryDocument> {
+    return this.categoryModel.findByIdAndUpdate(id, data, { new: true }).exec();
+  }
+
   async remove(id: string): Promise<any> {
     return this.categoryModel.findByIdAndDelete(id).exec();
   }

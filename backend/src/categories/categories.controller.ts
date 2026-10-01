@@ -1,5 +1,5 @@
 
-import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -16,6 +16,12 @@ export class CategoriesController {
   @Post()
   async create(@Body() data: any) {
     return this.categoriesService.create(data);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() data: any) {
+    return this.categoriesService.update(id, data);
   }
 
   @UseGuards(JwtAuthGuard)
