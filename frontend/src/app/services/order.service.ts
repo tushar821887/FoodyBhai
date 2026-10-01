@@ -31,7 +31,7 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  placeOrder(orderData: { items: CartItem[], totalAmount: number, deliveryDetails: DeliveryDetails, orderType: string }): Observable<Order> {
+  placeOrder(orderData: { items: CartItem[], totalAmount: number, deliveryDetails: DeliveryDetails, orderType: string, paymentMethod?: string }): Observable<Order> {
     return this.http.post<Order>(`${this.API_URL}/orders`, orderData);
   }
 
