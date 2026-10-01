@@ -2,6 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
 import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-orders',
@@ -18,7 +20,9 @@ export class OrdersComponent implements OnInit {
   constructor(
     private orderService: OrderService,
     public authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    private cartService: CartService
   ) {}
 
   ngOnInit(): void {
@@ -28,6 +32,19 @@ export class OrdersComponent implements OnInit {
       this.isLoading = false;
       this.errorMessage = 'Please login to view your order history.';
     }
+  }
+
+  reorder(order: Order) {
+    this.cartService.clearCart();
+    order.items.forEach((item: any) => {
+      if (item.recipe) {
+        this.cartService.addToCart(item.recipe);
+        if (item.quantity > 1) {
+          this.cartService.updateQuantity(item.recipe.id, item.quantity);
+        }
+      }
+    });
+    this.router.navigate(['/cart']);
   }
 
   loadOrders() {
