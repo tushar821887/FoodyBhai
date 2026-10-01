@@ -1,5 +1,5 @@
 <div class="page-header">
-  <div class="container text-center animate-fade-in">
+  <div class="container text-center ">
     <h1 class="page-title">Our <span>Menu</span></h1>
     <p class="page-subtitle">Explore our delicious, freshly prepared meals.</p>
   </div>
@@ -7,7 +7,7 @@
 
 <section class="section">
   <div class="container">
-    <div class="menu-controls animate-fade-in">
+    <div class="menu-controls ">
       <div class="search-bar">
         <i class="fa-solid fa-search"></i>
         <input type="text" placeholder="Search the menu..." [value]="searchQuery" (input)="onSearch($event)">
@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <div class="category-tabs animate-fade-in">
+    <div class="category-tabs ">
       @for (category of categories; track category.slug) {
         <button 
           class="category-tab" 
@@ -35,20 +35,13 @@
 
     <div class="menu-grid">
       @if (isLoading) {
-        <!-- Skeleton loading cards -->
-        @for (i of skeletonItems; track i) {
-          <div class="menu-card-skeleton">
-            <div class="skeleton-img"></div>
-            <div class="skeleton-body">
-              <div class="skeleton-line wide"></div>
-              <div class="skeleton-line short"></div>
-              <div class="skeleton-footer">
-                <div class="skeleton-line tag"></div>
-                <div class="skeleton-btn"></div>
-              </div>
-            </div>
-          </div>
-        }
+        <!-- Skeleton loading cards (Hardcoded to avoid primitive track crash) -->
+        <div class="menu-card-skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line wide"></div><div class="skeleton-line short"></div><div class="skeleton-footer"><div class="skeleton-line tag"></div><div class="skeleton-btn"></div></div></div></div>
+        <div class="menu-card-skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line wide"></div><div class="skeleton-line short"></div><div class="skeleton-footer"><div class="skeleton-line tag"></div><div class="skeleton-btn"></div></div></div></div>
+        <div class="menu-card-skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line wide"></div><div class="skeleton-line short"></div><div class="skeleton-footer"><div class="skeleton-line tag"></div><div class="skeleton-btn"></div></div></div></div>
+        <div class="menu-card-skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line wide"></div><div class="skeleton-line short"></div><div class="skeleton-footer"><div class="skeleton-line tag"></div><div class="skeleton-btn"></div></div></div></div>
+        <div class="menu-card-skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line wide"></div><div class="skeleton-line short"></div><div class="skeleton-footer"><div class="skeleton-line tag"></div><div class="skeleton-btn"></div></div></div></div>
+        <div class="menu-card-skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line wide"></div><div class="skeleton-line short"></div><div class="skeleton-footer"><div class="skeleton-line tag"></div><div class="skeleton-btn"></div></div></div></div>
       } @else if (filteredItems.length > 0) {
         @for (item of filteredItems; track item.id || item._id) {
           <app-menu-card [item]="item"></app-menu-card>
