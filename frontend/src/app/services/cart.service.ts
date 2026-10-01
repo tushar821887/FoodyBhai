@@ -23,7 +23,13 @@ export class CartService {
   );
 
   public totalPrice$ = this.items$.pipe(
-    map(items => items.reduce((total, item) => total + ((item.recipe.price || 0) * item.quantity), 0))
+    map(items => {
+      if (!items || !Array.isArray(items)) return 0;
+      return items.reduce((total, item) => {
+        if (!item || !item.recipe) return total;
+        return total + ((item.recipe.price || 0) * item.quantity);
+      }, 0);
+    })
   );
 
   private couponSubject = new BehaviorSubject<string>('');
@@ -123,14 +129,15 @@ export class CartService {
   getQuantity(recipeId: number): Observable<number> {
     return this.items$.pipe(
       map(items => {
-        const item = items.find(i => i.recipe.id === recipeId);
+        if (!items || !Array.isArray(items)) return 0;
+        const item = items.find(i => i && i.recipe && i.recipe.id === recipeId);
         return item ? item.quantity : 0;
       })
     );
   }
 
   removeFromCart(recipeId: number) {
-    const currentItems = this.itemsSubject.value.filter(i => i.recipe.id !== recipeId);
+    const currentItems = this.itemsSubject.value.filter(i => i && i.recipe && i.recipe.id !== recipeId);
     this.syncCart(currentItems);
   }
 
@@ -140,7 +147,7 @@ export class CartService {
       return;
     }
     const currentItems = [...this.itemsSubject.value];
-    const existingIndex = currentItems.findIndex(i => i.recipe.id === recipeId);
+    const existingIndex = currentItems.findIndex(i => i && i.recipe && i.recipe.id === recipeId);
     if (existingIndex >= 0) {
       currentItems[existingIndex] = {
         ...currentItems[existingIndex],
@@ -151,7 +158,12 @@ export class CartService {
   }
 
   getCurrentTotal(): number {
-    return this.itemsSubject.value.reduce((total, item) => total + ((item.recipe.price || 0) * item.quantity), 0);
+    const items = this.itemsSubject.value;
+    if (!items || !Array.isArray(items)) return 0;
+    return items.reduce((total, item) => {
+      if (!item || !item.recipe) return total;
+      return total + ((item.recipe.price || 0) * item.quantity);
+    }, 0);
   }
 
   applyCoupon(code: string): boolean {

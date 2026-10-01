@@ -12,7 +12,7 @@
   <div class="container">
     <div class="menu-grid">
       @if (recipes.length > 0) {
-        @for (item of recipes; track item.id) {
+        @for (item of recipes; track item.id || item._id) {
           <app-menu-card [item]="item"></app-menu-card>
         }
       } @else {

@@ -50,7 +50,7 @@
           </div>
         }
       } @else if (filteredItems.length > 0) {
-        @for (item of filteredItems; track item.id) {
+        @for (item of filteredItems; track item.id || item._id) {
           <app-menu-card [item]="item"></app-menu-card>
         }
       } @else {
