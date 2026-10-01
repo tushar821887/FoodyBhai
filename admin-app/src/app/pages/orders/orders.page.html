@@ -95,7 +95,7 @@
 
           <div class="order-items">
             <div class="item" *ngFor="let item of order.items">
-              <span class="qty">{{ item.quantity }}x</span> {{ item.recipe.name || 'Custom Item' }}
+              <span class="qty">{{ item.quantity }}x</span> {{ item.recipe.title || 'Custom Item' }}
               <span class="item-price" *ngIf="item.recipe.price">
                 (₹{{ item.recipe.price }} = ₹{{ item.quantity * item.recipe.price }})
               </span>
