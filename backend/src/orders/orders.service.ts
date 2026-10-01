@@ -28,6 +28,9 @@ export class OrdersService {
 
   async updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Promise<OrderDocument> {
     const updateData: any = { status };
+    if (status === 'delivered') {
+      updateData.paymentStatus = 'paid';
+    }
     if (preparationTime !== undefined) {
       updateData.preparationTime = preparationTime;
     }
