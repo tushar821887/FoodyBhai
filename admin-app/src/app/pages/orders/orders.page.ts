@@ -179,6 +179,17 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   
+  onFileSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.qrImageUrl = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   saveSettings() {
     localStorage.setItem('foodybhai_upi', this.upiId);
     localStorage.setItem('foodybhai_qr', this.qrImageUrl);

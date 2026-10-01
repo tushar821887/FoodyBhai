@@ -172,29 +172,59 @@
 
     <!-- SETTINGS VIEW -->
     <ng-container *ngIf="currentView === 'settings'">
-      <div class="agents-container">
-        <h2>Store Settings</h2>
+      <div class="settings-container animate-fade-in">
+        <div class="settings-header-banner">
+          <h2>Store Settings</h2>
+          <p>Configure your payment gateway and store preferences.</p>
+        </div>
         
-        <div class="add-agent-card">
-          <h3>Payment Settings</h3>
-          <p style="color: #64748b; margin-bottom: 20px; font-size: 14px;">Configure the QR code and UPI ID shown to delivery agents when collecting online payments.</p>
-          
-          <div class="settings-form" style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="settings-card">
+          <div class="card-header-styled">
+            <div class="icon-circle">💰</div>
             <div>
-              <label style="display: block; font-weight: 600; margin-bottom: 5px;">UPI ID</label>
-              <input type="text" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;" [(ngModel)]="upiId" placeholder="e.g. yourname@upi">
+              <h3>Payment Configuration</h3>
+              <p>This QR code will be shown to delivery agents for collecting online payments.</p>
+            </div>
+          </div>
+          
+          <div class="settings-form-modern">
+            <div class="form-group-modern">
+              <label>Business UPI ID</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🏦</span>
+                <input type="text" [(ngModel)]="upiId" placeholder="e.g. foodybhai@okicici">
+              </div>
             </div>
             
-            <div>
-              <label style="display: block; font-weight: 600; margin-bottom: 5px;">QR Code Image URL</label>
-              <input type="text" style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;" [(ngModel)]="qrImageUrl" placeholder="https://link-to-your-qr.jpg">
+            <div class="form-group-modern">
+              <label>Payment QR Code Image</label>
+              <div class="qr-upload-area">
+                
+                <!-- Preview State -->
+                <div class="qr-preview-card" *ngIf="qrImageUrl">
+                  <img [src]="qrImageUrl" alt="QR Code Preview">
+                  <div class="qr-actions">
+                    <button class="btn-change-qr" (click)="fileInput.click()">Change Image</button>
+                    <button class="btn-remove-qr" (click)="qrImageUrl = ''">Remove</button>
+                  </div>
+                </div>
+                
+                <!-- Upload State -->
+                <div class="upload-dropzone" *ngIf="!qrImageUrl" (click)="fileInput.click()">
+                  <div class="upload-icon">📸</div>
+                  <h4>Upload QR Code</h4>
+                  <p>Click to browse files (PNG, JPG)</p>
+                </div>
+                
+                <input #fileInput type="file" accept="image/*" style="display: none;" (change)="onFileSelected($event)">
+              </div>
             </div>
 
-            <div *ngIf="qrImageUrl" style="margin-top: 10px; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; width: fit-content;">
-              <img [src]="qrImageUrl" alt="QR Code Preview" style="width: 150px; height: 150px; object-fit: contain;">
+            <div class="settings-footer">
+              <button class="btn-save-modern" (click)="saveSettings()">
+                <span class="save-icon">💾</span> Save Changes
+              </button>
             </div>
-
-            <button class="btn-primary" style="padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; width: 150px;" (click)="saveSettings()">Save Settings</button>
           </div>
         </div>
       </div>
