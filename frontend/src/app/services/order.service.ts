@@ -19,6 +19,7 @@ export interface Order {
   deliveryDetails: DeliveryDetails;
   orderType: string;
   status: string;
+  deliveryAgent?: { name: string; phone: string };
   createdAt?: string;
 }
 

@@ -51,6 +51,9 @@ export class Order {
   paymentStatus: string;
   @Prop({ required: true, default: 'delivery', enum: ['delivery', 'pickup'] })
   orderType: string;
+  @Prop({ type: Object, required: false })
+  deliveryAgent?: { name: string; phone: string };
+
 
 }
 

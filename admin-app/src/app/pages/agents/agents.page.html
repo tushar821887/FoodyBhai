@@ -1,0 +1,23 @@
+<div class="agents-container">
+  <h2>Delivery Agents</h2>
+  
+  <div class="add-agent-card">
+    <h3>Add New Agent</h3>
+    <div class="form-group">
+      <input type="text" placeholder="Agent Name" [(ngModel)]="newName">
+      <input type="text" placeholder="Phone Number" [(ngModel)]="newPhone">
+      <button (click)="addAgent()" [disabled]="isAdding">Add Agent</button>
+    </div>
+  </div>
+
+  <div class="agents-list">
+    <div class="agent-card" *ngFor="let agent of agents">
+      <div class="agent-info">
+        <h4>{{ agent.name }}</h4>
+        <p>📞 {{ agent.phone }}</p>
+      </div>
+      <button class="btn-delete" (click)="deleteAgent(agent.id)">Delete</button>
+    </div>
+    <div *ngIf="agents.length === 0" class="empty-state">No agents added yet.</div>
+  </div>
+</div>

@@ -34,8 +34,9 @@ export class OrdersController {
   async updateOrderStatus(
     @Param('id') id: string,
     @Body('status') status: string,
-    @Body('preparationTime') preparationTime?: number
+    @Body('preparationTime') preparationTime?: number,
+    @Body('deliveryAgent') deliveryAgent?: { name: string; phone: string }
   ) {
-    return this.ordersService.updateOrderStatus(id, status, preparationTime);
+    return this.ordersService.updateOrderStatus(id, status, preparationTime, deliveryAgent);
   }
 }

@@ -3,6 +3,12 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 
+export interface Agent {
+  id: string;
+  name: string;
+  phone: string;
+}
+
 export interface Order {
   _id: string;
   userId: { name: string; phone: string; email: string };
@@ -52,6 +58,18 @@ export class ApiService {
     );
   }
   
+  getAgents() {
+    return this.http.get<Agent[]>(`${this.apiUrl}/agents`);
+  }
+
+  addAgent(name: string, phone: string) {
+    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone });
+  }
+
+  deleteAgent(id: string) {
+    return this.http.delete(`${this.apiUrl}/agents/${id}`);
+  }
+
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);
@@ -63,7 +81,7 @@ export class ApiService {
     return this.http.get<Order[]>(`${this.apiUrl}/orders/admin/all`, this.getHeaders());
   }
 
-  updateOrderStatus(orderId: string, status: string, preparationTime?: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/status`, { status, preparationTime }, this.getHeaders());
+  updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/status`, { status, preparationTime, deliveryAgent }, this.getHeaders());
   }
 }

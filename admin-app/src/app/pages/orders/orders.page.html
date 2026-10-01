@@ -5,17 +5,17 @@
       <img src="assets/logo.png" alt="FoodyBhai" onerror="this.src='https://via.placeholder.com/150x50?text=FoodyBhai'">
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item active">
+      <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
         <i class="icon">📊</i>
         <span>Dashboard</span>
+      </a>
+      <a class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
+        <i class="icon">🛵</i>
+        <span>Delivery Agents</span>
       </a>
       <a class="nav-item">
         <i class="icon">🍽️</i>
         <span>Menu</span>
-      </a>
-      <a class="nav-item">
-        <i class="icon">⚙️</i>
-        <span>Settings</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -27,6 +27,8 @@
 
   <!-- Main Content -->
   <main class="main-content">
+    <!-- DASHBOARD VIEW -->
+    <ng-container *ngIf="currentView === 'dashboard'">
     <div class="top-bar">
       <div class="greeting">
         <h2>Welcome, Admin</h2>
@@ -130,6 +132,35 @@
         </div>
       </div>
     </div>
+  </ng-container>
+
+    <!-- AGENTS VIEW -->
+    <ng-container *ngIf="currentView === 'agents'">
+      <div class="agents-container">
+        <h2>Delivery Agents</h2>
+        
+        <div class="add-agent-card">
+          <h3>Add New Agent</h3>
+          <div class="form-group">
+            <input type="text" placeholder="Agent Name" [(ngModel)]="newAgentName">
+            <input type="text" placeholder="Phone Number" [(ngModel)]="newAgentPhone">
+            <button (click)="addAgent()" [disabled]="isAddingAgent">Add Agent</button>
+          </div>
+        </div>
+
+        <div class="agents-list">
+          <div class="agent-card" *ngFor="let agent of agents">
+            <div class="agent-info">
+              <h4>{{ agent.name }}</h4>
+              <p>📞 {{ agent.phone }}</p>
+            </div>
+            <button class="btn-delete" (click)="deleteAgent(agent.id)">Delete</button>
+          </div>
+          <div *ngIf="agents.length === 0" class="empty-state">No agents added yet.</div>
+        </div>
+      </div>
+    </ng-container>
+
   </main>
 </div>
 
@@ -145,6 +176,23 @@
     <div class="modal-actions">
       <button class="btn btn-light" (click)="showPrepModal = false">Cancel</button>
       <button class="btn btn-primary" (click)="acceptOrder()">Confirm Accept</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Agent Modal -->
+<div class="modal-overlay" *ngIf="showAssignModal">
+  <div class="modal-content">
+    <h3>Assign Delivery Agent</h3>
+    <div class="agents-selection-list">
+      <div class="agent-select-item" *ngFor="let agent of agents" (click)="assignAgent(agent)" [class.selected]="selectedAgent?.id === agent.id">
+        <strong>{{ agent.name }}</strong> ({{ agent.phone }})
+      </div>
+      <div *ngIf="agents.length === 0" class="empty-state">Please add Delivery Agents from the sidebar first.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="showAssignModal = false">Cancel</button>
+      <button class="btn-primary" [disabled]="!selectedAgent" (click)="confirmOutForDelivery()">Assign & Dispatch</button>
     </div>
   </div>
 </div>

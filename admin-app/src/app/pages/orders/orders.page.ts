@@ -15,6 +15,14 @@ export class OrdersPage implements OnInit, OnDestroy {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   currentTab: string = 'pending';
+  currentView: 'dashboard' | 'agents' = 'dashboard';
+  agents: any[] = [];
+  newAgentName = '';
+  newAgentPhone = '';
+  isAddingAgent = false;
+  showAssignModal = false;
+  selectedAgent: any = null;
+  orderToAssign: string | null = null;
   
   prepTimeInput: number = 15;
   selectedOrderId: string | null = null;
@@ -95,6 +103,63 @@ export class OrdersPage implements OnInit, OnDestroy {
     } else {
       this.filteredOrders = this.orders.filter(o => ['delivered', 'cancelled', 'rejected'].includes(o.status));
     }
+  }
+
+  
+  setView(view: 'dashboard' | 'agents') {
+    this.currentView = view;
+    if (view === 'agents') {
+      this.fetchAgents();
+    }
+  }
+
+  fetchAgents() {
+    this.api.getAgents().subscribe(data => this.agents = data);
+  }
+
+  addAgent() {
+    if(!this.newAgentName || !this.newAgentPhone) return;
+    this.isAddingAgent = true;
+    this.api.addAgent(this.newAgentName, this.newAgentPhone).subscribe({
+      next: () => {
+        this.newAgentName = '';
+        this.newAgentPhone = '';
+        this.isAddingAgent = false;
+        this.fetchAgents();
+      },
+      error: () => this.isAddingAgent = false
+    });
+  }
+
+  deleteAgent(id: string) {
+    if(confirm('Delete this agent?')) {
+      this.api.deleteAgent(id).subscribe(() => this.fetchAgents());
+    }
+  }
+
+  
+  openAssignAgentModal(orderId: string) {
+    this.orderToAssign = orderId;
+    this.selectedAgent = null;
+    this.showAssignModal = true;
+    if (this.agents.length === 0) {
+      this.fetchAgents();
+    }
+  }
+
+  assignAgent(agent: any) {
+    this.selectedAgent = agent;
+  }
+
+  confirmOutForDelivery() {
+    if (!this.orderToAssign || !this.selectedAgent) return;
+    this.api.updateOrderStatus(this.orderToAssign, 'out_for_delivery', undefined, {
+      name: this.selectedAgent.name,
+      phone: this.selectedAgent.phone
+    }).subscribe(() => {
+      this.showAssignModal = false;
+      this.fetchOrders();
+    });
   }
 
   logout() {
