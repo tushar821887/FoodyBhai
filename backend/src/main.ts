@@ -24,6 +24,7 @@ async function bootstrap() {
         'https://api.foodybhai.in',
         'https://admin.foodybhai.in',
         'http://localhost',
+        'https://localhost',
         'capacitor://localhost',
         'ionic://localhost'
       ];

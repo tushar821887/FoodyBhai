@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Foody Bhai',
   webDir: 'dist/foody-bhai/browser',
   server: {
-    androidScheme: 'https'
+    cleartext: true,
+    androidScheme: 'http',
+    hostname: 'localhost'
   }
 };
 
