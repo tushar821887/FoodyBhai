@@ -102,6 +102,18 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/recipes/${id}`, this.getHeaders());
   }
 
+  
+  // Users
+  getUsers() {
+    return this.http.get<any[]>(`${this.apiUrl}/users`, this.getHeaders());
+  }
+  updateUser(id: string, data: any) {
+    return this.http.put<any>(`${this.apiUrl}/users/${id}`, data, this.getHeaders());
+  }
+  deleteUser(id: string) {
+    return this.http.delete(`${this.apiUrl}/users/${id}`, this.getHeaders());
+  }
+
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);

@@ -57,6 +57,24 @@ export class UsersService {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
 
+  
+  async findAll(): Promise<UserDocument[]> {
+    return this.userModel.find().select('-passwordHash').exec();
+  }
+
+  async updateUser(id: string, updateData: any): Promise<UserDocument | null> {
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(12);
+      updateData.passwordHash = await bcrypt.hash(updateData.password, salt);
+      delete updateData.password;
+    }
+    return this.userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-passwordHash');
+  }
+
+  async deleteUser(id: string): Promise<any> {
+    return this.userModel.findByIdAndDelete(id);
+  }
+
   async addAddress(userId: string, addressData: { label: string, fullAddress: string }): Promise<UserDocument | null> {
     return this.userModel.findByIdAndUpdate(
       userId,

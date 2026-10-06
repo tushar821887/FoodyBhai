@@ -15,7 +15,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'agents' | 'settings' | 'menu' = 'dashboard';
+  currentView: 'dashboard' | 'agents' | 'settings' | 'menu' | 'users' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   
   categories: any[] = [];
@@ -45,6 +45,9 @@ export class OrdersPage implements OnInit, OnDestroy {
   editingRecipe: any = null;
   showEditRecipeModal = false;
   
+  users: any[] = [];
+  editingUser: any = null;
+  showEditUserModal = false;
   agents: any[] = [];
   newAgentName = '';
   newAgentPhone = '';
@@ -145,7 +148,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   
-  setView(view: 'dashboard' | 'agents' | 'settings' | 'menu') {
+  setView(view: 'dashboard' | 'agents' | 'settings' | 'menu' | 'users') {
     this.currentView = view;
     if (view === 'menu') {
       this.fetchCategories();
@@ -159,6 +162,42 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
     if (view === 'agents') {
       this.fetchAgents();
+    }
+    if (view === 'users') {
+      this.fetchUsers();
+    }
+  }
+
+  fetchUsers() {
+    this.api.getUsers().subscribe(data => this.users = data);
+  }
+
+  editUser(user: any) {
+    this.editingUser = { ...user, password: '' };
+    this.showEditUserModal = true;
+  }
+
+  saveUserEdit() {
+    if(!this.editingUser) return;
+    const updateData: any = {
+      name: this.editingUser.name,
+      email: this.editingUser.email,
+      phone: this.editingUser.phone
+    };
+    if (this.editingUser.password) {
+      updateData.password = this.editingUser.password;
+    }
+    
+    this.api.updateUser(this.editingUser._id || this.editingUser.id, updateData).subscribe(() => {
+      this.showEditUserModal = false;
+      this.editingUser = null;
+      this.fetchUsers();
+    });
+  }
+
+  deleteUser(id: string) {
+    if(confirm('Delete this user?')) {
+      this.api.deleteUser(id).subscribe(() => this.fetchUsers());
     }
   }
 
