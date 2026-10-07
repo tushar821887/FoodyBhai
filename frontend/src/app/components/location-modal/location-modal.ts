@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { LocationService } from '../../services/location.service';
+import { Geolocation } from '@capacitor/geolocation';
 
 @Component({
   selector: 'app-location-modal',
@@ -94,6 +95,49 @@ export class LocationModalComponent implements OnInit, OnDestroy {
     this.searchSubject.next(query);
   }
 
+
+  async useCurrentLocation() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.isLoading = true;
+      this.errorMsg = '';
+      
+      try {
+        // Use Capacitor Geolocation which works on both Web and Native
+        const permissions = await Geolocation.checkPermissions();
+        if (permissions.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            this.isLoading = false;
+            this.errorMsg = 'Location permission denied. Please enable it in your settings.';
+            return;
+          }
+        }
+        
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        this.http.get<any>(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`).subscribe({
+          next: (data) => {
+            this.isLoading = false;
+            if (data && data.display_name) {
+              const name = data.name || data.address?.suburb || data.address?.neighbourhood || data.display_name.split(',')[0];
+              this.selectLocation({ ...data, name: name });
+            } else {
+              this.errorMsg = 'Could not determine location from coordinates.';
+            }
+          },
+          error: () => {
+            this.isLoading = false;
+            this.errorMsg = 'Failed to fetch location data.';
+          }
+        });
+      } catch (error: any) {
+        this.isLoading = false;
+        this.errorMsg = error.message || 'Failed to get your current location. Please try searching instead.';
+      }
+    }
+  }
 
   selectLocation(result: any) {
     const address = result.address || {};

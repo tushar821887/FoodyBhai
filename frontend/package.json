@@ -28,6 +28,7 @@
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/dialog": "^8.0.1",
+    "@capacitor/geolocation": "^8.2.3",
     "express": "^5.1.0",
     "leaflet": "^1.9.4",
     "rxjs": "~7.8.0",

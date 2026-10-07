@@ -162,3 +162,27 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.btn-current-location {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  background-color: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-current-location:hover {
+  background-color: #fef3c7;
+}
+.btn-current-location:active {
+  transform: scale(0.98);
+}
