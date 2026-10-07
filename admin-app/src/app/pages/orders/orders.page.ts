@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FilterStatusPipe } from '../../pipes/filter-status.pipe';
 import { FormsModule } from '@angular/forms';
@@ -47,6 +47,8 @@ export class OrdersPage implements OnInit, OnDestroy {
   
   users: any[] = [];
   editingUser: any = null;
+  showAddUserModal = false;
+  newUser: any = { name: '', email: '', password: '', phone: '', role: 'user' };
   showEditUserModal = false;
   agents: any[] = [];
   newAgentName = '';
@@ -74,7 +76,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   private ringAudio: HTMLAudioElement | null = null;
   private isRinging = false;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     try {
@@ -169,7 +171,25 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   fetchUsers() {
-    this.api.getUsers().subscribe(data => this.users = data);
+    this.api.getUsers().subscribe(data => {
+      this.users = data;
+      this.cdr.detectChanges();
+    });
+  }
+
+  addUser() {
+    if(!this.newUser.name || !this.newUser.email || !this.newUser.password) {
+      alert('Name, Email, and Password are required');
+      return;
+    }
+    this.api.createUser(this.newUser).subscribe({
+      next: () => {
+        this.showAddUserModal = false;
+        this.newUser = { name: '', email: '', password: '', phone: '', role: 'user' };
+        this.fetchUsers();
+      },
+      error: (err) => alert(err.error?.message || 'Failed to create user')
+    });
   }
 
   editUser(user: any) {
@@ -182,7 +202,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     const updateData: any = {
       name: this.editingUser.name,
       email: this.editingUser.email,
-      phone: this.editingUser.phone
+      phone: this.editingUser.phone,
+      role: this.editingUser.role
     };
     if (this.editingUser.password) {
       updateData.password = this.editingUser.password;

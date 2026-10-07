@@ -17,6 +17,7 @@ export class UsersService {
     email: string,
     password: string,
     phone?: string,
+    role?: string
   ): Promise<UserDocument> {
     // Check for duplicate email
     const existingUser = await this.userModel.findOne({

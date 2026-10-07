@@ -104,8 +104,13 @@ export class ApiService {
 
   
   // Users
+
   getUsers() {
     return this.http.get<any[]>(`${this.apiUrl}/users`, this.getHeaders());
+  }
+  
+  createUser(data: any) {
+    return this.http.post<any>(`${this.apiUrl}/users`, data, this.getHeaders());
   }
   updateUser(id: string, data: any) {
     return this.http.put<any>(`${this.apiUrl}/users/${id}`, data, this.getHeaders());

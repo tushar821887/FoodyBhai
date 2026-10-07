@@ -349,9 +349,14 @@
         </div>
         
         <div class="settings-card">
-          <div class="card-header-styled">
-            <div class="icon-circle" style="background: #ede9fe; color: #8b5cf6;">👥</div>
-            <div><h3>Registered Users</h3></div>
+          <div class="card-header-styled" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div class="icon-circle" style="background: #ede9fe; color: #8b5cf6;">👥</div>
+              <div><h3>Registered Users</h3></div>
+            </div>
+            <button class="btn btn-primary" (click)="showAddUserModal = true">
+              <i class="icon">➕</i> Add User
+            </button>
           </div>
           <div style="padding: 20px;">
             <div *ngFor="let user of users" class="recipe-list-item" style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0; gap: 15px;">
@@ -361,6 +366,9 @@
               <div style="flex: 1; min-width: 0;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <strong style="font-size: 16px;">{{ user.name }}</strong>
+                  <span class="status-badge" [style.background]="user.role === 'admin' ? '#ede9fe' : '#e0f2fe'" [style.color]="user.role === 'admin' ? '#8b5cf6' : '#0ea5e9'">
+                    {{ user.role || 'user' }}
+                  </span>
                 </div>
                 <div style="font-size: 13px; color: #64748b; margin-top: 5px;">📧 {{ user.email }}</div>
                 <div style="font-size: 13px; color: #64748b; margin-top: 2px;">📞 {{ user.phone || 'No phone' }}</div>
@@ -455,6 +463,44 @@
   </div>
 </div>
 
+  <!-- Add User Modal -->
+  <div class="modal-overlay" *ngIf="showAddUserModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>Add New User</h2>
+        <button class="close-btn" (click)="showAddUserModal = false">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" [(ngModel)]="newUser.name" placeholder="User Full Name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="newUser.email" placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="newUser.password" placeholder="Min 8 chars, 1 Uppercase, 1 Number">
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" [(ngModel)]="newUser.phone" placeholder="Phone Number">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select [(ngModel)]="newUser.role" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+            <option value="user">Customer (user)</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showAddUserModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="addUser()">Create User</button>
+      </div>
+    </div>
+  </div>
 <!-- Assign Agent Modal -->
 <div class="modal-overlay" *ngIf="showAssignModal">
   <div class="modal-content assign-modal">

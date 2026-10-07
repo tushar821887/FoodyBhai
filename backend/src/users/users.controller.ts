@@ -12,6 +12,18 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+
+  @Post()
+  async createUser(@Body() createData: any) {
+    return this.usersService.createUser(
+      createData.name,
+      createData.email,
+      createData.password,
+      createData.phone,
+      createData.role
+    );
+  }
+
   @Put(':id')
   async updateUser(@Param('id') id: string, @Body() updateData: any) {
     return this.usersService.updateUser(id, updateData);
