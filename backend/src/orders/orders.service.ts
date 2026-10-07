@@ -49,4 +49,28 @@ export class OrdersService {
     }
     return order;
   }
+
+  async rateOrder(orderId: string, rating: number, review?: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findByIdAndUpdate(
+      orderId,
+      { $set: { rating, review } },
+      { new: true }
+    );
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
+  }
+  async getRestaurantStats() {
+    const ordersWithRatings = await this.orderModel.find({ rating: { $exists: true, $ne: null } }).exec();
+    const totalRatings = ordersWithRatings.length;
+    const avgRating = totalRatings > 0 
+      ? (ordersWithRatings.reduce((sum, order) => sum + (order.rating || 0), 0) / totalRatings).toFixed(1)
+      : 0;
+      
+    return {
+      averageRating: parseFloat(avgRating as string),
+      totalReviews: totalRatings
+    };
+  }
 }

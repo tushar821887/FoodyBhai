@@ -20,7 +20,18 @@ export class OrdersController {
     return this.ordersService.getUserOrders(userId);
   }
 
+  @Get('restaurant/stats')
+  async getRestaurantStats() {
+    return this.ordersService.getRestaurantStats();
+  }
+
   // --- Admin Endpoints ---
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/rate')
+  async rateOrder(@Param('id') id: string, @Body('rating') rating: number, @Body('review') review: string) {
+    return this.ordersService.rateOrder(id, rating, review);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('admin/all')

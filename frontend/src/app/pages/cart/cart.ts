@@ -277,8 +277,18 @@ export class CartComponent implements OnDestroy {
     this.cartService.items$.subscribe(i => items = i).unsubscribe();
 
     this.isPlacingOrder = true;
+    let itemTotal = 0, discount = 0, gst = 0, platformFee = 0;
+    this.cartService.totalPrice$.subscribe(v => itemTotal = v).unsubscribe();
+    this.cartService.discount$.subscribe(v => discount = v).unsubscribe();
+    this.cartService.gst$.subscribe(v => gst = v).unsubscribe();
+    this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
+
     this.orderService.placeOrder({
       items,
+      itemTotal,
+      discount,
+      gst,
+      platformFee,
       totalAmount: this.currentTotal,
       orderType: this.orderType,
       paymentMethod: this.paymentMethod,

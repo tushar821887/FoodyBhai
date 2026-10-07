@@ -15,12 +15,18 @@ export interface Order {
   id?: string;
   userId?: string;
   items: CartItem[];
+  itemTotal?: number;
+  discount?: number;
+  gst?: number;
+  platformFee?: number;
   totalAmount: number;
   deliveryDetails: DeliveryDetails;
   orderType: string;
   status: string;
   deliveryAgent?: { name: string; phone: string };
   createdAt?: string;
+  rating?: number;
+  review?: string;
 }
 
 @Injectable({
@@ -31,11 +37,15 @@ export class OrderService {
 
   constructor(private http: HttpClient) {}
 
-  placeOrder(orderData: { items: CartItem[], totalAmount: number, deliveryDetails: DeliveryDetails, orderType: string, paymentMethod?: string }): Observable<Order> {
+  placeOrder(orderData: any): Observable<Order> {
     return this.http.post<Order>(`${this.API_URL}/orders`, orderData);
   }
 
   getOrderHistory(): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.API_URL}/orders`);
+  }
+
+  rateOrder(id: string, rating: number, review: string): Observable<Order> {
+    return this.http.post<Order>(`${this.API_URL}/orders/${id}/rate`, { rating, review });
   }
 }

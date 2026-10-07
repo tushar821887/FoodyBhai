@@ -54,7 +54,23 @@ export class Order {
   @Prop({ type: Object, required: false })
   deliveryAgent?: { name: string; phone: string };
 
+  @Prop({ required: false })
+  itemTotal?: number;
+  
+  @Prop({ required: false })
+  discount?: number;
+  
+  @Prop({ required: false })
+  gst?: number;
+  
+  @Prop({ required: false })
+  platformFee?: number;
 
+  @Prop({ required: false })
+  rating?: number;
+
+  @Prop({ required: false })
+  review?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

@@ -266,6 +266,16 @@
                   <span>-₹{{cartService.discount$ | async}}</span>
                 </div>
               }
+              @if ((cartService.totalPrice$ | async)! > 0) {
+                <div class="total-row">
+                  <span>GST (5%)</span>
+                  <span>₹{{cartService.gst$ | async}}</span>
+                </div>
+                <div class="total-row">
+                  <span>Platform Fee</span>
+                  <span>₹{{cartService.platformFee$ | async}}</span>
+                </div>
+              }
               <div class="total-row grand-total">
                 <span>To Pay</span>
                 <span>₹{{cartService.finalPrice$ | async}}</span>
