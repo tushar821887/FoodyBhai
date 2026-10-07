@@ -1,8 +1,8 @@
 .orders-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  max-width: 850px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
