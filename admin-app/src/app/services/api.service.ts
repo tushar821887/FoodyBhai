@@ -77,7 +77,7 @@ export class ApiService {
   }
 
   addAgent(name: string, phone: string, email?: string, password?: string) {
-    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone }, this.getHeaders());
+    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone, email, password }, this.getHeaders());
   }
 
   deleteAgent(id: string) {
