@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -44,7 +44,8 @@ export class LocationModalComponent implements OnInit, OnDestroy {
   constructor(
     public locationService: LocationService,
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cdr: ChangeDetectorRef
   ) {}
 
 
@@ -100,19 +101,10 @@ export class LocationModalComponent implements OnInit, OnDestroy {
     if (isPlatformBrowser(this.platformId)) {
       this.isLoading = true;
       this.errorMsg = '';
+      this.cdr.detectChanges();
       
       try {
-        // Use Capacitor Geolocation which works on both Web and Native
-        const permissions = await Geolocation.checkPermissions();
-        if (permissions.location !== 'granted') {
-          const request = await Geolocation.requestPermissions();
-          if (request.location !== 'granted') {
-            this.isLoading = false;
-            this.errorMsg = 'Location permission denied. Please enable it in your settings.';
-            return;
-          }
-        }
-        
+        // Just call getCurrentPosition, the browser/OS will prompt for permissions automatically.
         const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
@@ -126,15 +118,18 @@ export class LocationModalComponent implements OnInit, OnDestroy {
             } else {
               this.errorMsg = 'Could not determine location from coordinates.';
             }
+            this.cdr.detectChanges();
           },
           error: () => {
             this.isLoading = false;
             this.errorMsg = 'Failed to fetch location data.';
+            this.cdr.detectChanges();
           }
         });
       } catch (error: any) {
         this.isLoading = false;
         this.errorMsg = error.message || 'Failed to get your current location. Please try searching instead.';
+        this.cdr.detectChanges();
       }
     }
   }
