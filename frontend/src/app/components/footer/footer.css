@@ -7,8 +7,8 @@
 
 .footer-content {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  gap: 2rem;
   margin-bottom: 3rem;
 }
 
@@ -89,7 +89,8 @@
   color: #a4b0be;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+  word-break: break-word;
 }
 
 .footer-contact i {
