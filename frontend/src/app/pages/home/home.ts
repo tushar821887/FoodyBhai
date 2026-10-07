@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -19,16 +19,19 @@ export class Home implements OnInit {
 
   private recipeService = inject(RecipeService);
   private platformId = inject(PLATFORM_ID);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.recipeService.getCategories().subscribe(cats => {
       this.categories = cats;
+      this.cdr.detectChanges();
     });
 
     this.recipeService.getRecipes().subscribe({
       next: items => {
         this.popularItems = items.slice(0, 4);
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => { this.isLoading = false; }
     });

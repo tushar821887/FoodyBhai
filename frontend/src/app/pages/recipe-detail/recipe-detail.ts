@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -12,6 +12,7 @@ import { CartService } from '../../services/cart.service';
   styleUrl: './recipe-detail.css'
 })
 export class RecipeDetail implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   recipe: Recipe | undefined;
   schemaMarkup: SafeHtml = '';
 
@@ -27,7 +28,7 @@ export class RecipeDetail implements OnInit {
       const slug = params.get('slug');
       if (slug) {
         this.recipeService.getRecipeBySlug(slug).subscribe(recipe => {
-          this.recipe = recipe;
+          this.recipe = recipe; this.cdr.detectChanges();
           if (recipe) {
             this.setSeoTags(recipe);
             this.generateSchema(recipe);

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -13,6 +13,7 @@ import { MenuCard } from '../../components/menu-card/menu-card';
   styleUrl: './category.css'
 })
 export class Category implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   categorySlug: string = '';
   categoryName: string = '';
   categoryDesc: string = '';
@@ -35,12 +36,13 @@ export class Category implements OnInit {
 
         if (category) {
           this.categoryName = category.name;
+          this.cdr.detectChanges();
           this.categoryDesc = category.description;
           this.setSeoTags();
 
           this.recipeService.getRecipesByCategory(this.categoryName).subscribe({
-            next: recipes => { this.recipes = recipes; this.isLoading = false; },
-            error: () => { this.isLoading = false; }
+            next: recipes => { this.recipes = recipes; this.isLoading = false; this.cdr.detectChanges(); },
+            error: () => { this.isLoading = false; this.cdr.detectChanges(); }
           });
         } else {
           // Fallback: match slug pattern from recipe category
