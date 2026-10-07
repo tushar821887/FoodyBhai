@@ -203,9 +203,20 @@
           <span>₹{{ selectedOrderDetails.platformFee || 0 }}</span>
         </div>
         <div style="height: 1px; background: #e2e8f0; margin-bottom: 15px;"></div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span style="color: #1e293b; font-weight: 700; font-size: 16px;">Total Amount</span>
           <span style="font-size: 20px; font-weight: 800; color: var(--primary-color);">₹{{ selectedOrderDetails.totalAmount }}</span>
+        </div>
+        <div style="height: 1px; background: #e2e8f0; margin-bottom: 12px; border-top: 1px dashed #cbd5e1;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #64748b; font-size: 14px;">Payment Mode</span>
+          <span style="font-weight: 600; color: #1e293b; font-size: 14px;">
+            @if (selectedOrderDetails.paymentMethod === 'online') {
+              <i class="fa-solid fa-credit-card" style="color: #10b981; margin-right: 5px;"></i> ONLINE
+            } @else {
+              <i class="fa-solid fa-money-bill-wave" style="color: var(--primary-color); margin-right: 5px;"></i> CASH ON DELIVERY
+            }
+          </span>
         </div>
       </div>
       
