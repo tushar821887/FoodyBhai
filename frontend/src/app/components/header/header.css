@@ -265,7 +265,7 @@
   align-items: center;
   gap: 0.3rem;
   white-space: nowrap;
-  max-width: 150px;
+  max-width: 250px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -281,7 +281,7 @@
     margin-right: 0;
   }
   .loc-value {
-    max-width: 100px;
+    max-width: 180px;
   }
 }
 
