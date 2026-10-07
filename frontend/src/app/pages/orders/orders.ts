@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
@@ -41,6 +42,12 @@ export class OrdersComponent implements OnInit {
       this.isLoading = false;
       this.errorMessage = 'Please login to view your order history.';
     }
+  }
+
+  
+  downloadInvoice(orderId: string) {
+    const url = `${environment.apiUrl}/orders/${orderId}/invoice`;
+    window.open(url, '_blank');
   }
 
   reorder(order: Order) {

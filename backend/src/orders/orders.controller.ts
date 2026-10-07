@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -50,4 +51,15 @@ export class OrdersController {
   ) {
     return this.ordersService.updateOrderStatus(id, status, preparationTime, deliveryAgent);
   }
+
+  @Get(':id/invoice')
+  async downloadInvoice(@Param('id') id: string, @Res() res: Response) {
+    const stream = await this.ordersService.generateInvoice(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=invoice-${id}.pdf`,
+    });
+    stream.pipe(res);
+  }
+
 }
