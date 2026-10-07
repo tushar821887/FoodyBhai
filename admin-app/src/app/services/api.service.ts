@@ -21,6 +21,8 @@ export interface Order {
   paymentStatus: string;
   orderType: string;
   deliveryAgent?: { name: string; phone: string };
+  rating?: number;
+  review?: string;
   items: any[];
   createdAt: string;
 }
