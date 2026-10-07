@@ -20,6 +20,8 @@ export class OrdersComponent implements OnInit {
   
   // Rating Modal
   showRateModal = false;
+  showDetailsModal = false;
+  selectedOrderDetails: any = null;
   orderToRate: any = null;
   ratingValue = 5;
   reviewText = '';
@@ -69,6 +71,16 @@ export class OrdersComponent implements OnInit {
       }
     });
   }
+  openDetailsModal(order: any) {
+    this.selectedOrderDetails = order;
+    this.showDetailsModal = true;
+  }
+
+  closeDetailsModal() {
+    this.showDetailsModal = false;
+    this.selectedOrderDetails = null;
+  }
+
   openRateModal(order: any) {
     this.orderToRate = order;
     this.ratingValue = order.rating || 5;
