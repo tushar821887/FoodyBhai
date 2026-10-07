@@ -1,4 +1,4 @@
-import * as PDFDocument from 'pdfkit';
+const PDFDocument = require('pdfkit');
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -95,7 +95,7 @@ export class OrdersService {
     doc.fontSize(14).text('TAX INVOICE', { align: 'center' }).moveDown();
     doc.fontSize(10);
     doc.text(`Order ID: ${order._id.toString().slice(-6).toUpperCase()}`);
-    doc.text(`Date: ${order.createdAt ? new Date(order.createdAt).toLocaleString() : new Date().toLocaleString()}`);
+    doc.text(`Date: ${(order as any).createdAt ? new Date((order as any).createdAt).toLocaleString() : new Date().toLocaleString()}`);
     doc.text(`Status: ${order.status.toUpperCase()}`);
     doc.moveDown();
 
