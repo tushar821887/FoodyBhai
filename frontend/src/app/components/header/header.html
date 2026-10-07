@@ -20,7 +20,7 @@
         <i class="fa-solid fa-location-dot location-icon"></i>
         <div class="loc-text">
           <span class="loc-label">Delivering to</span>
-          <span class="loc-value">{{ (locationService.location$ | async) || 'Select Location' }} <i class="fa-solid fa-chevron-down"></i></span>
+          <span class="loc-value"><span class="loc-value-text">{{ (locationService.location$ | async) || 'Select Location' }}</span> <i class="fa-solid fa-chevron-down"></i></span>
         </div>
       </div>
     </div>
