@@ -110,6 +110,15 @@ export class OrdersPage implements OnInit, OnDestroy {
       },
       error: (err) => console.error('Failed to fetch orders', err)
     });
+    
+    // Fetch live ratings
+    this.api.getRestaurantStats().subscribe({
+      next: (stats: any) => {
+        this.restaurantStats = stats;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => console.error('Failed to fetch stats', err)
+    });
   }
 
   startRinging() {

@@ -132,6 +132,10 @@ export class ApiService {
     return this.http.get<Order[]>(`${this.apiUrl}/orders/admin/all`, this.getHeaders());
   }
 
+  getRestaurantStats(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/orders/restaurant/stats`, this.getHeaders());
+  }
+
   updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Observable<any> {
     return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/status`, { status, preparationTime, deliveryAgent }, this.getHeaders());
   }
