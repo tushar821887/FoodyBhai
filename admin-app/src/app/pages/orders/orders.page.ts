@@ -56,6 +56,8 @@ export class OrdersPage implements OnInit, OnDestroy {
   agents: any[] = [];
   newAgentName = '';
   newAgentPhone = '';
+  newAgentEmail = '';
+  newAgentPassword = '';
   isAddingAgent = false;
   
   // Settings
@@ -245,10 +247,12 @@ export class OrdersPage implements OnInit, OnDestroy {
   addAgent() {
     if(!this.newAgentName || !this.newAgentPhone) return;
     this.isAddingAgent = true;
-    this.api.addAgent(this.newAgentName, this.newAgentPhone).subscribe({
+    this.api.addAgent(this.newAgentName, this.newAgentPhone, this.newAgentEmail, this.newAgentPassword).subscribe({
       next: () => {
         this.newAgentName = '';
         this.newAgentPhone = '';
+        this.newAgentEmail = '';
+        this.newAgentPassword = '';
         this.isAddingAgent = false;
         this.fetchAgents();
       },
