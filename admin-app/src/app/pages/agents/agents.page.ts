@@ -14,6 +14,8 @@ export class AgentsPage implements OnInit {
   agents: Agent[] = [];
   newName = '';
   newPhone = '';
+  newEmail = '';
+  newPassword = '';
   isAdding = false;
 
   constructor(private api: ApiService) {}
@@ -29,10 +31,12 @@ export class AgentsPage implements OnInit {
   addAgent() {
     if(!this.newName || !this.newPhone) return;
     this.isAdding = true;
-    this.api.addAgent(this.newName, this.newPhone).subscribe({
+    this.api.addAgent(this.newName, this.newPhone, this.newEmail, this.newPassword).subscribe({
       next: () => {
         this.newName = '';
         this.newPhone = '';
+        this.newEmail = '';
+        this.newPassword = '';
         this.isAdding = false;
         this.fetchAgents();
       },

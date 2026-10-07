@@ -12,6 +12,8 @@ import { ApiService, Order } from '../../services/api.service';
   styleUrl: './orders.page.css'
 })
 export class OrdersPage implements OnInit, OnDestroy {
+  currentUser: any = null;
+  isAgent = false;
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   currentTab: string = 'pending';
@@ -80,6 +82,10 @@ export class OrdersPage implements OnInit, OnDestroy {
   constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
+    this.currentUser = this.api.getCurrentUser();
+    if (this.currentUser && this.currentUser.role === 'agent') {
+      this.isAgent = true;
+    }
     try {
       this.ringAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
       this.ringAudio.loop = true;

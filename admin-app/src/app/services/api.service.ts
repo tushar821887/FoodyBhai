@@ -8,6 +8,7 @@ export interface Agent {
   id: string;
   name: string;
   phone: string;
+  email?: string;
 }
 
 export interface Order {
@@ -29,6 +30,13 @@ export interface Order {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
+  getCurrentUser() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const user = localStorage.getItem('admin_user');
+      return user ? JSON.parse(user) : null;
+    }
+    return null;
+  }
   private apiUrl = environment.apiUrl;
   private tokenKey = 'foodybhai_admin_token';
   
@@ -56,6 +64,7 @@ export class ApiService {
         if (res.success && res.accessToken) {
           if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem(this.tokenKey, res.accessToken);
+            localStorage.setItem('admin_user', JSON.stringify(res.user));
           }
           this.authSubject.next(true);
         }
@@ -67,7 +76,7 @@ export class ApiService {
     return this.http.get<Agent[]>(`${this.apiUrl}/agents`, this.getHeaders());
   }
 
-  addAgent(name: string, phone: string) {
+  addAgent(name: string, phone: string, email?: string, password?: string) {
     return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone }, this.getHeaders());
   }
 
@@ -124,6 +133,7 @@ export class ApiService {
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem('admin_user');
     }
     this.authSubject.next(false);
   }

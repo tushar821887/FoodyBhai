@@ -8,8 +8,8 @@ export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
   @Post()
-  create(@Body('name') name: string, @Body('phone') phone: string) {
-    return this.agentsService.create(name, phone);
+  create(@Body('name') name: string, @Body('phone') phone: string, @Body('email') email?: string, @Body('password') password?: string) {
+    return this.agentsService.create(name, phone, email, password);
   }
 
   @Get()

@@ -1,117 +1,62 @@
 const fs = require('fs');
 const path = require('path');
 
-const htmlPath = path.join(__dirname, 'admin-app', 'src', 'app', 'pages', 'orders', 'orders.page.html');
-let content = fs.readFileSync(htmlPath, 'utf8');
+const htmlPath = path.join(__dirname, 'frontend', 'src', 'app', 'pages', 'orders', 'orders.html');
+let htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
-// Add to desktop sidebar
-const desktopSidebarLink = `
-      <a class="nav-item" [class.active]="currentView === 'users'" (click)="setView('users')">
-        <i class="icon">👥</i>
-        <span>Users</span>
-      </a>
-      <a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">`;
-content = content.replace(`<a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">`, desktopSidebarLink);
+const oldBlock = `                  @if (order.status === 'delivered') {
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                      <button class="btn btn-reorder" style="flex: 1; background: var(--primary-color); border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;" (click)="reorder(order)" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-rotate-right"></i> Reorder
+                      </button>
+                      
+                      @if (!order.rating) {
+                        <button class="btn btn-rate" style="flex: 1; background: #f59e0b; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;" (click)="openRateModal(order)" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                          <i class="fa-solid fa-star"></i> Rate Order
+                        </button>
+                      } @else {
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; color: #f59e0b; font-weight: bold; background: #fffbeb; border-radius: 8px; border: 1px solid #fde68a;">
+                           {{ order.rating }} <i class="fa-solid fa-star"></i>
+                        </div>
+                      }
+                    </div>
+                  }`;
 
-// Add to mobile nav
-const mobileNavLink = `
-  <a class="nav-item" [class.active]="currentView === 'users'" (click)="setView('users')">
-    <i class="icon">👥</i>
-    <span>Users</span>
-  </a>
-  <a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">`;
-content = content.replace(`<a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">`, mobileNavLink);
+const newBlock = `                  @if (order.status === 'delivered') {
+                    
+                    @if (order.rating) {
+                      <div class="order-rating-box" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px; margin-top: 15px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                          <strong style="color: #92400e; font-size: 14px;">Your Feedback</strong>
+                          <div style="display: flex; gap: 3px; font-size: 14px;">
+                            <i class="fa-solid fa-star" [style.opacity]="1 <= order.rating ? '1' : '0.3'" style="color: #f59e0b;"></i>
+                            <i class="fa-solid fa-star" [style.opacity]="2 <= order.rating ? '1' : '0.3'" style="color: #f59e0b;"></i>
+                            <i class="fa-solid fa-star" [style.opacity]="3 <= order.rating ? '1' : '0.3'" style="color: #f59e0b;"></i>
+                            <i class="fa-solid fa-star" [style.opacity]="4 <= order.rating ? '1' : '0.3'" style="color: #f59e0b;"></i>
+                            <i class="fa-solid fa-star" [style.opacity]="5 <= order.rating ? '1' : '0.3'" style="color: #f59e0b;"></i>
+                          </div>
+                        </div>
+                        @if (order.review) {
+                          <div style="font-size: 13px; color: #b45309; font-style: italic; margin-top: 4px;">
+                            "{{ order.review }}"
+                          </div>
+                        }
+                      </div>
+                    }
 
-// Add Users view
-const usersView = `
-    <!-- USERS VIEW -->
-    <ng-container *ngIf="currentView === 'users'">
-      <div class="agents-container animate-fade-in">
-        <div class="settings-header-banner" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); margin-bottom: 20px; border-radius: 12px; padding: 25px; color: white;">
-          <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700;">Customer Management</h2>
-          <p style="margin: 0; opacity: 0.9; font-size: 15px;">View and manage your registered customers.</p>
-        </div>
-        
-        <div class="settings-card">
-          <div class="card-header-styled">
-            <div class="icon-circle" style="background: #ede9fe; color: #8b5cf6;">👥</div>
-            <div><h3>Registered Users</h3></div>
-          </div>
-          <div style="padding: 20px;">
-            <div *ngFor="let user of users" class="recipe-list-item" style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0; gap: 15px;">
-              <div style="width: 50px; height: 50px; border-radius: 25px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #64748b;">
-                {{ user.name?.charAt(0)?.toUpperCase() || 'U' }}
-              </div>
-              <div style="flex: 1; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <strong style="font-size: 16px;">{{ user.name }}</strong>
-                </div>
-                <div style="font-size: 13px; color: #64748b; margin-top: 5px;">📧 {{ user.email }}</div>
-                <div style="font-size: 13px; color: #64748b; margin-top: 2px;">📞 {{ user.phone || 'No phone' }}</div>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button style="color: #3b82f6; background: #eff6ff; border: none; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 6px;" (click)="editUser(user)">Edit</button>
-                <button style="color: #ef4444; background: #fef2f2; border: none; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 6px;" (click)="deleteUser(user._id || user.id)">Delete</button>
-              </div>
-            </div>
-            <div *ngIf="users.length === 0" style="color: #64748b; text-align: center; padding: 30px;">No users found.</div>
-          </div>
-        </div>
-      </div>
-    </ng-container>
+                    <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                      <button class="btn btn-reorder" style="flex: 1; min-width: 120px; background: var(--primary-color); border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;" (click)="reorder(order)" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-rotate-right"></i> Reorder
+                      </button>
+                      
+                      @if (!order.rating) {
+                        <button class="btn btn-rate" style="flex: 1; min-width: 120px; background: #fffbeb; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; color: #d97706; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;" (click)="openRateModal(order)" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                          <i class="fa-solid fa-star"></i> Rate Order
+                        </button>
+                      }
+                    </div>
+                  }`;
 
-    <!-- SETTINGS VIEW -->`;
-content = content.replace(`<!-- SETTINGS VIEW -->`, usersView);
-
-const editUserModal = `
-<!-- Edit User Modal -->
-<div class="modal-overlay" *ngIf="showEditUserModal">
-  <div class="modal-content assign-modal" style="max-width: 400px;">
-    <div class="modal-header">
-      <div class="modal-icon-wrapper" style="background: #ede9fe; color: #8b5cf6;">
-        <span class="modal-icon">✏️</span>
-      </div>
-      <h3>Edit User</h3>
-    </div>
-    
-    <div class="settings-form-modern" style="padding: 0; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;" *ngIf="editingUser">
-      <div class="form-group-modern" style="margin-bottom: 0;">
-        <label>Name</label>
-        <div class="input-with-icon">
-          <input type="text" [(ngModel)]="editingUser.name" placeholder="Full Name">
-        </div>
-      </div>
-      <div class="form-group-modern" style="margin-bottom: 0;">
-        <label>Email</label>
-        <div class="input-with-icon">
-          <input type="email" [(ngModel)]="editingUser.email" placeholder="Email Address">
-        </div>
-      </div>
-      <div class="form-group-modern" style="margin-bottom: 0;">
-        <label>Phone</label>
-        <div class="input-with-icon">
-          <input type="text" [(ngModel)]="editingUser.phone" placeholder="Phone Number">
-        </div>
-      </div>
-      <div class="form-group-modern" style="margin-bottom: 0;">
-        <label>New Password (Optional)</label>
-        <div class="input-with-icon">
-          <input type="password" [(ngModel)]="editingUser.password" placeholder="Leave blank to keep current">
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-actions full-width">
-      <button class="btn-cancel-modal" (click)="showEditUserModal = false">Cancel</button>
-      <button class="btn-dispatch-modal" style="background: #8b5cf6; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);" (click)="saveUserEdit()">
-        Save Changes
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Mobile Bottom Navigation -->`;
-content = content.replace(`<!-- Mobile Bottom Navigation -->`, editUserModal);
-
-fs.writeFileSync(htmlPath, content);
-console.log('orders.page.html updated');
+htmlContent = htmlContent.replace(oldBlock, newBlock);
+fs.writeFileSync(htmlPath, htmlContent);
+console.log('Fixed orders.html');

@@ -10,6 +10,13 @@ export class Agent {
 
   @Prop({ required: true })
   phone: string;
+
+  @Prop({ required: false, unique: true, sparse: true })
+  email?: string;
+
+  @Prop({ required: false })
+  passwordHash?: string;
+
 }
 
 export const AgentSchema = SchemaFactory.createForClass(Agent);

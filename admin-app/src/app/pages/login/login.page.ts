@@ -31,10 +31,10 @@ export class LoginPage {
     this.api.login({ email: this.email, password: this.password }).subscribe({
       next: (res) => {
         this.isLoading = false;
-        if (res.user?.role !== 'admin') {
+        if (res.user?.role !== 'admin' && res.user?.role !== 'agent') {
           // Even if login succeeds, reject if not admin
           this.api.logout();
-          this.error = 'Access denied. Admin only.';
+          this.error = 'Access denied. Authorized personnel only.';
         } else {
           this.router.navigate(['/']);
         }

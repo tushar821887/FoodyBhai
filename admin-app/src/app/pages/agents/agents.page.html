@@ -3,17 +3,23 @@
   
   <div class="add-agent-card">
     <h3>Add New Agent</h3>
-    <div class="form-group">
-      <input type="text" placeholder="Agent Name" [(ngModel)]="newName">
-      <input type="text" placeholder="Phone Number" [(ngModel)]="newPhone">
-      <button (click)="addAgent()" [disabled]="isAdding">Add Agent</button>
+    <div class="form-group" style="display: flex; flex-direction: column; gap: 15px;">
+      <div style="display: flex; gap: 15px;">
+        <input type="text" placeholder="Agent Name" [(ngModel)]="newName" style="flex:1;">
+        <input type="text" placeholder="Phone Number" [(ngModel)]="newPhone" style="flex:1;">
+      </div>
+      <div style="display: flex; gap: 15px;">
+        <input type="email" placeholder="Login Email (Optional)" [(ngModel)]="newEmail" style="flex:1;">
+        <input type="password" placeholder="Login Password (Optional)" [(ngModel)]="newPassword" style="flex:1;">
+      </div>
+      <button (click)="addAgent()" [disabled]="isAdding" style="align-self: flex-start;">Add Agent</button>
     </div>
   </div>
 
   <div class="agents-list">
     <div class="agent-card" *ngFor="let agent of agents">
       <div class="agent-info">
-        <h4>{{ agent.name }}</h4>
+        <h4>{{ agent.name }} <span *ngIf="agent.email" style="font-size:12px; color: #888;">({{ agent.email }})</span></h4>
         <p>📞 {{ agent.phone }}</p>
       </div>
       <button class="btn-delete" (click)="deleteAgent(agent.id)">Delete</button>
