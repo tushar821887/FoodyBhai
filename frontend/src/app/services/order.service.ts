@@ -48,4 +48,8 @@ export class OrderService {
   rateOrder(id: string, rating: number, review: string): Observable<Order> {
     return this.http.post<Order>(`${this.API_URL}/orders/${id}/rate`, { rating, review });
   }
+
+  getRestaurantStats(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/orders/restaurant/stats`);
+  }
 }

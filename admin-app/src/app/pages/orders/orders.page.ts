@@ -20,6 +20,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   
   categories: any[] = [];
   recipes: any[] = [];
+  restaurantStats: any = { averageRating: 0, totalReviews: 0 };
   
   // Menu Category Form
   newCategoryName = '';
