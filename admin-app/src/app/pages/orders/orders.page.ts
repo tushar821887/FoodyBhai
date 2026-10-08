@@ -595,10 +595,17 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
-  saveSettings() {
+  saveSettings(showNotification = true) {
     this.api.saveSetting('foodybhai_upi', this.upiId).subscribe();
-    this.api.saveSetting('foodybhai_qr', this.qrImageUrl).subscribe(() => alert('Settings saved successfully!'));
-    
+    this.api.saveSetting('restaurant_open', this.restaurantOpen ? 'true' : 'false').subscribe();
+    if (this.restaurantClosedReason) {
+      this.api.saveSetting('restaurant_closed_reason', this.restaurantClosedReason).subscribe();
+    }
+    this.api.saveSetting('foodybhai_qr', this.qrImageUrl).subscribe(() => {
+      if (showNotification) {
+        alert('Settings saved successfully!');
+      }
+    });
   }
 
   openPaymentModal(order: any) {
@@ -712,7 +719,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
 
   toggleRestaurantStatus() {
-    this.api.saveSetting('restaurant_open', this.restaurantOpen ? 'true' : 'false').subscribe();
+    this.saveSettings(false);
   }
 
   get totalCompletedOrders() {
