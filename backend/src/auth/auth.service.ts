@@ -40,6 +40,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    loginDto.email = loginDto.email.toLowerCase().trim();
     let user = await this.usersService.findByEmail(loginDto.email);
     let role = user ? user.role : null;
     let passwordHash = user ? user.passwordHash : null;

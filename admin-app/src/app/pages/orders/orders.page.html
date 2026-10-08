@@ -195,7 +195,10 @@
               <h4>{{ agent.name }} <span *ngIf="agent.email" style="font-size:12px; color: #888;">({{ agent.email }})</span></h4>
               <p>📞 {{ agent.phone }}</p>
             </div>
-            <button class="btn-delete" (click)="deleteAgent(agent.id)">Delete</button>
+            <div class="agent-actions" style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn-edit" (click)="editAgent(agent)" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Edit</button>
+              <button class="btn-delete" (click)="deleteAgent(agent.id || agent._id)">Delete</button>
+            </div>
           </div>
           <div *ngIf="agents.length === 0" class="empty-state">No agents added yet.</div>
         </div>
@@ -706,6 +709,53 @@
     <div class="modal-actions full-width">
       <button class="btn-cancel-modal" (click)="showEditUserModal = false">Cancel</button>
       <button class="btn-dispatch-modal" style="background: #8b5cf6; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);" (click)="saveUserEdit()">
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Agent Modal -->
+<div class="modal-overlay" *ngIf="showEditAgentModal">
+  <div class="modal-content assign-modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <div class="modal-icon-wrapper" style="background: #e0f2fe; color: #0284c7;">
+        <span class="modal-icon">✏️</span>
+      </div>
+      <h3>Edit Agent</h3>
+    </div>
+    
+    <div class="settings-form-modern" style="padding: 0; display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;" *ngIf="editingAgent">
+      <div class="form-group-modern" style="margin-bottom: 0;">
+        <label>Agent Name</label>
+        <div class="input-with-icon">
+          <input type="text" [(ngModel)]="editingAgent.name" placeholder="Agent Name">
+        </div>
+      </div>
+      <div class="form-group-modern" style="margin-bottom: 0;">
+        <label>Phone Number</label>
+        <div class="input-with-icon">
+          <input type="text" [(ngModel)]="editingAgent.phone" placeholder="Phone Number">
+        </div>
+      </div>
+      <div class="form-group-modern" style="margin-bottom: 0;">
+        <label>Email (Optional)</label>
+        <div class="input-with-icon">
+          <input type="email" [(ngModel)]="editingAgent.email" placeholder="Email Address">
+        </div>
+      </div>
+      <div class="form-group-modern" style="margin-bottom: 0;">
+        <label>New Password (Optional)</label>
+        <div class="input-with-icon">
+          <input type="password" [(ngModel)]="editingAgent.password" placeholder="Leave blank to keep current">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions full-width">
+      <button class="btn-cancel-modal" (click)="showEditAgentModal = false">Cancel</button>
+      <button class="btn-dispatch-modal" style="background: #0ea5e9; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);" (click)="saveAgentEdit()">
         Save Changes
       </button>
     </div>

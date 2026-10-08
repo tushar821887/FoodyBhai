@@ -85,6 +85,10 @@ export class ApiService {
     return this.http.get<Agent[]>(`${this.apiUrl}/agents`, this.getHeaders());
   }
 
+  updateAgent(id: string, name: string, phone: string, email?: string, password?: string) {
+    return this.http.put<Agent>(`${this.apiUrl}/agents/${id}`, { name, phone, email, password }, this.getHeaders());
+  }
+
   addAgent(name: string, phone: string, email?: string, password?: string) {
     return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone, email, password }, this.getHeaders());
   }

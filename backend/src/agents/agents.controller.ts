@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param, Put, UseGuards } from '@nestjs/common';
 import { AgentsService } from './agents.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -15,6 +15,11 @@ export class AgentsController {
   @Get()
   findAll() {
     return this.agentsService.findAll();
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() updateData: any) {
+    return this.agentsService.update(id, updateData);
   }
 
   @Delete(':id')

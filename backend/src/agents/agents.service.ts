@@ -26,6 +26,15 @@ export class AgentsService {
     return this.agentModel.findOne({ email }).exec();
   }
 
+  async update(id: string, updateData: any) {
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.passwordHash = await bcrypt.hash(updateData.password, salt);
+    }
+    delete updateData.password;
+    return this.agentModel.findByIdAndUpdate(id, updateData, { new: true }).select('-passwordHash').exec();
+  }
+
   async delete(id: string) {
     return this.agentModel.findByIdAndDelete(id).exec();
   }

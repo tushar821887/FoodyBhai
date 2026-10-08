@@ -264,6 +264,29 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  editingAgent: any = null;
+  showEditAgentModal = false;
+
+  editAgent(agent: any) {
+    this.editingAgent = { ...agent, password: '' };
+    this.showEditAgentModal = true;
+  }
+
+  saveAgentEdit() {
+    if(!this.editingAgent) return;
+    this.api.updateAgent(
+      this.editingAgent._id || this.editingAgent.id,
+      this.editingAgent.name,
+      this.editingAgent.phone,
+      this.editingAgent.email,
+      this.editingAgent.password
+    ).subscribe(() => {
+      this.showEditAgentModal = false;
+      this.editingAgent = null;
+      this.fetchAgents();
+    });
+  }
+
   deleteAgent(id: string) {
     if(confirm('Delete this agent?')) {
       this.api.deleteAgent(id).subscribe(() => this.fetchAgents());
