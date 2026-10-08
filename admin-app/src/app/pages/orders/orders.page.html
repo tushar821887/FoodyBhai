@@ -274,6 +274,13 @@
                 <option value="cod">Cash on Delivery (COD)</option>
               </select>
             </div>
+            <div style="flex: 1; min-width: 150px;">
+              <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Delivery Agent</label>
+              <select [(ngModel)]="historyFilterAgent" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+                <option value="all">All Agents</option>
+                <option *ngFor="let a of agents" [value]="a.phone">{{ a.name }}</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -292,6 +299,7 @@
                 <th style="padding: 15px;">Items</th>
                 <th style="padding: 15px;">Total Amount</th>
                 <th style="padding: 15px;">Payment Method</th>
+                <th style="padding: 15px;">Delivery Agent</th>
                 <th style="padding: 15px;">Status</th>
                 <th style="padding: 15px; text-align: right;">Action</th>
               </tr>
@@ -305,6 +313,10 @@
                 <td style="padding: 15px;">
                   <span *ngIf="order.paymentMethod === 'online'" style="background: #ecfdf5; color: #10b981; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">Online</span>
                   <span *ngIf="order.paymentMethod !== 'online'" style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">COD</span>
+                </td>
+                <td style="padding: 15px;">
+                  <span *ngIf="order.deliveryAgent" style="color: #0f172a; font-weight: 600; font-size: 13px;">{{ order.deliveryAgent.name }}</span>
+                  <span *ngIf="!order.deliveryAgent" style="color: #94a3b8; font-style: italic; font-size: 13px;">Unassigned</span>
                 </td>
                 <td style="padding: 15px;">
                   <span [style.background]="getStatusBadge(order.status).color + '20'" [style.color]="getStatusBadge(order.status).color" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase;">

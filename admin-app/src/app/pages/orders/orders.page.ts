@@ -234,6 +234,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   historyFilterDate: string = 'all';
   historyFilterStatus: string = 'all';
   historyFilterPayment: string = 'all';
+  historyFilterAgent: string = 'all';
   showOrderDetailsModal: boolean = false;
   selectedHistoryOrder: any = null;
 
@@ -265,6 +266,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
 
     // Payment Filter
+    if (this.historyFilterAgent !== 'all') {
+      result = result.filter(o => o.deliveryAgent && o.deliveryAgent.phone === this.historyFilterAgent);
+    }
+
     if (this.historyFilterPayment !== 'all') {
       result = result.filter(o => {
         const p = (o.paymentMethod || '').toLowerCase();
@@ -288,6 +293,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users') {
     this.currentView = view;
+    if (view === 'history' && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
       this.fetchCategories();
       this.fetchRecipes();
