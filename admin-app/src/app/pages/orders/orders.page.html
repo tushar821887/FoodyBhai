@@ -724,17 +724,17 @@
     
     <!-- USERS VIEW -->
     <ng-container *ngIf="currentView === 'users'">
-      <div class="agents-container animate-fade-in">
+      <div class="settings-container animate-fade-in" style="max-width: 1000px; margin: 0 auto; padding-top: 20px;">
         <div class="settings-header-banner" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); margin-bottom: 20px; border-radius: 12px; padding: 25px; color: white;">
-          <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700;">Customer Management</h2>
-          <p style="margin: 0; opacity: 0.9; font-size: 15px;">View and manage your registered customers.</p>
+          <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700; color: white;">Customer Management</h2>
+          <p style="margin: 0; opacity: 0.9; font-size: 15px; color: rgba(255, 255, 255, 0.9);">View and manage your registered customers.</p>
         </div>
         
         <div class="settings-card">
           <div class="card-header-styled" style="display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 15px;">
               <div class="icon-circle" style="background: #ede9fe; color: #8b5cf6;">👥</div>
-              <div><h3>Registered Users</h3></div>
+              <div><h3 style="margin: 0;">Registered Users</h3></div>
             </div>
             <button (click)="showAddUserModal = true" style="background: #8b5cf6; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 15px rgba(139, 92, 246, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139, 92, 246, 0.25)'">
               <span>➕</span> Add User
@@ -742,20 +742,24 @@
           </div>
           <div style="padding: 20px;">
             <div *ngFor="let user of users" class="recipe-list-item" style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0; gap: 15px;">
-              <div style="width: 50px; height: 50px; border-radius: 25px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #64748b;">
+              <div style="width: 50px; height: 50px; border-radius: 25px; background: #ede9fe; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #8b5cf6;">
                 {{ user.name?.charAt(0)?.toUpperCase() || 'U' }}
               </div>
               <div style="flex: 1; min-width: 0;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <strong style="font-size: 16px;">{{ user.name }}</strong>
-                  <span class="status-badge" [style.background]="user.role === 'admin' ? '#ede9fe' : '#e0f2fe'" [style.color]="user.role === 'admin' ? '#8b5cf6' : '#0ea5e9'">
+                  <strong style="font-size: 16px; color: #1e293b;">{{ user.name }}</strong>
+                  <span class="status-badge" [style.background]="user.role === 'admin' ? '#ede9fe' : '#e0f2fe'" [style.color]="user.role === 'admin' ? '#8b5cf6' : '#0ea5e9'" style="padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">
                     {{ user.role || 'user' }}
                   </span>
                 </div>
-                <div style="font-size: 13px; color: #64748b; margin-top: 5px;">📧 {{ user.email }}</div>
-                <div style="font-size: 13px; color: #64748b; margin-top: 2px;">📞 {{ user.phone || 'No phone' }}</div>
+                <div style="font-size: 13px; color: #475569; margin-top: 5px; display: flex; align-items: center; gap: 5px;">
+                  <span style="opacity: 0.7;">📧</span> {{ user.email }}
+                </div>
+                <div style="font-size: 13px; color: #475569; margin-top: 2px; display: flex; align-items: center; gap: 5px;">
+                  <span style="opacity: 0.7;">📞</span> {{ user.phone || 'No phone' }}
+                </div>
               </div>
-              <div style="display: flex; gap: 10px; align-items: center;">
+              <div style="display: flex; gap: 8px; align-items: center;">
                 <button style="color: #0ea5e9; background: #e0f2fe; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" (click)="editUser(user)">✏️ Edit</button>
                 <button style="color: #ef4444; background: #fef2f2; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'" (click)="deleteUser(user._id || user.id)">🗑️ Delete</button>
               </div>
