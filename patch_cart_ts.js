@@ -1,43 +1,18 @@
 const fs = require('fs');
 const path = require('path');
+const filePath = path.join(__dirname, 'frontend/src/app/pages/cart/cart.ts');
+let content = fs.readFileSync(filePath, 'utf8');
 
-const tsPath = path.join(__dirname, 'frontend', 'src', 'app', 'pages', 'cart', 'cart.ts');
-let content = fs.readFileSync(tsPath, 'utf8');
+// Replace localStorage reads
+content = content.replace("const savedQr = localStorage.getItem('foodybhai_qr');", "this.orderService.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) { this.qrImageUrl = res.value; this.cdr.detectChanges(); } });");
+content = content.replace("const savedUpi = localStorage.getItem('foodybhai_upi');", "this.orderService.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) { this.upiId = res.value; this.cdr.detectChanges(); } });");
+content = content.replace("if (savedQr) this.qrImageUrl = savedQr;", "");
+content = content.replace("if (savedUpi) this.upiId = savedUpi;", "");
 
-const oldPlaceOrder = `    this.orderService.placeOrder({
-      items,
-      totalAmount: this.currentTotal,
-      orderType: this.orderType,
-      paymentMethod: this.paymentMethod,
-      deliveryDetails: {
-        name: this.customerName,
-        phone: this.customerPhone,
-        address: finalAddress
-      }
-    }).subscribe({`;
-    
-const newPlaceOrder = `    let itemTotal = 0, discount = 0, gst = 0, platformFee = 0;
-    this.cartService.totalPrice$.subscribe(v => itemTotal = v).unsubscribe();
-    this.cartService.discount$.subscribe(v => discount = v).unsubscribe();
-    this.cartService.gst$.subscribe(v => gst = v).unsubscribe();
-    this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
+// Add ChangeDetectorRef to constructor
+if (!content.includes('ChangeDetectorRef')) {
+  content = content.replace("import { Component, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';", "import { Component, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';");
+  content = content.replace("public authService: AuthService,", "public authService: AuthService, private cdr: ChangeDetectorRef,");
+}
 
-    this.orderService.placeOrder({
-      items,
-      itemTotal,
-      discount,
-      gst,
-      platformFee,
-      totalAmount: this.currentTotal,
-      orderType: this.orderType,
-      paymentMethod: this.paymentMethod,
-      deliveryDetails: {
-        name: this.customerName,
-        phone: this.customerPhone,
-        address: finalAddress
-      }
-    }).subscribe({`;
-
-content = content.replace(oldPlaceOrder, newPlaceOrder);
-fs.writeFileSync(tsPath, content);
-console.log('Fixed cart.ts');
+fs.writeFileSync(filePath, content);

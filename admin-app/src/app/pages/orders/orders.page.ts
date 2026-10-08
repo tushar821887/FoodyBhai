@@ -175,10 +175,10 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.fetchRecipes();
     }
     if (view === 'settings') {
-      const savedUpi = localStorage.getItem('foodybhai_upi');
-      const savedQr = localStorage.getItem('foodybhai_qr');
-      if (savedUpi) this.upiId = savedUpi;
-      if (savedQr) this.qrImageUrl = savedQr;
+      this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) this.upiId = res.value; });
+      this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) this.qrImageUrl = res.value; });
+      
+      
     }
     if (view === 'agents') {
       this.fetchAgents();
@@ -387,9 +387,9 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   saveSettings() {
-    localStorage.setItem('foodybhai_upi', this.upiId);
-    localStorage.setItem('foodybhai_qr', this.qrImageUrl);
-    alert('Settings saved successfully!');
+    this.api.saveSetting('foodybhai_upi', this.upiId).subscribe();
+    this.api.saveSetting('foodybhai_qr', this.qrImageUrl).subscribe(() => alert('Settings saved successfully!'));
+    
   }
 
   openPaymentModal(order: any) {

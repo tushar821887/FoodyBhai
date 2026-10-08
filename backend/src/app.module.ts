@@ -8,6 +8,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -60,7 +61,8 @@ import { RecipesModule } from './recipes/recipes.module';
     CategoriesModule,
     CartModule,
     OrdersModule,
-    RecipesModule
+    RecipesModule,
+    SettingsModule
   ],
 })
 export class AppModule {}

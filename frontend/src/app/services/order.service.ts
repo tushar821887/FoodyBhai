@@ -33,6 +33,9 @@ export interface Order {
   providedIn: 'root'
 })
 export class OrderService {
+  getSetting(key: string): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/settings/${key}`);
+  }
   private readonly API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {}

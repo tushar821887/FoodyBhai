@@ -30,6 +30,15 @@ export interface Order {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
+  // Settings
+  getSetting(key: string) {
+    return this.http.get<any>(`${this.apiUrl}/settings/${key}`);
+  }
+  
+  saveSetting(key: string, value: any) {
+    return this.http.put<any>(`${this.apiUrl}/settings/${key}`, { value }, this.getHeaders());
+  }
+
   getCurrentUser() {
     if (typeof window !== 'undefined' && window.localStorage) {
       const user = localStorage.getItem('admin_user');

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -54,7 +54,7 @@ export class CartComponent implements OnDestroy {
   constructor(
     public cartService: CartService,
     private orderService: OrderService,
-    public authService: AuthService,
+    public authService: AuthService, private cdr: ChangeDetectorRef,
     public uiService: UiService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -85,10 +85,10 @@ export class CartComponent implements OnDestroy {
 
     // Load QR & UPI from localStorage (set by admin)
     if (isPlatformBrowser(this.platformId)) {
-      const savedQr = localStorage.getItem('foodybhai_qr');
-      const savedUpi = localStorage.getItem('foodybhai_upi');
-      if (savedQr) this.qrImageUrl = savedQr;
-      if (savedUpi) this.upiId = savedUpi;
+      this.orderService.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) { this.qrImageUrl = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) { this.upiId = res.value; this.cdr.detectChanges(); } });
+      
+      
     }
   }
 
