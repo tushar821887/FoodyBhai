@@ -62,6 +62,8 @@ export class OrdersPage implements OnInit, OnDestroy {
   
   // Settings
   upiId: string = 'foodybhai@okaxis';
+  restaurantOpen = true;
+  restaurantClosedReason = 'We are currently closed. Please check back later.';
   qrImageUrl: string = 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
 
   // Payment Modal
@@ -177,6 +179,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     if (view === 'settings') {
       this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) this.upiId = res.value; });
       this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) this.qrImageUrl = res.value; });
+      this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
+      this.api.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value) this.restaurantClosedReason = res.value; });
       
       
     }

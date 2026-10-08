@@ -43,6 +43,8 @@ export class CartComponent implements OnDestroy {
   codConfirmed = false;
   qrImageUrl = '';
   upiId = 'foodybhai@okaxis';
+  restaurantOpen = true;
+  restaurantClosedReason = '';
   isPlacingOrder = false;
 
   // --- Toast Notification ---
@@ -86,6 +88,8 @@ export class CartComponent implements OnDestroy {
     // Load QR & UPI from localStorage (set by admin)
     if (isPlatformBrowser(this.platformId)) {
       this.orderService.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) { this.qrImageUrl = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) { this.restaurantOpen = res.value === 'true' || res.value === true; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value) { this.restaurantClosedReason = res.value; this.cdr.detectChanges(); } });
       this.orderService.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) { this.upiId = res.value; this.cdr.detectChanges(); } });
       
       
