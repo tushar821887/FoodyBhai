@@ -101,6 +101,11 @@
             </span>
           </div>
 
+          <div *ngIf="(order.status === 'cancelled' || order.status === 'rejected') && order.cancellationDetails" style="margin-bottom: 10px; padding: 8px 12px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px; font-size: 12px; color: #991b1b;">
+            <strong>Cancelled by:</strong> {{ order.cancellationDetails.cancelledBy }}
+            <div *ngIf="order.cancellationDetails.reason" style="margin-top: 4px;"><strong>Reason:</strong> {{ order.cancellationDetails.reason }}</div>
+          </div>
+
           <div class="order-time">{{ order.createdAt | date:'shortTime' }} • {{ order.createdAt | date:'dd MMM' }}
             <span class="order-type-badge" [class.pickup]="order.orderType === 'pickup'">
               {{ order.orderType === 'pickup' ? '🚶 Pickup' : '🛵 Delivery' }}

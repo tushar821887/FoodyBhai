@@ -78,6 +78,12 @@ export class Order {
     reason: string;
     status: string; // 'pending', 'approved', 'rejected'
   };
+
+  @Prop({ type: Object, required: false })
+  cancellationDetails?: {
+    cancelledBy: string; // 'Restaurant', 'Customer', 'Delivery Agent'
+    reason?: string;
+  };
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

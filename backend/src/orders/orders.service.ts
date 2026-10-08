@@ -20,6 +20,21 @@ export class OrdersService {
     return this.orderModel.find({ userId }).sort({ createdAt: -1 }).exec();
   }
 
+  async cancelOrderCustomer(orderId: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          status: 'cancelled',
+          cancellationDetails: { cancelledBy: 'Customer' }
+        }
+      },
+      { new: true }
+    );
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
   // --- Admin Methods ---
 
   async getAllOrders(): Promise<OrderDocument[]> {
@@ -31,6 +46,9 @@ export class OrdersService {
     const updateData: any = { status };
     if (status === 'delivered') {
       updateData.paymentStatus = 'paid';
+    }
+    if (status === 'cancelled' || status === 'rejected') {
+      updateData.cancellationDetails = { cancelledBy: 'Restaurant' };
     }
     if (preparationTime !== undefined) {
       updateData.preparationTime = preparationTime;
@@ -193,6 +211,7 @@ export class OrdersService {
     };
     if (approve) {
       updateData.$set.status = 'cancelled';
+      updateData.$set.cancellationDetails = { cancelledBy: 'Delivery Agent' };
     }
     const order = await this.orderModel.findByIdAndUpdate(
       id,

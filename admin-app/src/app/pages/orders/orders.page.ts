@@ -13,6 +13,7 @@ import { ApiService, Order } from '../../services/api.service';
 })
 export class OrdersPage implements OnInit, OnDestroy {
   notifiedOrderIds = new Set<string>();
+  notifiedCancelResolutions = new Set<string>();
   
   getMapUrl(order: any) {
     const origin = encodeURIComponent('127, Bhatwara, Meerut - 250002');
@@ -148,6 +149,20 @@ export class OrdersPage implements OnInit, OnDestroy {
                  });
                  this.startRinging();
                  setTimeout(() => this.stopRinging(), 4000);
+               }
+             }
+           });
+
+           const myResolvedCancels = data.filter(o => o.deliveryAgent && o.deliveryAgent.phone === this.currentUser.phone && o.cancelRequest && o.cancelRequest.status !== 'pending');
+           myResolvedCancels.forEach(o => {
+             const key = o._id + '-' + o.cancelRequest?.status;
+             if (!this.notifiedCancelResolutions.has(key)) {
+               this.notifiedCancelResolutions.add(key);
+               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                 const resolution = o.cancelRequest?.status === 'approved' ? 'Approved' : 'Rejected';
+                 new Notification(`Cancel Request ${resolution}!`, {
+                   body: `Your cancellation request for Order #${o._id.slice(-6).toUpperCase()} was ${resolution.toLowerCase()}.`,
+                 });
                }
              }
            });

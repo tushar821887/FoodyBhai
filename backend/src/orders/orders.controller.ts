@@ -21,6 +21,12 @@ export class OrdersController {
     return this.ordersService.getUserOrders(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/cancel')
+  async cancelOrderCustomer(@Param('id') id: string) {
+    return this.ordersService.cancelOrderCustomer(id);
+  }
+
   @Get('restaurant/stats')
   async getRestaurantStats() {
     return this.ordersService.getRestaurantStats();

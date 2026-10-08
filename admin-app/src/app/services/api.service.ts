@@ -27,6 +27,10 @@ export interface Order {
     reason: string;
     status: string;
   };
+  cancellationDetails?: {
+    cancelledBy: string;
+    reason?: string;
+  };
   rating?: number;
   review?: string;
   items: any[];
