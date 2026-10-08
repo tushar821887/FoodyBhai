@@ -12,10 +12,18 @@ import { ApiService, Order } from '../../services/api.service';
   styleUrl: './orders.page.css'
 })
 export class OrdersPage implements OnInit, OnDestroy {
+  notifiedOrderIds = new Set<string>();
+  
+  getMapUrl(order: any) {
+    const origin = encodeURIComponent('127, Bhatwara, Meerut - 250002');
+    const destination = encodeURIComponent(order.deliveryDetails.address);
+    return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+  }
   currentUser: any = null;
   isAgent = false;
   orders: Order[] = [];
   filteredOrders: Order[] = [];
+  baseOrders: Order[] = [];
   currentTab: string = 'pending';
   currentView: 'dashboard' | 'agents' | 'settings' | 'menu' | 'users' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
@@ -89,6 +97,9 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.currentUser = this.api.getCurrentUser();
     if (this.currentUser && this.currentUser.role === 'agent') {
       this.isAgent = true;
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') {
+        Notification.requestPermission();
+      }
     }
     try {
       this.ringAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -116,7 +127,27 @@ export class OrdersPage implements OnInit, OnDestroy {
         }
         
         this.orders = data;
+        this.baseOrders = this.orders;
+        if (this.isAgent && this.currentUser?.phone) {
+           this.baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent.phone === this.currentUser.phone));
+        }
         this.filterOrders();
+        
+        if (this.isAgent && this.currentUser?.phone) {
+           const myOrders = data.filter(o => o.status === 'out_for_delivery' && o.deliveryAgent && o.deliveryAgent.phone === this.currentUser.phone);
+           myOrders.forEach(o => {
+             if (!this.notifiedOrderIds.has(o._id)) {
+               this.notifiedOrderIds.add(o._id);
+               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                 new Notification('New Delivery Assigned!', {
+                   body: `Order #${o._id.slice(-6).toUpperCase()} to ${o.deliveryDetails.address}`,
+                 });
+                 this.startRinging();
+                 setTimeout(() => this.stopRinging(), 4000);
+               }
+             }
+           });
+        }
       },
       error: (err) => console.error('Failed to fetch orders', err)
     });
@@ -156,16 +187,22 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   get activeOrdersCount() {
-    return this.orders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status)).length;
+    let baseOrders = this.baseOrders;
+    return baseOrders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status)).length;
   }
 
   filterOrders() {
+    let baseOrders = this.orders;
+    if (this.isAgent && this.currentUser?.phone) {
+       baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent.phone === this.currentUser.phone));
+    }
+    
     if (this.currentTab === 'pending') {
-      this.filteredOrders = this.orders.filter(o => o.status === 'pending');
+      this.filteredOrders = baseOrders.filter(o => o.status === 'pending');
     } else if (this.currentTab === 'preparing') {
-      this.filteredOrders = this.orders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status));
+      this.filteredOrders = baseOrders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status));
     } else {
-      this.filteredOrders = this.orders.filter(o => ['delivered', 'cancelled', 'rejected'].includes(o.status));
+      this.filteredOrders = baseOrders.filter(o => ['delivered', 'cancelled', 'rejected'].includes(o.status));
     }
   }
 

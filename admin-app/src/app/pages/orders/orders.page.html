@@ -45,7 +45,7 @@
     <ng-container *ngIf="currentView === 'dashboard'">
     <div class="top-bar">
       <div class="greeting">
-        <h2>Welcome, Admin</h2>
+        <h2>Welcome, {{ currentUser?.name || 'User' }}</h2>
         <p>Here's what's happening in your kitchen today.</p>
       </div>
     </div>
@@ -54,15 +54,15 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-title">New Orders</div>
-        <div class="stat-value">{{ (orders | filterStatus:'pending').length }}</div>
+        <div class="stat-value">{{ (baseOrders | filterStatus:'pending').length }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-title">Preparing</div>
-        <div class="stat-value">{{ (orders | filterStatus:'preparing').length }}</div>
+        <div class="stat-value">{{ (baseOrders | filterStatus:'preparing').length }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-title">Ready</div>
-        <div class="stat-value">{{ (orders | filterStatus:'ready').length }}</div>
+        <div class="stat-value">{{ (baseOrders | filterStatus:'ready').length }}</div>
       </div>
       <div class="stat-card" style="background: #fffbeb; border: 1px solid #fde68a;">
         <div class="stat-title" style="color: #92400e;">Store Rating</div>
@@ -156,8 +156,9 @@
    <button class="btn btn-success" *ngIf="order.orderType === 'pickup'" (click)="openPaymentModal(order)">Mark Picked Up</button>
             </div>
 
-            <div class="action-buttons" *ngIf="order.status === 'out_for_delivery'">
-              <button class="btn btn-dark" (click)="openPaymentModal(order)">Mark Delivered</button>
+            <div class="action-buttons" *ngIf="order.status === 'out_for_delivery'" style="display: flex; gap: 8px;">
+              <a *ngIf="isAgent" [href]="getMapUrl(order)" target="_blank" class="btn btn-info" style="text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1;">📍 Navigate</a>
+              <button class="btn btn-dark" style="flex: 1;" (click)="openPaymentModal(order)">Mark Delivered</button>
             </div>
             
             <div class="action-buttons" *ngIf="['preparing', 'ready', 'out_for_delivery'].includes(order.status)" style="margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
