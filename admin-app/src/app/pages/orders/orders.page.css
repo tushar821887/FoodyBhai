@@ -1189,3 +1189,22 @@
     border-bottom: none !important;
   }
 }
+
+@media (max-width: 768px) {
+  .qr-preview-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+  .qr-actions {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+  }
+  .qr-actions button {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+}
