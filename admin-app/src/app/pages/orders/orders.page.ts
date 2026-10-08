@@ -96,6 +96,19 @@ export class OrdersPage implements OnInit, OnDestroy {
   private ringAudio: HTMLAudioElement | null = null;
   private isRinging = false;
 
+  notificationMessage = '';
+  notificationType: 'success' | 'error' = 'success';
+
+  showNotification(message: string, type: 'success' | 'error' = 'success') {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.notificationMessage = '';
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
   constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
@@ -497,6 +510,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     }).subscribe(() => {
       this.showAssignModal = false;
       this.fetchOrders();
+      this.showNotification(`Agent assigned. Customer notified!`, 'success');
     });
   }
 
@@ -625,6 +639,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.updateOrderStatus(this.orderToDeliver._id, 'delivered').subscribe(() => {
       this.showPaymentModal = false;
       this.fetchOrders();
+      this.showNotification(`Order marked delivered. Customer notified!`, 'success');
     });
   }
 
@@ -644,6 +659,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.updateOrderStatus(this.selectedOrderId, 'preparing', this.prepTimeInput).subscribe(() => {
       this.showPrepModal = false;
       this.fetchOrders();
+      this.showNotification(`Order accepted & preparing. Customer notified!`, 'success');
     });
   }
 
@@ -663,6 +679,7 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.showAdminRejectModal = false;
         this.adminRejectOrderId = null;
         this.fetchOrders();
+        this.showNotification(`Order cancelled. Customer notified!`, 'error');
       });
     } else {
       alert('Please provide a reason for cancellation.');
@@ -702,7 +719,14 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   updateStatus(orderId: string, status: string) {
-    this.api.updateOrderStatus(orderId, status).subscribe(() => this.fetchOrders());
+    this.api.updateOrderStatus(orderId, status).subscribe(() => {
+      this.fetchOrders();
+      let label = status;
+      if (status === 'ready') label = 'Ready';
+      else if (status === 'out_for_delivery') label = 'Out for Delivery';
+      else if (status === 'delivered') label = 'Delivered';
+      this.showNotification(`Order marked as ${label}. Customer notified!`, 'success');
+    });
   }
 
   getStatusBadge(status: string) {

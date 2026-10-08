@@ -1,3 +1,12 @@
+<!-- Notification Bar -->
+<div *ngIf="notificationMessage" class="notification-bar" [ngClass]="notificationType">
+  <div class="notification-content">
+    <span class="notification-icon" *ngIf="notificationType === 'success'">✅</span>
+    <span class="notification-icon" *ngIf="notificationType === 'error'">⚠️</span>
+    <span class="notification-text">{{ notificationMessage }}</span>
+  </div>
+</div>
+
 <div class="dashboard-layout">
   <!-- Desktop Sidebar -->
   <aside class="sidebar">
