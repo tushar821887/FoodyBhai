@@ -113,6 +113,12 @@
             📍 {{ order.deliveryDetails.address }}
           </div>
 
+          <div class="customer-info" *ngIf="order.deliveryAgent" style="margin-top: 10px; background: #f0f9ff; border-color: #bae6fd;">
+            <div style="font-size: 11px; color: #0284c7; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Delivery Agent</div>
+            <strong style="color: #0369a1;">🛵 {{ order.deliveryAgent.name }}</strong><br>
+            <span style="color: #0c4a6e;">📞 {{ order.deliveryAgent.phone }}</span>
+          </div>
+
           <div class="order-items">
             <div class="item" *ngFor="let item of order.items">
               <span class="qty">{{ item.quantity }}x</span> {{ item.recipe.title || 'Custom Item' }}
