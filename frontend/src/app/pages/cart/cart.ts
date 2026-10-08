@@ -287,6 +287,12 @@ export class CartComponent implements OnDestroy {
     this.cartService.gst$.subscribe(v => gst = v).unsubscribe();
     this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
 
+    if (this.cartService.isOffline$.value) {
+      
+      alert("We are currently offline and not accepting orders.");
+      return;
+    }
+
     this.orderService.placeOrder({
       items,
       itemTotal,
@@ -311,6 +317,9 @@ export class CartComponent implements OnDestroy {
         setTimeout(() => this.router.navigate(['/orders']), 2000);
       },
       error: (err) => {
+        if (err.error && err.error.message && err.error.message.includes('offline')) {
+           alert(err.error.message);
+        }
         this.isPlacingOrder = false;
         console.error(err);
         this.showToast('Failed to place order. Please try again.', 'error');

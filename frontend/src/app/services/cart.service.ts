@@ -15,6 +15,7 @@ export interface CartItem {
   providedIn: 'root'
 })
 export class CartService {
+  public isOffline$ = new BehaviorSubject<boolean>(false);
   private itemsSubject = new BehaviorSubject<CartItem[]>([]);
   public items$ = this.itemsSubject.asObservable();
 
@@ -64,6 +65,8 @@ export class CartService {
     private authService: AuthService
   ) {
     if (isPlatformBrowser(this.platformId)) {
+      this.checkOfflineStatus();
+      setInterval(() => this.checkOfflineStatus(), 30000);
       // Listen to auth state to sync cart
       this.authService.isAuthenticated$.subscribe(isAuthenticated => {
         if (isAuthenticated) {
@@ -73,6 +76,18 @@ export class CartService {
         }
       });
     }
+  }
+
+  private checkOfflineStatus() {
+    this.http.get<any>(`${this.API_URL}/settings/restaurant_open`).subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined) {
+          const isOpen = res.value === 'true' || res.value === true;
+          this.isOffline$.next(!isOpen);
+        }
+      },
+      error: () => {}
+    });
   }
 
   private loadLocalCart() {
@@ -117,6 +132,10 @@ export class CartService {
   }
 
   addToCart(recipe: Recipe) {
+    if (this.isOffline$.value) {
+      alert("We are currently offline and not accepting orders.");
+      return;
+    }
     const currentItems = [...this.itemsSubject.value];
     const existingIndex = currentItems.findIndex(i => i.recipe.id === recipe.id);
     

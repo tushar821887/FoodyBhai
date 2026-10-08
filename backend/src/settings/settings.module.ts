@@ -7,6 +7,7 @@ import { Setting, SettingSchema } from './schemas/setting.schema';
 @Module({
   imports: [MongooseModule.forFeature([{ name: Setting.name, schema: SettingSchema }])],
   controllers: [SettingsController],
-  providers: [SettingsService]
+  providers: [SettingsService],
+  exports: [SettingsService]
 })
 export class SettingsModule {}

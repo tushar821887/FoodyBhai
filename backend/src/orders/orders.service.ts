@@ -1,14 +1,22 @@
 const PDFDocument = require('pdfkit');
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { SettingsService } from '../settings/settings.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 
 @Injectable()
 export class OrdersService {
-  constructor(@InjectModel(Order.name) private orderModel: Model<OrderDocument>) {}
+  constructor(
+    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    private settingsService: SettingsService
+  ) {}
 
   async createOrder(userId: string, orderData: any): Promise<OrderDocument> {
+    const isOnline = await this.settingsService.getSetting('restaurant_open');
+    if (isOnline && (isOnline.value === 'false' || isOnline.value === false)) {
+      throw new BadRequestException('We are currently offline and not accepting orders.');
+    }
     const order = new this.orderModel({
       userId,
       ...orderData
