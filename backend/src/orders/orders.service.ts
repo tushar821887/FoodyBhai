@@ -167,4 +167,39 @@ export class OrdersService {
     return doc;
   }
 
+  async requestCancel(id: string, reason: string): Promise<OrderDocument> {
+    const order = await this.orderModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          cancelRequest: {
+            requested: true,
+            reason,
+            status: 'pending'
+          }
+        }
+      },
+      { new: true }
+    );
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  async resolveCancelRequest(id: string, approve: boolean): Promise<OrderDocument> {
+    const updateData: any = {
+      $set: {
+        'cancelRequest.status': approve ? 'approved' : 'rejected'
+      }
+    };
+    if (approve) {
+      updateData.$set.status = 'cancelled';
+    }
+    const order = await this.orderModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
 }

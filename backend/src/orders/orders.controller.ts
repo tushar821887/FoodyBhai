@@ -62,4 +62,22 @@ export class OrdersController {
     stream.pipe(res);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Put('agent/:id/cancel-request')
+  async requestCancel(
+    @Param('id') id: string,
+    @Body('reason') reason: string
+  ) {
+    return this.ordersService.requestCancel(id, reason);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('admin/:id/resolve-cancel')
+  async resolveCancelRequest(
+    @Param('id') id: string,
+    @Body('approve') approve: boolean
+  ) {
+    return this.ordersService.resolveCancelRequest(id, approve);
+  }
+
 }

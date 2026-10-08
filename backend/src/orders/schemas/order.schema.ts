@@ -71,6 +71,13 @@ export class Order {
 
   @Prop({ required: false })
   review?: string;
+
+  @Prop({ type: Object, required: false })
+  cancelRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string; // 'pending', 'approved', 'rejected'
+  };
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

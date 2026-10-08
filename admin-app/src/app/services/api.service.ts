@@ -22,6 +22,11 @@ export interface Order {
   paymentStatus: string;
   orderType: string;
   deliveryAgent?: { name: string; phone: string };
+  cancelRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string;
+  };
   rating?: number;
   review?: string;
   items: any[];
@@ -161,5 +166,13 @@ export class ApiService {
 
   updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Observable<any> {
     return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/status`, { status, preparationTime, deliveryAgent }, this.getHeaders());
+  }
+
+  requestCancelOrder(orderId: string, reason: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/agent/${orderId}/cancel-request`, { reason }, this.getHeaders());
+  }
+
+  resolveCancelOrder(orderId: string, approve: boolean): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/resolve-cancel`, { approve }, this.getHeaders());
   }
 }

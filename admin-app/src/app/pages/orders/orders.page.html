@@ -148,16 +148,16 @@
               </span>
             </div>
             
-            <div class="action-buttons" *ngIf="order.status === 'pending'">
+            <div class="action-buttons" *ngIf="!isAgent && order.status === 'pending'">
               <button class="btn btn-outline-danger" (click)="rejectOrder(order._id)">Reject</button>
               <button class="btn btn-primary" (click)="openAcceptModal(order._id)">Accept</button>
             </div>
 
-            <div class="action-buttons" *ngIf="order.status === 'preparing'">
+            <div class="action-buttons" *ngIf="!isAgent && order.status === 'preparing'">
               <button class="btn btn-success" (click)="updateStatus(order._id, 'ready')">Mark Ready</button>
             </div>
 
-            <div class="action-buttons" *ngIf="order.status === 'ready'">
+            <div class="action-buttons" *ngIf="!isAgent && order.status === 'ready'">
               <button class="btn btn-info" *ngIf="order.orderType !== 'pickup'" (click)="openAssignAgentModal(order._id)">Out for Delivery</button>
    <button class="btn btn-success" *ngIf="order.orderType === 'pickup'" (click)="openPaymentModal(order)">Mark Picked Up</button>
             </div>
@@ -168,7 +168,25 @@
             </div>
             
             <div class="action-buttons" *ngIf="['preparing', 'ready', 'out_for_delivery'].includes(order.status)" style="margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
-              <button class="btn btn-outline-danger" style="width: 100%;" (click)="rejectOrder(order._id)">Cancel Order</button>
+              
+              <!-- Admin Cancel Logic -->
+              <button *ngIf="!isAgent" class="btn btn-outline-danger" style="width: 100%;" (click)="rejectOrder(order._id)">Cancel Order</button>
+              
+              <!-- Agent Cancel Logic -->
+              <ng-container *ngIf="isAgent">
+                <button *ngIf="order.cancelRequest?.status === 'pending'" class="btn btn-outline-danger" style="width: 100%; opacity: 0.6; cursor: not-allowed;" disabled>Cancellation Requested</button>
+                <button *ngIf="order.cancelRequest?.status !== 'pending'" class="btn btn-outline-danger" style="width: 100%;" (click)="requestCancel(order._id)">Request Cancel</button>
+              </ng-container>
+            </div>
+            
+            <!-- Admin Cancellation Approval Banner -->
+            <div *ngIf="!isAgent && order.cancelRequest?.status === 'pending'" style="margin-top: 10px; padding: 10px; background: #fee2e2; border: 1px solid #f87171; border-radius: 6px;">
+              <div style="font-size: 12px; color: #b91c1c; font-weight: bold; margin-bottom: 5px;">⚠️ Agent Requested Cancellation</div>
+              <div style="font-size: 12px; color: #7f1d1d; margin-bottom: 8px;">Reason: {{ order.cancelRequest?.reason }}</div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-success" style="flex: 1; padding: 6px; font-size: 12px;" (click)="resolveCancel(order._id, true)">Approve</button>
+                <button class="btn btn-outline-danger" style="flex: 1; padding: 6px; font-size: 12px; background: white;" (click)="resolveCancel(order._id, false)">Reject</button>
+              </div>
             </div>
           </div>
         </div>

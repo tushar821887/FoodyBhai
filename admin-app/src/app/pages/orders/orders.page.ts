@@ -128,12 +128,12 @@ export class OrdersPage implements OnInit, OnDestroy {
         
         this.orders = data;
         this.baseOrders = this.orders;
-        if (this.isAgent && this.currentUser?.phone) {
+        if (this.isAgent) {
            this.baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent.phone === this.currentUser.phone));
         }
         this.filterOrders();
         
-        if (this.isAgent && this.currentUser?.phone) {
+        if (this.isAgent) {
            const myOrders = data.filter(o => o.status === 'out_for_delivery' && o.deliveryAgent && o.deliveryAgent.phone === this.currentUser.phone);
            myOrders.forEach(o => {
              if (!this.notifiedOrderIds.has(o._id)) {
@@ -193,7 +193,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   filterOrders() {
     let baseOrders = this.orders;
-    if (this.isAgent && this.currentUser?.phone) {
+    if (this.isAgent) {
        baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent.phone === this.currentUser.phone));
     }
     
@@ -498,6 +498,22 @@ export class OrdersPage implements OnInit, OnDestroy {
   rejectOrder(orderId: string) {
     if(confirm('Are you sure you want to reject this order?')) {
       this.api.updateOrderStatus(orderId, 'rejected').subscribe(() => this.fetchOrders());
+    }
+  }
+
+  requestCancel(orderId: string) {
+    const reason = prompt('Please enter the reason for cancellation:');
+    if (reason) {
+      this.api.requestCancelOrder(orderId, reason).subscribe(() => {
+        alert('Cancellation request sent to admin.');
+        this.fetchOrders();
+      });
+    }
+  }
+
+  resolveCancel(orderId: string, approve: boolean) {
+    if (confirm(`Are you sure you want to ${approve ? 'approve' : 'reject'} this cancellation request?`)) {
+      this.api.resolveCancelOrder(orderId, approve).subscribe(() => this.fetchOrders());
     }
   }
 
