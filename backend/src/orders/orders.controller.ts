@@ -53,9 +53,10 @@ export class OrdersController {
     @Param('id') id: string,
     @Body('status') status: string,
     @Body('preparationTime') preparationTime?: number,
-    @Body('deliveryAgent') deliveryAgent?: { name: string; phone: string }
+    @Body('deliveryAgent') deliveryAgent?: { name: string; phone: string },
+    @Body('cancelReason') cancelReason?: string
   ) {
-    return this.ordersService.updateOrderStatus(id, status, preparationTime, deliveryAgent);
+    return this.ordersService.updateOrderStatus(id, status, preparationTime, deliveryAgent, cancelReason);
   }
 
   @Get(':id/invoice')

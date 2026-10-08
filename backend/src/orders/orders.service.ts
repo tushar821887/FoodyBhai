@@ -42,13 +42,14 @@ export class OrdersService {
     return this.orderModel.find().populate('userId', 'name email phone').sort({ createdAt: -1 }).exec();
   }
 
-  async updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Promise<OrderDocument> {
+  async updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }, cancelReason?: string): Promise<OrderDocument> {
     const updateData: any = { status };
     if (status === 'delivered') {
       updateData.paymentStatus = 'paid';
     }
     if (status === 'cancelled' || status === 'rejected') {
       updateData.cancellationDetails = { cancelledBy: 'Restaurant' };
+      if (cancelReason) updateData.cancellationDetails.reason = cancelReason;
     }
     if (preparationTime !== undefined) {
       updateData.preparationTime = preparationTime;
@@ -204,6 +205,8 @@ export class OrdersService {
   }
 
   async resolveCancelRequest(id: string, approve: boolean): Promise<OrderDocument> {
+    const existingOrder = await this.orderModel.findById(id);
+    if (!existingOrder) throw new NotFoundException('Order not found');
     const updateData: any = {
       $set: {
         'cancelRequest.status': approve ? 'approved' : 'rejected'
@@ -211,7 +214,7 @@ export class OrdersService {
     };
     if (approve) {
       updateData.$set.status = 'cancelled';
-      updateData.$set.cancellationDetails = { cancelledBy: 'Delivery Agent' };
+      updateData.$set.cancellationDetails = { cancelledBy: 'Delivery Agent', reason: existingOrder.cancelRequest?.reason };
     }
     const order = await this.orderModel.findByIdAndUpdate(
       id,
