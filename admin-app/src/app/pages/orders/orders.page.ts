@@ -111,6 +111,7 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.ringAudio.loop = true;
     } catch(e) {}
 
+    this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
     this.fetchOrders();
     this.pollInterval = setInterval(() => this.fetchOrders(), 10000);
   }
@@ -569,4 +570,34 @@ export class OrdersPage implements OnInit, OnDestroy {
     };
     return map[status] || { label: status, color: '#95a5a6' };
   }
+
+
+  toggleRestaurantStatus() {
+    this.api.saveSetting('restaurant_open', this.restaurantOpen ? 'true' : 'false').subscribe();
+  }
+
+  get totalCompletedOrders() {
+    return this.baseOrders.filter(o => o.status === 'delivered').length;
+  }
+
+  get totalPayoutAmount() {
+    return this.baseOrders
+      .filter(o => o.status === 'delivered')
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }
+
+  showAgentOrdersModal = false;
+  selectedAgentOrders: any[] = [];
+  selectedAgentForOrders: any = null;
+
+  viewAgentOrders(agent: any) {
+    this.selectedAgentForOrders = agent;
+    this.selectedAgentOrders = this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent.phone === agent.phone && o.status === 'delivered');
+    this.showAgentOrdersModal = true;
+  }
+
+  getAgentDeliveryCount(agentPhone: string): number {
+    return this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent.phone === agentPhone && o.status === 'delivered').length;
+  }
+
 }
