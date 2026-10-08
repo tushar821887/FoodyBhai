@@ -18,6 +18,13 @@ export class AgentsPage implements OnInit {
   newPassword = '';
   isAdding = false;
 
+  editingAgentId: string | null = null;
+  editName = '';
+  editPhone = '';
+  editEmail = '';
+  editPassword = '';
+  isSavingEdit = false;
+
   constructor(private api: ApiService) {}
 
   ngOnInit() {
@@ -48,5 +55,30 @@ export class AgentsPage implements OnInit {
     if(confirm('Delete this agent?')) {
       this.api.deleteAgent(id).subscribe(() => this.fetchAgents());
     }
+  }
+
+  startEdit(agent: Agent) {
+    this.editingAgentId = agent.id;
+    this.editName = agent.name;
+    this.editPhone = agent.phone;
+    this.editEmail = agent.email || '';
+    this.editPassword = ''; // leave blank, only update if typed
+  }
+
+  cancelEdit() {
+    this.editingAgentId = null;
+  }
+
+  saveEdit() {
+    if (!this.editingAgentId || !this.editName || !this.editPhone) return;
+    this.isSavingEdit = true;
+    this.api.updateAgent(this.editingAgentId, this.editName, this.editPhone, this.editEmail, this.editPassword || undefined).subscribe({
+      next: () => {
+        this.isSavingEdit = false;
+        this.editingAgentId = null;
+        this.fetchAgents();
+      },
+      error: () => this.isSavingEdit = false
+    });
   }
 }
