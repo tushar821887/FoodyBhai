@@ -46,6 +46,7 @@ export class AuthService {
     let passwordHash = user ? user.passwordHash : null;
     let userId = user ? user._id.toString() : null;
     let name = user ? user.name : null;
+    let phone = user ? user.phone : null;
 
     if (!user) {
       const agent = await this.agentsService.findByEmail(loginDto.email);
@@ -54,6 +55,7 @@ export class AuthService {
         passwordHash = agent.passwordHash || '';
         userId = agent._id.toString();
         name = agent.name;
+        phone = agent.phone;
         user = agent as any;
       }
     }
@@ -91,6 +93,7 @@ export class AuthService {
         name: name,
         email: loginDto.email,
         role: role,
+        phone: phone,
       },
     };
   }

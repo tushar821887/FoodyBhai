@@ -22,6 +22,10 @@ export class AgentsService {
     return this.agentModel.find().select('-passwordHash').exec();
   }
 
+  async findById(id: string) {
+    return this.agentModel.findById(id).exec();
+  }
+
   async findByEmail(email: string) {
     return this.agentModel.findOne({ email }).exec();
   }
