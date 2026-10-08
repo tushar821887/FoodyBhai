@@ -85,6 +85,7 @@
           <span class="badge" *ngIf="activeOrdersCount > 0">{{ activeOrdersCount }}</span>
         </button>
         <button class="tab-btn" [class.active]="currentTab === 'completed'" (click)="setTab('completed')">History</button>
+        <button class="tab-btn" [class.active]="currentTab === 'cancelled'" (click)="setTab('cancelled')">Cancelled</button>
       </div>
 
       <div class="order-list" [class.empty]="filteredOrders.length === 0">

@@ -220,8 +220,10 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.filteredOrders = baseOrders.filter(o => o.status === 'pending');
     } else if (this.currentTab === 'preparing') {
       this.filteredOrders = baseOrders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status));
+    } else if (this.currentTab === 'cancelled') {
+      this.filteredOrders = baseOrders.filter(o => ['cancelled', 'rejected'].includes(o.status));
     } else {
-      this.filteredOrders = baseOrders.filter(o => ['delivered', 'cancelled', 'rejected'].includes(o.status));
+      this.filteredOrders = baseOrders.filter(o => o.status === 'delivered');
     }
   }
 
