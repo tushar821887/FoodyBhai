@@ -462,43 +462,66 @@
 
     <!-- AGENTS VIEW -->
     <ng-container *ngIf="currentView === 'agents'">
-      <div class="agents-container">
-        <h2>Delivery Agents</h2>
-        
-        <div class="add-agent-card">
-          <h3>Add New Agent</h3>
-          <div class="form-group" style="display: flex; flex-direction: column; gap: 15px;">
-            <div style="display: flex; gap: 15px;">
-              <input type="text" placeholder="Agent Name" [(ngModel)]="newAgentName" style="flex:1;">
-              <input type="text" placeholder="Phone Number" [(ngModel)]="newAgentPhone" style="flex:1;">
+      <div class="settings-container animate-fade-in" style="max-width: 1000px; margin: 0 auto; padding-top: 20px;">
+        <div class="settings-header-banner" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); margin-bottom: 20px; border-radius: 12px; padding: 25px; color: white;">
+          <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700;">Delivery Agents</h2>
+          <p style="margin: 0; opacity: 0.9; font-size: 15px;">Manage your fleet of delivery partners.</p>
+        </div>
+
+        <div class="settings-card" style="margin-bottom: 20px;">
+          <div class="card-header-styled" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div class="icon-circle" style="background: #fef3c7; color: #f59e0b;">🛵</div>
+              <div><h3>Add New Agent</h3></div>
             </div>
-            <div style="display: flex; gap: 15px;">
-              <input type="email" placeholder="Login Email (Optional)" [(ngModel)]="newAgentEmail" style="flex:1;">
-              <input type="password" placeholder="Login Password (Optional)" [(ngModel)]="newAgentPassword" style="flex:1;">
+          </div>
+          <div class="settings-form-modern" style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <input type="text" [(ngModel)]="newAgentName" placeholder="Agent Name" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+              <input type="text" [(ngModel)]="newAgentPhone" placeholder="Phone Number" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+              <input type="email" [(ngModel)]="newAgentEmail" placeholder="Login Email (Optional)" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
+              <input type="password" [(ngModel)]="newAgentPassword" placeholder="Login Password (Optional)" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
             </div>
-            <button (click)="addAgent()" [disabled]="isAddingAgent" style="align-self: flex-start;">Add Agent</button>
+            <button class="btn-save-modern" style="background: #f59e0b; margin-top: 15px;" (click)="addAgent()" [disabled]="isAddingAgent">
+              <span class="save-icon">➕</span> Add Agent
+            </button>
           </div>
         </div>
 
-        <div class="agents-list">
-          <div class="agent-card" *ngFor="let agent of agents">
-            <div class="agent-info">
-              <h4>{{ agent.name }} <span *ngIf="agent.email" style="font-size:12px; color: #888;">({{ agent.email }})</span></h4>
-              <p>📞 {{ agent.phone }}</p>
-              <div style="margin-top: 8px; font-size: 13px; color: #475569; display: flex; align-items: center; gap: 6px;">
-                <span style="background: #ecfdf5; color: #10b981; padding: 4px 8px; border-radius: 12px; font-weight: 700;">{{ getAgentDeliveryCount(agent.phone) }} Deliveries</span>
-              </div>
-            </div>
-            <div class="agent-actions" style="display: flex; gap: 10px; align-items: center;">
-              <button class="btn-orders" (click)="viewAgentOrders(agent)" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600;">Orders</button>
-              <button class="btn-edit" (click)="editAgent(agent)" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Edit</button>
-              <button class="btn-delete" (click)="deleteAgent(agent.id || agent._id)">Delete</button>
+        <div class="settings-card">
+          <div class="card-header-styled">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div class="icon-circle" style="background: #ecfdf5; color: #10b981;">📋</div>
+              <div><h3>Active Fleet</h3></div>
             </div>
           </div>
-          <div *ngIf="agents.length === 0" class="empty-state">No agents added yet.</div>
+          <div style="padding: 20px; max-height: 500px; overflow-y: auto;">
+            <div *ngFor="let agent of agents" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0; gap: 15px;">
+              <div style="width: 50px; height: 50px; border-radius: 25px; background: #fef3c7; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #d97706;">
+                {{ agent.name?.charAt(0)?.toUpperCase() || 'A' }}
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="font-size: 16px; color: #1e293b;">{{ agent.name }}</strong>
+                  <span *ngIf="agent.email" style="font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">{{ agent.email }}</span>
+                </div>
+                <div style="font-size: 13px; color: #475569; margin-top: 5px;">📞 {{ agent.phone }}</div>
+                <div style="margin-top: 8px; display: inline-flex; align-items: center;">
+                  <span style="background: #ecfdf5; color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid #a7f3d0;">
+                    📦 {{ getAgentDeliveryCount(agent.phone) }} Deliveries
+                  </span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button style="color: #10b981; background: #ecfdf5; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'" (click)="viewAgentOrders(agent)">📦 Orders</button>
+                <button style="color: #0ea5e9; background: #e0f2fe; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" (click)="editAgent(agent)">✏️ Edit</button>
+                <button style="color: #ef4444; background: #fef2f2; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'" (click)="deleteAgent(agent.id || agent._id)">🗑️ Delete</button>
+              </div>
+            </div>
+            <div *ngIf="agents.length === 0" style="color: #64748b; text-align: center; padding: 30px; font-size: 15px;">No agents added yet. Start by creating a new delivery partner above.</div>
+          </div>
         </div>
       </div>
-    
     </ng-container>
 
     <!-- MENU VIEW -->
