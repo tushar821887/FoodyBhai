@@ -26,7 +26,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   filteredOrders: Order[] = [];
   baseOrders: Order[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'agents' | 'settings' | 'menu' | 'users' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   
   showCancelModal = false;
@@ -229,7 +229,60 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   
-  setView(view: 'dashboard' | 'agents' | 'settings' | 'menu' | 'users') {
+  
+  // Order History Features
+  historyFilterDate: string = 'all';
+  historyFilterStatus: string = 'all';
+  historyFilterPayment: string = 'all';
+  showOrderDetailsModal: boolean = false;
+  selectedHistoryOrder: any = null;
+
+  get filteredHistoryOrders() {
+    let result = this.baseOrders;
+
+    // Date Filter
+    if (this.historyFilterDate !== 'all') {
+      const now = new Date();
+      result = result.filter(o => {
+        if (!o.createdAt) return true;
+        const orderDate = new Date(o.createdAt);
+        const diffTime = Math.abs(now.getTime() - orderDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        if (this.historyFilterDate === 'weekly') return diffDays <= 7;
+        if (this.historyFilterDate === 'monthly') return diffDays <= 30;
+        return true;
+      });
+    }
+
+    // Status Filter
+    if (this.historyFilterStatus !== 'all') {
+      result = result.filter(o => {
+        const s = (o.status || '').toLowerCase();
+        if (this.historyFilterStatus === 'completed') return s === 'delivered' || s === 'completed';
+        if (this.historyFilterStatus === 'cancelled') return s === 'cancelled' || s === 'rejected';
+        return true;
+      });
+    }
+
+    // Payment Filter
+    if (this.historyFilterPayment !== 'all') {
+      result = result.filter(o => {
+        const p = (o.paymentMethod || '').toLowerCase();
+        if (this.historyFilterPayment === 'online') return p === 'online';
+        if (this.historyFilterPayment === 'cod') return p === 'cod';
+        return true;
+      });
+    }
+
+    return result;
+  }
+
+  openHistoryDetails(order: any) {
+    this.selectedHistoryOrder = order;
+    this.showOrderDetailsModal = true;
+  }
+
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users') {
     this.currentView = view;
     if (view === 'menu') {
       this.fetchCategories();
