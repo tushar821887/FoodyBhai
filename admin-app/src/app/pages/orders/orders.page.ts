@@ -26,7 +26,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   filteredOrders: Order[] = [];
   baseOrders: Order[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   
   showCancelModal = false;
@@ -135,12 +135,12 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.orders = data;
         this.baseOrders = this.orders;
         if (this.isAgent) {
-           this.baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent.phone === this.currentUser.phone));
+           this.baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent?.phone === this.currentUser.phone));
         }
         this.filterOrders();
         
         if (this.isAgent) {
-           const myOrders = data.filter(o => o.status === 'out_for_delivery' && o.deliveryAgent && o.deliveryAgent.phone === this.currentUser.phone);
+           const myOrders = data.filter(o => o.status === 'out_for_delivery' && o.deliveryAgent && o.deliveryAgent?.phone === this.currentUser.phone);
            myOrders.forEach(o => {
              if (!this.notifiedOrderIds.has(o._id)) {
                this.notifiedOrderIds.add(o._id);
@@ -154,7 +154,7 @@ export class OrdersPage implements OnInit, OnDestroy {
              }
            });
 
-           const myResolvedCancels = data.filter(o => o.deliveryAgent && o.deliveryAgent.phone === this.currentUser.phone && o.cancelRequest && o.cancelRequest.status !== 'pending');
+           const myResolvedCancels = data.filter(o => o.deliveryAgent && o.deliveryAgent?.phone === this.currentUser.phone && o.cancelRequest && o.cancelRequest.status !== 'pending');
            myResolvedCancels.forEach(o => {
              const key = o._id + '-' + o.cancelRequest?.status;
              if (!this.notifiedCancelResolutions.has(key)) {
@@ -214,7 +214,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   filterOrders() {
     let baseOrders = this.orders;
     if (this.isAgent) {
-       baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent.phone === this.currentUser.phone));
+       baseOrders = this.orders.filter(o => o.deliveryAgent && (o.deliveryAgent?.phone === this.currentUser.phone));
     }
     
     if (this.currentTab === 'pending') {
@@ -267,7 +267,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
     // Payment Filter
     if (this.historyFilterAgent !== 'all') {
-      result = result.filter(o => o.deliveryAgent && o.deliveryAgent.phone === this.historyFilterAgent);
+      result = result.filter(o => o.deliveryAgent && o.deliveryAgent?.phone === this.historyFilterAgent);
     }
 
     if (this.historyFilterPayment !== 'all') {
@@ -286,14 +286,74 @@ export class OrdersPage implements OnInit, OnDestroy {
     return this.filteredHistoryOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   }
 
+  // --- PAYMENTS VIEW LOGIC ---
+  paymentFilterDate: string = 'all';
+  paymentFilterMethod: string = 'all';
+
+  get filteredPaymentOrders() {
+    let result = this.baseOrders.filter(o => o.status === 'delivered');
+
+    if (this.paymentFilterDate !== 'all') {
+      const now = new Date();
+      result = result.filter(o => {
+        const orderDate = new Date(o.createdAt);
+        if (this.paymentFilterDate === 'weekly') {
+          return (now.getTime() - orderDate.getTime()) / (1000 * 3600 * 24) <= 7;
+        } else if (this.paymentFilterDate === 'monthly') {
+          return (now.getTime() - orderDate.getTime()) / (1000 * 3600 * 24) <= 30;
+        }
+        return true;
+      });
+    }
+
+    if (this.paymentFilterMethod !== 'all') {
+      result = result.filter(o => (o.paymentMethod || '').toLowerCase() === this.paymentFilterMethod);
+    }
+    return result;
+  }
+
+  get totalRevenue() {
+    return this.filteredPaymentOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }
+
+  get onlineRevenue() {
+    return this.filteredPaymentOrders.filter(o => (o.paymentMethod || '').toLowerCase() === 'online').reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }
+
+  get codRevenue() {
+    return this.filteredPaymentOrders.filter(o => (o.paymentMethod || '').toLowerCase() !== 'online').reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }
+
+    get agentCashBalances() {
+    const balances: { agentName: string, phone: string, cashCollected: number, deliveries: number }[] = [];
+    const codOrders = this.filteredPaymentOrders.filter(o => (o.paymentMethod || '').toLowerCase() !== 'online' && o.deliveryAgent && o.deliveryAgent.phone);
+    
+    codOrders.forEach(o => {
+      const agentPhone = o.deliveryAgent!.phone || 'unknown';
+      const agentName = o.deliveryAgent!.name || 'Unknown Agent';
+      
+      let existingIndex = balances.findIndex(b => b.phone === agentPhone);
+      if (existingIndex === -1) {
+        balances.push({ agentName: agentName, phone: agentPhone, cashCollected: 0, deliveries: 0 });
+        existingIndex = balances.length - 1;
+      }
+      
+      balances[existingIndex].cashCollected += (o.totalAmount || 0);
+      balances[existingIndex].deliveries += 1;
+    });
+    
+    return balances.sort((a, b) => b.cashCollected - a.cashCollected);
+  }
+
+
   openHistoryDetails(order: any) {
     this.selectedHistoryOrder = order;
     this.showOrderDetailsModal = true;
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users') {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments') {
     this.currentView = view;
-    if (view === 'history' && this.agents.length === 0) { this.fetchAgents(); }
+    if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
       this.fetchCategories();
       this.fetchRecipes();
@@ -671,12 +731,12 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   viewAgentOrders(agent: any) {
     this.selectedAgentForOrders = agent;
-    this.selectedAgentOrders = this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent.phone === agent.phone && o.status === 'delivered');
+    this.selectedAgentOrders = this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent?.phone === agent.phone && o.status === 'delivered');
     this.showAgentOrdersModal = true;
   }
 
   getAgentDeliveryCount(agentPhone: string): number {
-    return this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent.phone === agentPhone && o.status === 'delivered').length;
+    return this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent?.phone === agentPhone && o.status === 'delivered').length;
   }
 
 }
