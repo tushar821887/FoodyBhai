@@ -277,6 +277,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     return result;
   }
 
+  get filteredHistoryTotalAmount() {
+    return this.filteredHistoryOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  }
+
   openHistoryDetails(order: any) {
     this.selectedHistoryOrder = order;
     this.showOrderDetailsModal = true;

@@ -235,11 +235,17 @@
 
         <!-- Filters -->
         <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-          <div style="flex: 1; min-width: 200px;">
+          <div style="flex: 1.5; min-width: 280px;">
             <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px;">Order Statistics</h4>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-              <span style="color: #64748b; font-weight: 500;">Total Orders</span>
-              <span style="font-size: 24px; font-weight: 800; color: #10b981;">{{ filteredHistoryOrders.length }}</span>
+            <div style="display: flex; gap: 10px;">
+              <div style="flex: 1; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Total Orders</span>
+                <span style="font-size: 24px; font-weight: 800; color: #10b981; margin-top: 4px;">{{ filteredHistoryOrders.length }}</span>
+              </div>
+              <div style="flex: 1; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span style="color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Grand Total</span>
+                <span style="font-size: 24px; font-weight: 800; color: #10b981; margin-top: 4px;">₹{{ filteredHistoryTotalAmount }}</span>
+              </div>
             </div>
           </div>
           
