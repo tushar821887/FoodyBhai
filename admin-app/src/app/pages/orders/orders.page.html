@@ -787,6 +787,34 @@
   </div>
 </div>
 
+<!-- Custom Cancel Modal -->
+<div class="modal-overlay" *ngIf="showCancelModal">
+  <div class="modal-content assign-modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <div class="modal-icon-wrapper" style="background: #fee2e2; color: #ef4444;">
+        <span class="modal-icon">⚠️</span>
+      </div>
+      <h3>Request Cancellation</h3>
+      <p class="modal-subtitle">Please provide a reason for cancelling this order.</p>
+    </div>
+    
+    <div class="settings-form-modern" style="padding: 0; margin-bottom: 20px;">
+      <div class="form-group-modern" style="margin-bottom: 0;">
+        <div class="input-with-icon">
+          <textarea [(ngModel)]="cancelReason" placeholder="Reason for cancellation..." rows="3" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; resize: vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions full-width">
+      <button class="btn-cancel-modal" (click)="closeCancelModal()">Cancel</button>
+      <button class="btn-dispatch-modal" style="background: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);" [disabled]="!cancelReason.trim()" (click)="submitCancelRequest()">
+        Submit Request
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav">
   <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">

@@ -28,6 +28,10 @@ export class OrdersPage implements OnInit, OnDestroy {
   currentView: 'dashboard' | 'agents' | 'settings' | 'menu' | 'users' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   
+  showCancelModal = false;
+  cancelReason = '';
+  orderToCancel: string | null = null;
+
   categories: any[] = [];
   recipes: any[] = [];
   restaurantStats: any = { averageRating: 0, totalReviews: 0 };
@@ -501,14 +505,30 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
-  requestCancel(orderId: string) {
-    const reason = prompt('Please enter the reason for cancellation:');
-    if (reason) {
-      this.api.requestCancelOrder(orderId, reason).subscribe(() => {
+  openCancelModal(orderId: string) {
+    this.orderToCancel = orderId;
+    this.cancelReason = '';
+    this.showCancelModal = true;
+  }
+
+  closeCancelModal() {
+    this.showCancelModal = false;
+    this.orderToCancel = null;
+    this.cancelReason = '';
+  }
+
+  submitCancelRequest() {
+    if (this.orderToCancel && this.cancelReason.trim()) {
+      this.api.requestCancelOrder(this.orderToCancel, this.cancelReason.trim()).subscribe(() => {
         alert('Cancellation request sent to admin.');
+        this.closeCancelModal();
         this.fetchOrders();
       });
     }
+  }
+
+  requestCancel(orderId: string) {
+    this.openCancelModal(orderId);
   }
 
   resolveCancel(orderId: string, approve: boolean) {
