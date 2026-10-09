@@ -82,6 +82,8 @@ export class OrdersService {
     const updateData: any = { status };
     if (status === 'delivered') {
       updateData.paymentStatus = 'paid';
+    } else if (status === 'preparing' && existingOrder.paymentMethod === 'online') {
+      updateData.paymentStatus = 'paid';
     }
     if (status === 'cancelled' || status === 'rejected') {
       updateData.cancellationDetails = { cancelledBy: 'Restaurant' };

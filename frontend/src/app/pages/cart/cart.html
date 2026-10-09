@@ -459,8 +459,8 @@
         <div class="qr-section animate-fade-in">
           <p class="qr-instruction">Scan this QR code or pay to UPI ID below</p>
           <div class="qr-wrapper">
-            @if (qrImageUrl) {
-              <img [src]="qrImageUrl" alt="Payment QR Code" class="qr-image">
+            @if (dynamicQrUrl) {
+              <img [src]="dynamicQrUrl" alt="Payment QR Code" class="qr-image">
             } @else {
               <div class="qr-placeholder">
                 <i class="fa-solid fa-qrcode"></i>

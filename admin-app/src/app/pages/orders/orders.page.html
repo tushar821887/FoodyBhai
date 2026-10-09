@@ -200,7 +200,9 @@
             
             <div class="action-buttons" *ngIf="!isAgent && order.status === 'pending'">
               <button class="btn btn-outline-danger" (click)="rejectOrder(order._id)">Reject</button>
-              <button class="btn btn-primary" (click)="openAcceptModal(order._id)">Accept</button>
+              <button class="btn btn-primary" (click)="openAcceptModal(order._id)">
+                {{ order.paymentMethod === 'online' ? 'Verify Payment & Accept' : 'Accept' }}
+              </button>
             </div>
 
             <div class="action-buttons" *ngIf="!isAgent && order.status === 'preparing'">

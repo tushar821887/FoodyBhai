@@ -43,6 +43,13 @@ export class CartComponent implements OnDestroy {
   codConfirmed = false;
   qrImageUrl = '';
   upiId = 'foodybhai@okaxis';
+  
+  get dynamicQrUrl(): string {
+    if (!this.upiId) return this.qrImageUrl; // fallback
+    const upiStr = `upi://pay?pa=${this.upiId}&pn=FoodyBhai&am=${this.currentTotal}&cu=INR`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiStr)}`;
+  }
+
   restaurantOpen = true;
   restaurantClosedReason = '';
   isPlacingOrder = false;
