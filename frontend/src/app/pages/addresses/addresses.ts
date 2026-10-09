@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './addresses.css'
 })
 export class AddressesComponent implements OnInit, OnDestroy {
+  errorMessage = '';
   savedAddresses: Address[] = [];
   
   showNewAddressForm = false;
