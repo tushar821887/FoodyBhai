@@ -70,7 +70,15 @@ export class CartService {
       // Listen to auth state to sync cart
       this.authService.isAuthenticated$.subscribe(isAuthenticated => {
         if (isAuthenticated) {
-          this.fetchRemoteCart();
+          // If logged in, get current local items and merge them with remote cart
+          const savedCart = localStorage.getItem(this.CART_STORAGE_KEY);
+          let localItems: CartItem[] = [];
+          if (savedCart) {
+            try {
+              localItems = JSON.parse(savedCart);
+            } catch (e) {}
+          }
+          this.fetchAndMergeCart(localItems);
         } else {
           this.loadLocalCart();
         }
@@ -114,6 +122,30 @@ export class CartService {
         }
       },
       error: (err) => console.error('Failed to fetch remote cart', err)
+    });
+  }
+
+  private fetchAndMergeCart(localItems: CartItem[]) {
+    this.http.get<{ items: CartItem[] }>(`${this.API_URL}/cart`).subscribe({
+      next: (cart) => {
+        let mergedItems = [...(cart?.items || [])];
+        
+        // Merge local items into remote items
+        for (const localItem of localItems) {
+          if (!localItem || !localItem.recipe) continue;
+          const existingIndex = mergedItems.findIndex(i => i && i.recipe && i.recipe.id === localItem.recipe.id);
+          if (existingIndex >= 0) {
+            // Take the max quantity, or add them? Add them makes sense, or max. Let's add them.
+            mergedItems[existingIndex].quantity += localItem.quantity;
+          } else {
+            mergedItems.push(localItem);
+          }
+        }
+        
+        // Sync merged cart (this will update UI, localStorage, and backend)
+        this.syncCart(mergedItems);
+      },
+      error: (err) => console.error('Failed to fetch and merge cart', err)
     });
   }
 
