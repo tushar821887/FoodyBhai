@@ -126,7 +126,12 @@
               @if (order.status === 'cancelled' && order.paymentMethod === 'online') {
                 <div style="margin-bottom: 15px; padding: 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; text-align: center; border: 1px solid;" 
                      [ngStyle]="{'background': order.refundStatus === 'completed' ? '#dcfce7' : '#e0e7ff', 'color': order.refundStatus === 'completed' ? '#166534' : '#3730a3', 'border-color': order.refundStatus === 'completed' ? '#bbf7d0' : '#c7d2fe'}">
-                  <i class="fa-solid fa-money-bill-transfer"></i> Refund Status: {{ order.refundStatus === 'completed' ? 'Completed' : 'Pending (3-5 Days)' }}
+                  <i class="fa-solid fa-money-bill-transfer"></i> 
+                  @if (order.refundStatus === 'completed') {
+                    Refund status completed
+                  } @else {
+                    Refund in progress will recieved soon
+                  }
                 </div>
               }
 
