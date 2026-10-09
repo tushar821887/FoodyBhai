@@ -1,5 +1,5 @@
 import { environment } from '../../../environments/environment';
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +14,7 @@ import { CartService } from '../../services/cart.service';
   templateUrl: './orders.html',
   styleUrl: './orders.css'
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements OnInit, OnDestroy {
   orders: any[] = [];
 
   filterDate: string = 'all';
@@ -77,13 +77,65 @@ export class OrdersComponent implements OnInit {
     private cartService: CartService
   ) {}
 
+  timerInterval: any;
+
   ngOnInit(): void {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
     if (this.authService.isLoggedIn()) {
       this.loadOrders();
+      this.timerInterval = setInterval(() => {
+        this.cdr.detectChanges();
+        // Poll for updates every 10 seconds
+        if (new Date().getSeconds() % 10 === 0) {
+          this.orderService.getOrderHistory().subscribe({
+            next: (data) => {
+              if (data) {
+                // Check if any order changed to 'preparing'
+                data.forEach((newOrder: any) => {
+                  const oldOrder = this.orders.find(o => (o._id || o.id) === (newOrder._id || newOrder.id));
+                  if (oldOrder && oldOrder.status !== 'preparing' && newOrder.status === 'preparing') {
+                    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                      new Notification('FoodyBhai Order Update', { body: `Your order is now preparing! Ready in ${newOrder.preparationTime} minutes.` });
+                    } else {
+                      alert(`Your order #${(newOrder._id || newOrder.id).slice(-6).toUpperCase()} is now preparing! Ready in ${newOrder.preparationTime} minutes.`);
+                    }
+                  }
+                });
+                this.orders = data;
+                // Update selected order in modal if open
+                if (this.selectedOrderDetails) {
+                  const updated = data.find((o: any) => (o._id || o.id) === (this.selectedOrderDetails._id || this.selectedOrderDetails.id));
+                  if (updated) this.selectedOrderDetails = updated;
+                }
+              }
+              this.cdr.detectChanges();
+            }
+          });
+        }
+      }, 1000);
     } else {
       this.isLoading = false;
       this.errorMessage = 'Please login to view your order history.';
     }
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+  }
+
+  getPreparationTimeRemaining(order: any): string {
+    if (order.status !== 'preparing' || !order.preparationTime) return '';
+    const startTime = new Date(order.updatedAt || order.createdAt).getTime();
+    const targetTime = startTime + order.preparationTime * 60000;
+    const now = new Date().getTime();
+    const diff = targetTime - now;
+    if (diff <= 0) return 'Almost ready!';
+    
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return `${minutes}m ${seconds}s`;
   }
 
   

@@ -69,6 +69,11 @@
               <div class="order-meta">
                 <span class="order-id">Order #{{ (order._id || order.id || 'N/A')?.slice(-6)?.toUpperCase() }}</span>
                 <span class="order-date"><i class="fa-regular fa-calendar"></i> {{ order.createdAt | date:'medium' }}</span>
+                @if (order.status === 'preparing' && order.preparationTime) {
+                  <span class="order-timer" style="color: #f59e0b; font-weight: bold; font-size: 0.85rem; margin-top: 4px;">
+                    <i class="fa-solid fa-fire-burner"></i> Ready in {{ getPreparationTimeRemaining(order) }}
+                  </span>
+                }
               </div>
               <div class="order-status-badge" [ngClass]="(order.status || 'pending').toLowerCase()">
                 @if ((order.status || 'pending').toLowerCase() === 'pending') {
@@ -172,6 +177,11 @@
       <div>
         <h3 style="margin: 0; font-size: 18px; color: #1e293b;">Order #{{ (selectedOrderDetails._id || selectedOrderDetails.id)?.slice(-6)?.toUpperCase() }}</h3>
         <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">{{ selectedOrderDetails.createdAt | date:'medium' }}</p>
+        @if (selectedOrderDetails.status === 'preparing' && selectedOrderDetails.preparationTime) {
+          <p style="margin: 4px 0 0 0; font-size: 14px; color: #f59e0b; font-weight: bold;">
+            <i class="fa-solid fa-fire-burner"></i> Ready in {{ getPreparationTimeRemaining(selectedOrderDetails) }}
+          </p>
+        }
       </div>
       <button style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569;" (click)="closeDetailsModal()">
         <i class="fa-solid fa-xmark"></i>
