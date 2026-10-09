@@ -27,7 +27,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   filteredOrders: Order[] = [];
   baseOrders: Order[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   
   showCancelModal = false;
@@ -388,7 +388,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.showOrderDetailsModal = true;
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments') {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests') {
     this.currentView = view;
     if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
@@ -822,6 +822,14 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   getAgentDeliveryCount(agentPhone: string): number {
     return this.baseOrders.filter(o => o.deliveryAgent && o.deliveryAgent?.phone === agentPhone && o.status === 'delivered').length;
+  }
+
+
+  getCancelAndRefundOrders() {
+    return this.baseOrders.filter(o => 
+      (o.cancelRequest && o.cancelRequest.status === 'pending') || 
+      (o.status === 'cancelled' && o.refundStatus === 'pending')
+    ).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   }
 
 }
