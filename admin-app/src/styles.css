@@ -10,7 +10,3 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
 }
 
-/* Fix for the green banner text visibility */
-.settings-header-banner h2, .settings-header-banner p {
-  color: #ffffff !important;
-}
