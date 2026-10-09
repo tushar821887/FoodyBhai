@@ -227,12 +227,19 @@
             
             <!-- Admin Cancellation Approval Banner -->
             <div *ngIf="!isAgent && order.cancelRequest?.status === 'pending'" style="margin-top: 10px; padding: 10px; background: #fee2e2; border: 1px solid #f87171; border-radius: 6px;">
-              <div style="font-size: 12px; color: #b91c1c; font-weight: bold; margin-bottom: 5px;">⚠️ Agent Requested Cancellation</div>
+              <div style="font-size: 12px; color: #b91c1c; font-weight: bold; margin-bottom: 5px;">⚠️ {{ order.cancelRequest?.requestedBy || 'Agent' }} Requested Cancellation</div>
               <div style="font-size: 12px; color: #7f1d1d; margin-bottom: 8px;">Reason: {{ order.cancelRequest?.reason }}</div>
               <div style="display: flex; gap: 8px;">
-                <button class="btn btn-success" style="flex: 1; padding: 6px; font-size: 12px;" (click)="resolveCancel(order._id, true)">Approve</button>
-                <button class="btn btn-outline-danger" style="flex: 1; padding: 6px; font-size: 12px; background: white;" (click)="resolveCancel(order._id, false)">Reject</button>
+                <button class="btn btn-success" style="flex: 1; padding: 6px; font-size: 12px;" (click)="resolveCancel(order, true)">Approve</button>
+                <button class="btn btn-outline-danger" style="flex: 1; padding: 6px; font-size: 12px; background: white;" (click)="resolveCancel(order, false)">Reject</button>
               </div>
+            </div>
+            
+            <!-- Refund Action for Cancelled Orders -->
+            <div *ngIf="!isAgent && order.status === 'cancelled' && order.refundStatus === 'pending'" style="margin-top: 10px; padding: 10px; background: #e0e7ff; border: 1px solid #818cf8; border-radius: 6px;">
+              <div style="font-size: 12px; color: #3730a3; font-weight: bold; margin-bottom: 5px;">💸 Pending Refund</div>
+              <div style="font-size: 12px; color: #312e81; margin-bottom: 8px;">Order cancelled but refund not yet processed.</div>
+              <button class="btn btn-primary" style="width: 100%; padding: 6px; font-size: 12px; background: #4f46e5;" (click)="processRefund(order)">Mark Refund as Processed</button>
             </div>
           </div>
         </div>

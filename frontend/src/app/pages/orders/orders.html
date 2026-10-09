@@ -137,9 +137,15 @@
                       <i class="fa-solid fa-clock"></i> Cancellation Requested
                     </button>
                   } @else {
-                    <button style="flex: 1; background: white; border: 1px solid #ef4444; padding: 10px; border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;" (click)="cancelOrder(order)" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'">
-                      <i class="fa-solid fa-xmark"></i> Cancel Order
-                    </button>
+                    @if (canCancel(order)) {
+                      <button style="flex: 1; background: white; border: 1px solid #ef4444; padding: 10px; border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;" (click)="cancelOrder(order)" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'">
+                        <i class="fa-solid fa-xmark"></i> Cancel Order
+                      </button>
+                    } @else {
+                      <div style="flex: 1; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px; color: #64748b; font-size: 0.85rem; text-align: center; font-weight: 500;">
+                        <i class="fa-solid fa-headset"></i> Contact Support to Cancel
+                      </div>
+                    }
                   }
                 </div>
               }

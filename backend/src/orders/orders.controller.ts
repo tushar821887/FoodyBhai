@@ -23,8 +23,8 @@ export class OrdersController {
 
   @UseGuards(JwtAuthGuard)
   @Put(':id/cancel')
-  async cancelOrderCustomer(@Param('id') id: string) {
-    return this.ordersService.cancelOrderCustomer(id);
+  async cancelOrderCustomer(@Param('id') id: string, @Body('reason') reason: string) {
+    return this.ordersService.cancelOrderCustomer(id, reason);
   }
 
   @Get('restaurant/stats')
@@ -82,9 +82,17 @@ export class OrdersController {
   @Put('admin/:id/resolve-cancel')
   async resolveCancelRequest(
     @Param('id') id: string,
-    @Body('approve') approve: boolean
+    @Body('approve') approve: boolean,
+    @Body('processRefund') processRefund?: boolean
   ) {
-    return this.ordersService.resolveCancelRequest(id, approve);
+    return this.ordersService.resolveCancelRequest(id, approve, processRefund);
+  }
+
+
+  @UseGuards(JwtAuthGuard)
+  @Put('admin/:id/refund')
+  async processRefund(@Param('id') id: string) {
+    return this.ordersService.processRefund(id);
   }
 
 }

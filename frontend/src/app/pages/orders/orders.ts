@@ -193,6 +193,44 @@ export class OrdersComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  cancelOrder(order: any) {
+    if (!this.canCancel(order)) {
+      this.showNotification('Cannot cancel order after 1 minute. Please contact support.', 'error');
+      return;
+    }
+    const reason = prompt('Please enter a reason for cancelling this order (optional):');
+    if (reason === null) return; // User clicked Cancel in prompt
+    
+    const orderId = order._id || order.id;
+    this.orderService.cancelOrder(orderId, reason).subscribe({
+      next: (updatedOrder: any) => {
+        const idx = this.orders.findIndex(o => (o._id || o.id) === orderId);
+        if (idx !== -1) {
+          this.orders[idx] = updatedOrder;
+        }
+        if (updatedOrder.cancelRequest?.status === 'pending') {
+          this.showNotification('Cancellation requested. Waiting for admin approval.', 'info');
+        } else {
+          this.showNotification('Order cancelled successfully.', 'success');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.showNotification(err?.error?.message || 'Failed to cancel order.', 'error');
+        console.error(err);
+      }
+    });
+  }
+
+  canCancel(order: any): boolean {
+    if (!order.createdAt) return false;
+    const orderDate = new Date(order.createdAt).getTime();
+    const now = new Date().getTime();
+    const diffMinutes = (now - orderDate) / (1000 * 60);
+    return diffMinutes <= 1;
+  }
+
   openDetailsModal(order: any) {
     this.selectedOrderDetails = order;
     this.showDetailsModal = true;

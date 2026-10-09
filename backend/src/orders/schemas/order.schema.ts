@@ -72,11 +72,15 @@ export class Order {
   @Prop({ required: false })
   review?: string;
 
+  @Prop({ required: false, default: 'none', enum: ['none', 'pending', 'completed', 'failed'] })
+  refundStatus?: string;
+
   @Prop({ type: Object, required: false })
   cancelRequest?: {
     requested: boolean;
     reason: string;
     status: string; // 'pending', 'approved', 'rejected'
+    requestedBy?: string; // 'Customer', 'Delivery Agent'
   };
 
   @Prop({ type: Object, required: false })
@@ -84,6 +88,9 @@ export class Order {
     cancelledBy: string; // 'Restaurant', 'Customer', 'Delivery Agent'
     reason?: string;
   };
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

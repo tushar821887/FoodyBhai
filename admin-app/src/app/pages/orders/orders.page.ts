@@ -750,9 +750,25 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.openCancelModal(orderId);
   }
 
-  resolveCancel(orderId: string, approve: boolean) {
+  resolveCancel(order: any, approve: boolean) {
     if (confirm(`Are you sure you want to ${approve ? 'approve' : 'reject'} this cancellation request?`)) {
-      this.api.resolveCancelOrder(orderId, approve).subscribe(() => this.fetchOrders());
+      let processRefund = false;
+      if (approve && order.paymentMethod === 'online') {
+        processRefund = confirm(`This order was paid online. Do you want to process a refund now?`);
+      }
+      this.api.resolveCancelOrder(order._id, approve, processRefund).subscribe(() => {
+        this.fetchOrders();
+        this.showNotification(`Cancellation ${approve ? 'approved' : 'rejected'}.`, 'success');
+      });
+    }
+  }
+
+  processRefund(order: any) {
+    if (confirm('Are you sure you want to process the refund for this order?')) {
+      this.api.processRefund(order._id).subscribe(() => {
+        this.fetchOrders();
+        this.showNotification('Refund processed successfully!', 'success');
+      });
     }
   }
 

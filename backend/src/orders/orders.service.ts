@@ -28,22 +28,66 @@ export class OrdersService {
     return this.orderModel.find({ userId }).sort({ createdAt: -1 }).exec();
   }
 
-  async cancelOrderCustomer(orderId: string): Promise<OrderDocument> {
+  async cancelOrderCustomer(orderId: string, reason: string): Promise<OrderDocument> {
+    const existingOrder = await this.orderModel.findById(orderId);
+    if (!existingOrder) throw new NotFoundException('Order not found');
+
+    const orderDate = new Date(existingOrder.createdAt || Date.now()).getTime();
+    const now = new Date().getTime();
+    const diffMinutes = (now - orderDate) / (1000 * 60);
+
+    if (diffMinutes > 1) {
+      throw new BadRequestException('Cannot cancel order after 1 minute. Please contact support.');
+    }
+
+    if (existingOrder.status === 'pending') {
+      // If it's just pending, cancel immediately
+      const order = await this.orderModel.findByIdAndUpdate(
+        orderId,
+        {
+          $set: {
+            status: 'cancelled',
+            cancellationDetails: { cancelledBy: 'Customer', reason: reason || 'Cancelled by customer' },
+            refundStatus: existingOrder.paymentMethod === 'online' ? 'pending' : 'none'
+          }
+        },
+        { new: true }
+      );
+      if (!order) throw new NotFoundException('Order not found');
+      return order;
+    } else {
+      // Otherwise, request cancellation from admin
+      const order = await this.orderModel.findByIdAndUpdate(
+        orderId,
+        {
+          $set: {
+            cancelRequest: {
+              requested: true,
+              reason: reason || 'Customer requested cancellation',
+              status: 'pending',
+              requestedBy: 'Customer'
+            }
+          }
+        },
+        { new: true }
+      );
+      if (!order) throw new NotFoundException('Order not found');
+      return order;
+    }
+  }
+
+  // --- Admin Methods ---
+
+  async processRefund(id: string): Promise<OrderDocument> {
     const order = await this.orderModel.findByIdAndUpdate(
-      orderId,
-      {
-        $set: {
-          status: 'cancelled',
-          cancellationDetails: { cancelledBy: 'Customer' }
-        }
-      },
+      id,
+      { $set: { refundStatus: 'completed' } },
       { new: true }
     );
     if (!order) throw new NotFoundException('Order not found');
     return order;
   }
 
-  // --- Admin Methods ---
 
   async getAllOrders(): Promise<OrderDocument[]> {
     // Sort by newest first
@@ -51,6 +95,9 @@ export class OrdersService {
   }
 
   async updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }, cancelReason?: string): Promise<OrderDocument> {
+    const existingOrder = await this.orderModel.findById(orderId);
+    if (!existingOrder) throw new NotFoundException('Order not found');
+
     const updateData: any = { status };
     if (status === 'delivered') {
       updateData.paymentStatus = 'paid';
@@ -58,6 +105,9 @@ export class OrdersService {
     if (status === 'cancelled' || status === 'rejected') {
       updateData.cancellationDetails = { cancelledBy: 'Restaurant' };
       if (cancelReason) updateData.cancellationDetails.reason = cancelReason;
+      if (existingOrder.paymentMethod === 'online') {
+        updateData.refundStatus = 'pending';
+      }
     }
     if (preparationTime !== undefined) {
       updateData.preparationTime = preparationTime;
@@ -212,7 +262,7 @@ export class OrdersService {
     return order;
   }
 
-  async resolveCancelRequest(id: string, approve: boolean): Promise<OrderDocument> {
+  async resolveCancelRequest(id: string, approve: boolean, processRefund: boolean = false): Promise<OrderDocument> {
     const existingOrder = await this.orderModel.findById(id);
     if (!existingOrder) throw new NotFoundException('Order not found');
     const updateData: any = {
@@ -222,7 +272,13 @@ export class OrdersService {
     };
     if (approve) {
       updateData.$set.status = 'cancelled';
-      updateData.$set.cancellationDetails = { cancelledBy: 'Delivery Agent', reason: existingOrder.cancelRequest?.reason };
+      updateData.$set.cancellationDetails = { 
+        cancelledBy: existingOrder.cancelRequest?.requestedBy || 'Delivery Agent', 
+        reason: existingOrder.cancelRequest?.reason 
+      };
+      if (existingOrder.paymentMethod === 'online') {
+        updateData.$set.refundStatus = processRefund ? 'completed' : 'pending';
+      }
     }
     const order = await this.orderModel.findByIdAndUpdate(
       id,
