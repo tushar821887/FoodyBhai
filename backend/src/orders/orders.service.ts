@@ -40,43 +40,24 @@ export class OrdersService {
       throw new BadRequestException('Cannot cancel order after 1 minute. Please contact support.');
     }
 
-    if (existingOrder.status === 'pending') {
-      // If it's just pending, cancel immediately
-      const order = await this.orderModel.findByIdAndUpdate(
-        orderId,
-        {
-          $set: {
-            status: 'cancelled',
-            cancellationDetails: { cancelledBy: 'Customer', reason: reason || 'Cancelled by customer' },
-            refundStatus: existingOrder.paymentMethod === 'online' ? 'pending' : 'none'
+    // Always create a cancellation request instead of cancelling immediately
+    const order = await this.orderModel.findByIdAndUpdate(
+      orderId,
+      {
+        $set: {
+          cancelRequest: {
+            requested: true,
+            reason: reason || 'Customer requested cancellation',
+            status: 'pending',
+            requestedBy: 'Customer'
           }
-        },
-        { new: true }
-      );
-      if (!order) throw new NotFoundException('Order not found');
-      return order;
-    } else {
-      // Otherwise, request cancellation from admin
-      const order = await this.orderModel.findByIdAndUpdate(
-        orderId,
-        {
-          $set: {
-            cancelRequest: {
-              requested: true,
-              reason: reason || 'Customer requested cancellation',
-              status: 'pending',
-              requestedBy: 'Customer'
-            }
-          }
-        },
-        { new: true }
-      );
-      if (!order) throw new NotFoundException('Order not found');
-      return order;
-    }
+        }
+      },
+      { new: true }
+    ).exec();
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
   }
-
-  // --- Admin Methods ---
 
   async processRefund(id: string): Promise<OrderDocument> {
     const order = await this.orderModel.findByIdAndUpdate(
