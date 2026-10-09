@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FilterStatusPipe } from '../../pipes/filter-status.pipe';
 import { FormsModule } from '@angular/forms';
@@ -109,7 +110,13 @@ export class OrdersPage implements OnInit, OnDestroy {
     }, 4000);
   }
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer) {}
+
+  getMapUrl(address: string) {
+    if (!address) return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+    const url = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
 
   ngOnInit() {
     this.currentUser = this.api.getCurrentUser();
