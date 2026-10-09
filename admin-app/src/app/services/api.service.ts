@@ -98,6 +98,10 @@ export class ApiService {
     return this.http.put<Agent>(`${this.apiUrl}/agents/${id}`, { name, phone, email, password }, this.getHeaders());
   }
 
+  updateAgentStatus(id: string, isActive: boolean) {
+    return this.http.put<Agent>(`${this.apiUrl}/agents/${id}`, { isActive }, this.getHeaders());
+  }
+
   addAgent(name: string, phone: string, email?: string, password?: string) {
     return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone, email, password }, this.getHeaders());
   }

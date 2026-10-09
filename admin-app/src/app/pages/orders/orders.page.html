@@ -522,6 +522,13 @@
                 </div>
               </div>
               <div style="display: flex; gap: 8px; align-items: center;">
+                <button 
+                  [style.color]="agent.isActive !== false ? '#10b981' : '#64748b'" 
+                  [style.background]="agent.isActive !== false ? '#ecfdf5' : '#f1f5f9'" 
+                  style="border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" 
+                  (click)="toggleAgentStatus(agent)">
+                  {{ agent.isActive !== false ? '✅ Active' : '⏸️ Inactive' }}
+                </button>
                 <button style="color: #10b981; background: #ecfdf5; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'" (click)="viewAgentOrders(agent)">📦 Orders</button>
                 <button style="color: #0ea5e9; background: #e0f2fe; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" (click)="editAgent(agent)">✏️ Edit</button>
                 <button style="color: #ef4444; background: #fef2f2; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'" (click)="deleteAgent(agent.id || agent._id)">🗑️ Delete</button>
@@ -896,7 +903,10 @@
     </div>
     
     <div class="agents-selection-list">
-      <div class="agent-select-item" *ngFor="let agent of agents" (click)="assignAgent(agent)" [class.selected]="selectedAgent?.id === agent.id">
+      <div *ngIf="getActiveAgents().length === 0" style="padding: 20px; text-align: center; color: #64748b;">
+        No active delivery agents found.
+      </div>
+      <div class="agent-select-item" *ngFor="let agent of getActiveAgents()" (click)="assignAgent(agent)" [class.selected]="selectedAgent?.id === agent.id">
         <div class="agent-avatar">{{ agent.name.charAt(0).toUpperCase() }}</div>
         <div class="agent-details">
           <strong>{{ agent.name }}</strong>

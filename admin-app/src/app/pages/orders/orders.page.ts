@@ -488,6 +488,19 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
+  toggleAgentStatus(agent: any) {
+    const newStatus = agent.isActive === false ? true : false;
+    this.api.updateAgentStatus(agent.id || agent._id, newStatus).subscribe(() => {
+      agent.isActive = newStatus;
+      this.showNotification(`Agent marked as ${newStatus ? 'Active' : 'Inactive'}`, 'success');
+      this.fetchAgents();
+    });
+  }
+
+  getActiveAgents() {
+    return this.agents.filter(a => a.isActive !== false);
+  }
+
   
   openAssignAgentModal(orderId: string) {
     this.orderToAssign = orderId;

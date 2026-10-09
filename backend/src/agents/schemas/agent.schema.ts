@@ -17,6 +17,8 @@ export class Agent {
   @Prop({ required: false })
   passwordHash?: string;
 
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const AgentSchema = SchemaFactory.createForClass(Agent);
