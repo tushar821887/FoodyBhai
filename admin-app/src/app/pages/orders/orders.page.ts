@@ -112,7 +112,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer) {}
 
-  getMapUrl(address: string) {
+  getEmbeddedMapUrl(address: string) {
     if (!address) return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
     const url = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
