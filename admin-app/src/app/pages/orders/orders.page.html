@@ -39,6 +39,10 @@
         <i class="icon">👥</i>
         <span>Users</span>
       </a>
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'contacts'" (click)="setView('contacts')">
+        <i class="icon">💬</i>
+        <span>Complaints/Contacts</span>
+      </a>
   <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cancel-requests'" (click)="setView('cancel-requests')">
         <i class="icon">🔄</i>
         <span>Refund & Cancel</span>
@@ -105,14 +109,31 @@
 
     <!-- Orders Area -->
     <div class="orders-section">
-      <div class="tabs-header">
+      <div class="tabs-header" style="overflow-x: auto; white-space: nowrap; display: flex;" *ngIf="!isAgent">
         <button class="tab-btn" [class.active]="currentTab === 'pending'" (click)="setTab('pending')">
           New Orders
           <span class="badge" *ngIf="(orders | filterStatus:'pending').length">{{ (orders | filterStatus:'pending').length }}</span>
         </button>
         <button class="tab-btn" [class.active]="currentTab === 'preparing'" (click)="setTab('preparing')">
-          Active
-          <span class="badge" *ngIf="activeOrdersCount > 0">{{ activeOrdersCount }}</span>
+          Preparing
+          <span class="badge" *ngIf="(orders | filterStatus:'preparing').length">{{ (orders | filterStatus:'preparing').length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="currentTab === 'ready'" (click)="setTab('ready')">
+          Ready
+          <span class="badge" *ngIf="(orders | filterStatus:'ready').length">{{ (orders | filterStatus:'ready').length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="currentTab === 'out_for_delivery'" (click)="setTab('out_for_delivery')">
+          Out for Delivery
+          <span class="badge" *ngIf="(orders | filterStatus:'out_for_delivery').length">{{ (orders | filterStatus:'out_for_delivery').length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="currentTab === 'completed'" (click)="setTab('completed')">History</button>
+        <button class="tab-btn" [class.active]="currentTab === 'cancelled'" (click)="setTab('cancelled')">Cancelled</button>
+      </div>
+
+      <div class="tabs-header" style="overflow-x: auto; white-space: nowrap; display: flex;" *ngIf="isAgent">
+        <button class="tab-btn" [class.active]="currentTab === 'out_for_delivery'" (click)="setTab('out_for_delivery')">
+          Active Delivery
+          <span class="badge" *ngIf="filteredOrders.length > 0 && currentTab === 'out_for_delivery'">{{ filteredOrders.length }}</span>
         </button>
         <button class="tab-btn" [class.active]="currentTab === 'completed'" (click)="setTab('completed')">History</button>
         <button class="tab-btn" [class.active]="currentTab === 'cancelled'" (click)="setTab('cancelled')">Cancelled</button>
@@ -126,6 +147,27 @@
         <div style="flex: 1; text-align: center;">
           <div style="color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Total Payout Amount</div>
           <div style="font-size: 32px; font-weight: 800; color: #10b981;">₹{{ totalPayoutAmount }}</div>
+        </div>
+      </div>
+
+      <!-- Dashboard History Filters -->
+      <div *ngIf="currentTab === 'completed'" class="animate-fade-in" style="background: white; border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; gap: 20px; align-items: center;">
+        <div style="flex: 1;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Date Filter</label>
+          <select [(ngModel)]="dashboardHistoryDate" (change)="filterOrders()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 14px; cursor: pointer;">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="weekly">Last 7 Days</option>
+            <option value="monthly">Last 30 Days</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Payment Method</label>
+          <select [(ngModel)]="dashboardHistoryPayment" (change)="filterOrders()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 14px; cursor: pointer;">
+            <option value="all">All Methods</option>
+            <option value="online">Online Payment</option>
+            <option value="cod">Cash on Delivery (COD)</option>
+          </select>
         </div>
       </div>
 
@@ -189,6 +231,12 @@
               "{{ order.review }}"
             </div>
           </div>
+          
+          <div *ngIf="isAgent && order.status === 'out_for_delivery'" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+             <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #334155;">🗺️ Delivery Route</h4>
+             <iframe [src]="getEmbeddedMapUrl(order.deliveryDetails.address)" width="100%" height="200" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+             <a [href]="getMapUrl(order)" target="_blank" class="btn btn-info" style="margin-top: 10px; width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center;">📍 Open in Google Maps</a>
+          </div>
 
           <div class="order-footer">
             <div class="payment-info">
@@ -214,9 +262,8 @@
    <button class="btn btn-success" *ngIf="order.orderType === 'pickup'" (click)="openPaymentModal(order)">Mark Picked Up</button>
             </div>
 
-            <div class="action-buttons" *ngIf="order.status === 'out_for_delivery'" style="display: flex; gap: 8px;">
-              <a *ngIf="isAgent" [href]="getMapUrl(order)" target="_blank" class="btn btn-info" style="text-decoration: none; display: flex; align-items: center; justify-content: center; flex: 1;">📍 Navigate</a>
-              <button class="btn btn-dark" style="flex: 1;" (click)="openPaymentModal(order)">Mark Delivered</button>
+            <div class="action-buttons" *ngIf="order.status === 'out_for_delivery'">
+              <button class="btn btn-dark" style="width: 100%; padding: 12px; font-size: 16px; font-weight: bold; background: #10b981; border: none;" (click)="openPaymentModal(order)">✅ Mark Delivered</button>
             </div>
             
             <div class="action-buttons" *ngIf="['preparing', 'ready', 'out_for_delivery'].includes(order.status)" style="margin-top: 10px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
@@ -870,7 +917,11 @@
         <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Refund & Cancel Requests</h2>
         <p style="margin: 0; opacity: 0.9; font-size: 15px;">Review cancellation requests and process pending refunds.</p>
       </div>
-      <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+      <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: transform 0.3s ease;" 
+           (click)="fetchOrders()"
+           onmouseover="this.style.transform='rotate(180deg)'" 
+           onmouseout="this.style.transform='rotate(0deg)'"
+           title="Refresh Requests">
         🔄
       </div>
     </div>
@@ -979,6 +1030,44 @@
   </div>
 </ng-container>
 
+<!-- CONTACTS / COMPLAINTS VIEW -->
+<ng-container *ngIf="currentView === 'contacts'">
+  <div class="top-bar">
+    <div class="greeting">
+      <h2>Complaints & Contacts</h2>
+      <p>View all messages submitted by users.</p>
+    </div>
+  </div>
+
+  <div class="table-container" style="background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 20px; overflow-x: auto;">
+    <table class="data-table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
+          <th style="padding: 15px; color: #64748b; font-weight: 600;">Date</th>
+          <th style="padding: 15px; color: #64748b; font-weight: 600;">Name</th>
+          <th style="padding: 15px; color: #64748b; font-weight: 600;">Contact Info</th>
+          <th style="padding: 15px; color: #64748b; font-weight: 600;">Message</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let contact of contacts" style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+          <td style="padding: 15px; vertical-align: top; white-space: nowrap; color: #475569;">{{ contact.createdAt | date:'short' }}</td>
+          <td style="padding: 15px; vertical-align: top; font-weight: 600; color: #1e293b;">{{ contact.name }}</td>
+          <td style="padding: 15px; vertical-align: top; color: #475569;">
+            <div>📧 {{ contact.email }}</div>
+            <div *ngIf="contact.phone" style="margin-top: 5px;">📞 {{ contact.phone }}</div>
+          </td>
+          <td style="padding: 15px; vertical-align: top; color: #334155; line-height: 1.5; min-width: 300px;">
+            {{ contact.message }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="contacts.length === 0" style="text-align: center; padding: 40px; color: #64748b;">
+      No complaints or messages found.
+    </div>
+  </div>
+</ng-container>
   </main>
 </div>
 
@@ -1275,15 +1364,15 @@
     <i class="icon">💳</i>
     <span>Pay</span>
   </a>
-  <a class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
+  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
     <i class="icon">🛵</i>
     <span>Agents</span>
   </a>
-  <a class="nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
+  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
     <i class="icon">🍽️</i>
     <span>Menu</span>
   </a>
-  <a class="nav-item" [class.active]="currentView === 'users'" (click)="setView('users')">
+  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'users'" (click)="setView('users')">
     <i class="icon">👥</i>
     <span>Users</span>
   </a>
@@ -1291,7 +1380,7 @@
     <i class="icon">🔄</i>
     <span>Refund & Cancel</span>
   </a>
-  <a class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
+  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
     <i class="icon">⚙️</i>
     <span>Settings</span>
   </a>

@@ -24,8 +24,12 @@ export class OrdersService {
     return order.save();
   }
 
-  async getUserOrders(userId: string): Promise<OrderDocument[]> {
-    return this.orderModel.find({ userId }).sort({ createdAt: -1 }).exec();
+  async getUserOrders(userId: string, phone?: string): Promise<OrderDocument[]> {
+    const query: any = { $or: [{ userId }] };
+    if (phone) {
+      query.$or.push({ 'deliveryDetails.phone': phone });
+    }
+    return this.orderModel.find(query).sort({ createdAt: -1 }).exec();
   }
 
   async cancelOrderCustomer(orderId: string, reason: string): Promise<OrderDocument> {

@@ -468,7 +468,7 @@
               </div>
             }
           </div>
-          <div class="upi-id-box">
+          <div class="upi-id-box" *ngIf="upiId">
             <i class="fa-solid fa-at"></i>
             <span class="upi-id-text">{{ upiId }}</span>
             <button class="upi-copy-btn" (click)="$event.stopPropagation()">

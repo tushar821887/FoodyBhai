@@ -19,7 +19,8 @@ export class OrdersController {
   @Get()
   async getUserOrders(@Req() req: any) {
     const userId = req.user._id || req.user.id;
-    return this.ordersService.getUserOrders(userId);
+    const phone = req.user.phone;
+    return this.ordersService.getUserOrders(userId, phone);
   }
 
   @UseGuards(JwtAuthGuard)

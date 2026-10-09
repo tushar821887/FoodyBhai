@@ -1,3 +1,4 @@
+import { ContactModule } from "./contact/contact.module";
 import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -12,6 +13,7 @@ import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
+    ContactModule,
     // Load environment variables
     ConfigModule.forRoot({
       isGlobal: true,

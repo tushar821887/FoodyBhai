@@ -133,10 +133,10 @@ export class CartService {
         // Merge local items into remote items
         for (const localItem of localItems) {
           if (!localItem || !localItem.recipe) continue;
-          const existingIndex = mergedItems.findIndex(i => i && i.recipe && i.recipe.id === localItem.recipe.id);
+          const existingIndex = mergedItems.findIndex(i => i && i.recipe && (i.recipe.id || i.recipe._id) == (localItem.recipe.id || localItem.recipe._id));
           if (existingIndex >= 0) {
-            // Take the max quantity, or add them? Add them makes sense, or max. Let's add them.
-            mergedItems[existingIndex].quantity += localItem.quantity;
+            // Take the max quantity to prevent doubling when local and remote carts are already synced
+            mergedItems[existingIndex].quantity = Math.max(mergedItems[existingIndex].quantity, localItem.quantity);
           } else {
             mergedItems.push(localItem);
           }
@@ -169,7 +169,7 @@ export class CartService {
       return;
     }
     const currentItems = [...this.itemsSubject.value];
-    const existingIndex = currentItems.findIndex(i => i.recipe.id === recipe.id);
+    const existingIndex = currentItems.findIndex(i => (i.recipe.id || i.recipe._id) == (recipe.id || recipe._id));
     
     if (existingIndex >= 0) {
       currentItems[existingIndex] = {
@@ -187,14 +187,14 @@ export class CartService {
     return this.items$.pipe(
       map(items => {
         if (!items || !Array.isArray(items)) return 0;
-        const item = items.find(i => i && i.recipe && i.recipe.id === recipeId);
+        const item = items.find(i => i && i.recipe && (i.recipe.id || i.recipe._id) == recipeId);
         return item ? item.quantity : 0;
       })
     );
   }
 
   removeFromCart(recipeId: number) {
-    const currentItems = this.itemsSubject.value.filter(i => i && i.recipe && i.recipe.id !== recipeId);
+    const currentItems = this.itemsSubject.value.filter(i => i && i.recipe && (i.recipe.id || i.recipe._id) != recipeId);
     this.syncCart(currentItems);
   }
 
@@ -204,7 +204,7 @@ export class CartService {
       return;
     }
     const currentItems = [...this.itemsSubject.value];
-    const existingIndex = currentItems.findIndex(i => i && i.recipe && i.recipe.id === recipeId);
+    const existingIndex = currentItems.findIndex(i => i && i.recipe && (i.recipe.id || i.recipe._id) == recipeId);
     if (existingIndex >= 0) {
       currentItems[existingIndex] = {
         ...currentItems[existingIndex],

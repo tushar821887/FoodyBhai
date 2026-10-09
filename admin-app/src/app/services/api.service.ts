@@ -189,4 +189,8 @@ export class ApiService {
   processRefund(orderId: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/refund`, {}, this.getHeaders());
   }
+
+  getContacts(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/contact`, this.getHeaders());
+  }
 }

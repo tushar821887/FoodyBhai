@@ -1,0 +1,227 @@
+<div class="profile-page-wrapper animate-fade-in">
+  <!-- Cover & Header -->
+  <div class="profile-cover">
+    <div class="profile-cover-gradient"></div>
+  </div>
+
+  <div class="profile-container">
+    <div class="profile-header-card shadow-sm">
+      <div class="avatar-wrapper">
+        <div class="profile-avatar">
+          {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+        </div>
+        <div class="avatar-ring"></div>
+      </div>
+      
+      <div class="profile-info-main">
+        <h1>{{ user?.name }}</h1>
+        <p class="email"><i class="fa-regular fa-envelope"></i> {{ user?.email }}</p>
+        
+        <div class="badges-row">
+          <span class="role-badge"><i class="fa-solid fa-user-shield" *ngIf="user?.role === 'admin'"></i> <i class="fa-solid fa-user" *ngIf="user?.role !== 'admin'"></i> {{ user?.role }}</span>
+          <span class="member-badge"><i class="fa-regular fa-calendar-check"></i> Member since {{ memberSince }}</span>
+        </div>
+      </div>
+
+      <button class="btn-edit-modern" (click)="isEditing = !isEditing">
+        <i class="fa-solid" [ngClass]="isEditing ? 'fa-xmark' : 'fa-pen'"></i> {{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
+      </button>
+    </div>
+
+    <!-- Alert Message -->
+    <div *ngIf="message" class="alert-modern" [ngClass]="isError ? 'alert-error' : 'alert-success'">
+      <i class="fa-solid" [ngClass]="isError ? 'fa-circle-exclamation' : 'fa-circle-check'"></i>
+      <span>{{ message }}</span>
+    </div>
+
+    <div class="profile-content-grid">
+      <!-- LEFT COLUMN -->
+      <div class="left-column">
+        
+        <!-- EDIT FORM -->
+        <div class="modern-card shadow-sm edit-card" *ngIf="isEditing">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-user-pen"></i> Edit Personal Details</h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group-modern">
+              <label><i class="fa-regular fa-user"></i> Full Name</label>
+              <input type="text" [(ngModel)]="editData.name" class="form-control-modern">
+            </div>
+            <div class="form-group-modern">
+              <label><i class="fa-solid fa-phone"></i> Phone Number</label>
+              <input type="text" [(ngModel)]="editData.phone" class="form-control-modern" placeholder="e.g. 9876543210">
+            </div>
+            <div class="form-group-modern">
+              <label><i class="fa-solid fa-cake-candles"></i> Date of Birth</label>
+              <input type="date" [(ngModel)]="editData.dateOfBirth" class="form-control-modern">
+            </div>
+            <div class="form-group-modern">
+              <label><i class="fa-solid fa-venus-mars"></i> Gender</label>
+              <select [(ngModel)]="editData.gender" class="form-control-modern">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+            <div class="form-actions-modern">
+              <button class="btn-save" (click)="saveProfile()"><i class="fa-solid fa-check"></i> Save Changes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW DETAILS -->
+        <div class="modern-card shadow-sm" *ngIf="!isEditing">
+          <div class="card-header">
+            <h3><i class="fa-regular fa-address-card"></i> Personal Details</h3>
+          </div>
+          <div class="card-body">
+            <div class="details-list">
+              <div class="detail-row">
+                <div class="detail-icon"><i class="fa-solid fa-phone"></i></div>
+                <div class="detail-content">
+                  <span class="detail-label">Phone Number</span>
+                  <span class="detail-value" [class.not-provided]="!user?.phone">{{ user?.phone || 'Not provided' }}</span>
+                </div>
+              </div>
+              <div class="detail-divider"></div>
+              <div class="detail-row">
+                <div class="detail-icon"><i class="fa-solid fa-cake-candles"></i></div>
+                <div class="detail-content">
+                  <span class="detail-label">Date of Birth</span>
+                  <span class="detail-value" [class.not-provided]="!user?.dateOfBirth">{{ user?.dateOfBirth || 'Not provided' }}</span>
+                </div>
+              </div>
+              <div class="detail-divider"></div>
+              <div class="detail-row">
+                <div class="detail-icon"><i class="fa-solid fa-venus-mars"></i></div>
+                <div class="detail-content">
+                  <span class="detail-label">Gender</span>
+                  <span class="detail-value" [class.not-provided]="!user?.gender">{{ user?.gender || 'Not provided' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADDRESSES WIDGET -->
+        <div class="modern-card shadow-sm" *ngIf="!isEditing">
+          <div class="card-header d-flex justify-between align-center">
+            <h3><i class="fa-solid fa-map-location-dot"></i> Saved Addresses</h3>
+            <a routerLink="/addresses" class="btn-text-link">Manage</a>
+          </div>
+          <div class="card-body">
+            <div *ngIf="!user?.addresses || user.addresses.length === 0" class="empty-state-mini">
+              <i class="fa-regular fa-compass"></i>
+              <p>No addresses saved.</p>
+            </div>
+            <div *ngIf="getAddresses().length > 0" class="address-preview-list">
+              <div class="address-preview-item" *ngFor="let addr of getAddresses() | slice:0:2">
+                <div class="addr-label-badge">{{ addr.label }}</div>
+                <p class="addr-text">{{ addr.fullAddress }}</p>
+              </div>
+              <div class="more-addresses" *ngIf="user.addresses.length > 2">
+                +{{ user.addresses.length - 2 }} more
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-column">
+        
+        <!-- QUICK STATS ROW -->
+        <div class="stats-row">
+          <div class="stat-card shadow-sm stat-total">
+            <div class="stat-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div class="stat-info">
+              <h4>{{ totalOrders }}</h4>
+              <span>Total Orders</span>
+            </div>
+          </div>
+          
+          <div class="stat-card shadow-sm stat-spent">
+            <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+            <div class="stat-info">
+              <h4>₹{{ totalSpent }}</h4>
+              <span>Total Spent</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORDER CHARTS -->
+        <div class="modern-card shadow-sm chart-card">
+          <div class="card-header d-flex justify-between align-center">
+            <h3><i class="fa-solid fa-chart-pie"></i> Order Analysis</h3>
+            <a routerLink="/orders" class="btn-text-link">View History <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+          
+          <div class="card-body">
+            <div *ngIf="totalOrders === 0" class="empty-state-large">
+              <img src="https://cdn-icons-png.flaticon.com/512/2748/2748558.png" alt="No Orders" class="empty-icon">
+              <h4>No orders placed yet</h4>
+              <p>Looks like you haven't tasted our delicious food yet!</p>
+              <a routerLink="/menu" class="btn-primary-glow">Browse Menu</a>
+            </div>
+
+            <div class="custom-bars-container" *ngIf="totalOrders > 0">
+              <!-- Completed Bar -->
+              <div class="custom-bar-group">
+                <div class="bar-header">
+                  <div class="bar-title">
+                    <span class="dot dot-success"></span> Completed
+                  </div>
+                  <div class="bar-stats">
+                    <strong>{{ completedOrders }}</strong> 
+                    <span class="text-muted">({{ getPercentage(completedOrders) }}%)</span>
+                  </div>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill fill-success" [style.width]="getPercentage(completedOrders) + '%'"></div>
+                </div>
+              </div>
+
+              <!-- Pending Bar -->
+              <div class="custom-bar-group">
+                <div class="bar-header">
+                  <div class="bar-title">
+                    <span class="dot dot-warning"></span> Pending / Active
+                  </div>
+                  <div class="bar-stats">
+                    <strong>{{ pendingOrders }}</strong> 
+                    <span class="text-muted">({{ getPercentage(pendingOrders) }}%)</span>
+                  </div>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill fill-warning" [style.width]="getPercentage(pendingOrders) + '%'"></div>
+                </div>
+              </div>
+
+              <!-- Cancelled Bar -->
+              <div class="custom-bar-group">
+                <div class="bar-header">
+                  <div class="bar-title">
+                    <span class="dot dot-danger"></span> Cancelled
+                  </div>
+                  <div class="bar-stats">
+                    <strong>{{ cancelledOrders }}</strong> 
+                    <span class="text-muted">({{ getPercentage(cancelledOrders) }}%)</span>
+                  </div>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill fill-danger" [style.width]="getPercentage(cancelledOrders) + '%'"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

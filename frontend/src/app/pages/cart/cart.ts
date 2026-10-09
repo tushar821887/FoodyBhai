@@ -42,7 +42,7 @@ export class CartComponent implements OnDestroy {
   paymentMethod: 'online' | 'cod' = 'online';
   codConfirmed = false;
   qrImageUrl = '';
-  upiId = 'foodybhai@okaxis';
+  upiId = '';
   
   get dynamicQrUrl(): string {
     if (!this.upiId) return this.qrImageUrl; // fallback
@@ -94,10 +94,10 @@ export class CartComponent implements OnDestroy {
 
     // Load QR & UPI from localStorage (set by admin)
     if (isPlatformBrowser(this.platformId)) {
-      this.orderService.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) { this.qrImageUrl = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) { this.qrImageUrl = res.value; this.cdr.detectChanges(); } });
       this.orderService.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) { this.restaurantOpen = res.value === 'true' || res.value === true; this.cdr.detectChanges(); } });
-      this.orderService.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value) { this.restaurantClosedReason = res.value; this.cdr.detectChanges(); } });
-      this.orderService.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) { this.upiId = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value !== undefined) { this.restaurantClosedReason = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) { this.upiId = res.value; this.cdr.detectChanges(); } });
       
       
     }
@@ -215,8 +215,14 @@ export class CartComponent implements OnDestroy {
 
   saveNewAddress() {
     if (!this.newAddressLabel || !this.newAddressText) return;
+    
+    let addressToSave = this.newAddressText;
+    if (!addressToSave.toLowerCase().includes('meerut')) {
+      addressToSave += ', Meerut, Uttar Pradesh';
+    }
+    
     this.isAddingAddress = true;
-    this.authService.addAddress({ label: this.newAddressLabel, fullAddress: this.newAddressText }).subscribe({
+    this.authService.addAddress({ label: this.newAddressLabel, fullAddress: addressToSave }).subscribe({
       next: (user) => {
         this.isAddingAddress = false;
         this.newAddressText = '';
@@ -276,7 +282,11 @@ export class CartComponent implements OnDestroy {
     let finalAddress = this.deliveryAddress;
     if (this.orderType === 'delivery') {
       const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
-      if (selected) finalAddress = selected.fullAddress;
+      if (selected) {
+        finalAddress = selected.fullAddress;
+      } else if (!finalAddress.toLowerCase().includes('meerut')) {
+        finalAddress += ', Meerut, Uttar Pradesh';
+      }
     } else {
       finalAddress = 'Self Pickup — 226 Bhatwara, Budhana Gate, Meerut';
     }

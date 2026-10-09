@@ -18,7 +18,9 @@ export class OrdersPage implements OnInit, OnDestroy {
   
   getMapUrl(order: any) {
     const origin = encodeURIComponent('127, Bhatwara, Meerut - 250002');
-    const destination = encodeURIComponent(order.deliveryDetails.address);
+    let destStr = order.deliveryDetails?.address || '';
+    if (!destStr.toLowerCase().includes('meerut')) destStr += ', Meerut, Uttar Pradesh, India';
+    const destination = encodeURIComponent(destStr);
     return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
   }
   currentUser: any = null;
@@ -54,8 +56,9 @@ export class OrdersPage implements OnInit, OnDestroy {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   baseOrders: Order[] = [];
+  contacts: any[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   
   showCancelModal = false;
@@ -103,7 +106,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   isAddingAgent = false;
   
   // Settings
-  upiId: string = 'foodybhai@okaxis';
+  upiId: string = '';
   restaurantOpen = true;
   restaurantClosedReason = 'We are currently closed. Please check back later.';
   qrImageUrl: string = 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
@@ -140,10 +143,27 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer) {}
 
+  private mapUrlCache = new Map<string, any>();
+
   getEmbeddedMapUrl(address: string) {
     if (!address) return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
-    const url = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    if (this.mapUrlCache.has(address)) {
+      return this.mapUrlCache.get(address);
+    }
+    
+    let searchAddress = address;
+    if (!searchAddress.toLowerCase().includes('meerut')) {
+      searchAddress += ', Meerut, Uttar Pradesh, India';
+    }
+    
+    // Embed a route from restaurant to the user
+    const origin = encodeURIComponent('127, Bhatwara, Meerut - 250002');
+    const dest = encodeURIComponent(searchAddress);
+    const url = `https://maps.google.com/maps?saddr=${origin}&daddr=${dest}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+    
+    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this.mapUrlCache.set(address, safeUrl);
+    return safeUrl;
   }
 
   private timerInterval: any;
@@ -152,6 +172,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.currentUser = this.api.getCurrentUser();
     if (this.currentUser && this.currentUser.role === 'agent') {
       this.isAgent = true;
+      this.currentTab = 'out_for_delivery';
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') {
         Notification.requestPermission();
       }
@@ -276,6 +297,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     return baseOrders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status)).length;
   }
 
+  // Dashboard History Filters
+  dashboardHistoryDate: string = 'all';
+  dashboardHistoryPayment: string = 'all';
+
   filterOrders() {
     let baseOrders = this.orders;
     if (this.isAgent) {
@@ -285,11 +310,39 @@ export class OrdersPage implements OnInit, OnDestroy {
     if (this.currentTab === 'pending') {
       this.filteredOrders = baseOrders.filter(o => o.status === 'pending');
     } else if (this.currentTab === 'preparing') {
-      this.filteredOrders = baseOrders.filter(o => ['preparing', 'ready', 'out_for_delivery'].includes(o.status));
+      this.filteredOrders = baseOrders.filter(o => o.status === 'preparing');
+    } else if (this.currentTab === 'ready') {
+      this.filteredOrders = baseOrders.filter(o => o.status === 'ready');
+    } else if (this.currentTab === 'out_for_delivery') {
+      this.filteredOrders = baseOrders.filter(o => o.status === 'out_for_delivery');
     } else if (this.currentTab === 'cancelled') {
       this.filteredOrders = baseOrders.filter(o => ['cancelled', 'rejected'].includes(o.status));
     } else {
-      this.filteredOrders = baseOrders.filter(o => o.status === 'delivered');
+      let historyOrders = baseOrders.filter(o => o.status === 'delivered');
+      
+      if (this.dashboardHistoryDate !== 'all') {
+        const now = new Date();
+        historyOrders = historyOrders.filter(o => {
+          if (!o.createdAt) return true;
+          const orderDate = new Date(o.createdAt);
+          const diffDays = Math.ceil(Math.abs(now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24)); 
+          if (this.dashboardHistoryDate === 'today') return diffDays <= 1;
+          if (this.dashboardHistoryDate === 'weekly') return diffDays <= 7;
+          if (this.dashboardHistoryDate === 'monthly') return diffDays <= 30;
+          return true;
+        });
+      }
+
+      if (this.dashboardHistoryPayment !== 'all') {
+        historyOrders = historyOrders.filter(o => {
+          const p = (o.paymentMethod || '').toLowerCase();
+          if (this.dashboardHistoryPayment === 'online') return p === 'online';
+          if (this.dashboardHistoryPayment === 'cod') return p === 'cod';
+          return true;
+        });
+      }
+      
+      this.filteredOrders = historyOrders;
     }
   }
 
@@ -416,18 +469,21 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.showOrderDetailsModal = true;
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests') {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts') {
     this.currentView = view;
     if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
       this.fetchCategories();
       this.fetchRecipes();
     }
+    if (view === 'contacts') {
+      this.api.getContacts().subscribe(res => this.contacts = res);
+    }
     if (view === 'settings') {
-      this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value) this.upiId = res.value; });
-      this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value) this.qrImageUrl = res.value; });
+      this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) this.upiId = res.value; });
+      this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) this.qrImageUrl = res.value; });
       this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
-      this.api.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value) this.restaurantClosedReason = res.value; });
+      this.api.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value !== undefined) this.restaurantClosedReason = res.value; });
       
       
     }
@@ -829,13 +885,11 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   get totalCompletedOrders() {
-    return this.baseOrders.filter(o => o.status === 'delivered').length;
+    return this.filteredOrders.length;
   }
 
   get totalPayoutAmount() {
-    return this.baseOrders
-      .filter(o => o.status === 'delivered')
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    return this.filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   }
 
   showAgentOrdersModal = false;

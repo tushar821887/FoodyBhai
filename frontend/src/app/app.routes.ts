@@ -16,5 +16,6 @@ export const routes: Routes = [
   { path: 'addresses', loadComponent: () => import('./pages/addresses/addresses').then(m => m.AddressesComponent) },
   { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.CartComponent) },
   { path: 'admin', loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent) },
+  { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then(m => m.NotFound) }
 ];

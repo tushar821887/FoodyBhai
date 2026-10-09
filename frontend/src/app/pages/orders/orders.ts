@@ -1,5 +1,6 @@
 import { environment } from '../../../environments/environment';
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
 import { FormsModule } from '@angular/forms';
@@ -87,8 +88,32 @@ export class OrdersComponent implements OnInit, OnDestroy {
     public authService: AuthService,
     private cdr: ChangeDetectorRef,
     private router: Router,
-    private cartService: CartService
+    private cartService: CartService,
+    private sanitizer: DomSanitizer
   ) {}
+
+  private mapUrlCache = new Map<string, any>();
+
+  getEmbeddedMapUrl(address: string) {
+    if (!address) return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+    if (this.mapUrlCache.has(address)) {
+      return this.mapUrlCache.get(address);
+    }
+    
+    let searchAddress = address;
+    if (!searchAddress.toLowerCase().includes('meerut')) {
+      searchAddress += ', Meerut, Uttar Pradesh, India';
+    }
+    
+    // Embed a route from restaurant to the user
+    const origin = encodeURIComponent('127, Bhatwara, Meerut - 250002');
+    const dest = encodeURIComponent(searchAddress);
+    const url = `https://maps.google.com/maps?saddr=${origin}&daddr=${dest}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+    
+    const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this.mapUrlCache.set(address, safeUrl);
+    return safeUrl;
+  }
 
   timerInterval: any;
 

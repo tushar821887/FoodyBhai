@@ -54,6 +54,12 @@ export class User {
   @Prop({ default: 'user', enum: ['user', 'admin'] })
   role: string;
 
+  @Prop({ type: String })
+  dateOfBirth: string;
+
+  @Prop({ type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say', ''] })
+  gender: string;
+
   @Prop({ type: [AddressSchema], default: [] })
   addresses: Address[];
 }
