@@ -149,6 +149,9 @@
               {{ order.orderType === 'pickup' ? '🚶 Pickup' : '🛵 Delivery' }}
             </span>
           </div>
+          <div *ngIf="order.status === 'preparing' && order.preparationTime" style="margin-top: 8px; font-size: 13px; font-weight: 700; color: #f59e0b; display: flex; align-items: center; gap: 5px;">
+            🔥 Time left: {{ getPreparationTimeRemaining(order) }}
+          </div>
           
           <div class="customer-info">
             <strong>{{ order.deliveryDetails.name }}</strong><br>

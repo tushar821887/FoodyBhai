@@ -118,6 +118,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
+  private timerInterval: any;
+
   ngOnInit() {
     this.currentUser = this.api.getCurrentUser();
     if (this.currentUser && this.currentUser.role === 'agent') {
@@ -134,11 +136,26 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
     this.fetchOrders();
     this.pollInterval = setInterval(() => this.fetchOrders(), 10000);
+    this.timerInterval = setInterval(() => this.cdr.detectChanges(), 1000);
   }
 
   ngOnDestroy() {
     if (this.pollInterval) clearInterval(this.pollInterval);
+    if (this.timerInterval) clearInterval(this.timerInterval);
     this.stopRinging();
+  }
+
+  getPreparationTimeRemaining(order: any): string {
+    if (order.status !== 'preparing' || !order.preparationTime) return '';
+    const startTime = new Date(order.updatedAt || order.createdAt).getTime();
+    const targetTime = startTime + order.preparationTime * 60000;
+    const now = new Date().getTime();
+    const diff = targetTime - now;
+    if (diff <= 0) return 'Overdue / Ready!';
+    
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return `${minutes}m ${seconds}s`;
   }
 
   fetchOrders() {
