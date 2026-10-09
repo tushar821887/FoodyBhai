@@ -828,8 +828,14 @@ export class OrdersPage implements OnInit, OnDestroy {
   getCancelAndRefundOrders() {
     return this.baseOrders.filter(o => 
       (o.cancelRequest && o.cancelRequest.status === 'pending') || 
-      (o.status === 'cancelled' && o.refundStatus === 'pending')
-    ).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      (o.status === 'cancelled')
+    ).sort((a, b) => {
+      // Sort pending requests and pending refunds first
+      const aNeedsAction = (a.cancelRequest?.status === 'pending') || (a.status === 'cancelled' && a.refundStatus === 'pending') ? 1 : 0;
+      const bNeedsAction = (b.cancelRequest?.status === 'pending') || (b.status === 'cancelled' && b.refundStatus === 'pending') ? 1 : 0;
+      if (aNeedsAction !== bNeedsAction) return bNeedsAction - aNeedsAction;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
   }
 
 }
