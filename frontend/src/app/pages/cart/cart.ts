@@ -293,7 +293,7 @@ export class CartComponent implements OnDestroy {
 
     if (this.cartService.isOffline$.value) {
       
-      alert("We are currently offline and not accepting orders.");
+      this.showToast("We are currently offline and not accepting orders.", 'error');
       return;
     }
 
@@ -322,7 +322,7 @@ export class CartComponent implements OnDestroy {
       },
       error: (err) => {
         if (err.error && err.error.message && err.error.message.includes('offline')) {
-           alert(err.error.message);
+           this.showToast(err.error.message, 'error');
         }
         this.isPlacingOrder = false;
         console.error(err);

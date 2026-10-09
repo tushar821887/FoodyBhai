@@ -1460,3 +1460,19 @@
   </div>
 </div>
 
+
+<!-- Custom Confirm Modal -->
+<div class="modal-overlay" *ngIf="confirmDialog.show">
+  <div class="modal-content text-center">
+    <div style="font-size: 40px; margin-bottom: 15px;">
+      {{ confirmDialog.icon }}
+    </div>
+    <h3 style="margin-bottom: 10px; color: #1e293b; font-size: 20px; font-weight: 700;">{{ confirmDialog.title }}</h3>
+    <p style="color: #64748b; margin-bottom: 25px; font-size: 15px;">{{ confirmDialog.message }}</p>
+    
+    <div class="modal-actions full-width" style="display: flex; gap: 10px;">
+      <button class="btn btn-light" style="flex: 1;" (click)="confirmDialog.onCancel()">Cancel</button>
+      <button class="btn btn-primary" style="flex: 1;" (click)="confirmDialog.onConfirm()">Yes, Confirm</button>
+    </div>
+  </div>
+</div>

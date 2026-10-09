@@ -60,7 +60,7 @@ export class AddressesComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isAddingAddress = false;
-        alert('Failed to save address. Please try again.');
+        this.errorMessage = 'Failed to save address. Please try again.';
       }
     });
   }

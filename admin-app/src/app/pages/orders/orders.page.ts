@@ -23,6 +23,34 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
   currentUser: any = null;
   isAgent = false;
+
+  confirmDialog = {
+    show: false,
+    title: '',
+    message: '',
+    icon: '❓',
+    onConfirm: () => {},
+    onCancel: () => {}
+  };
+
+  showConfirm(title: string, message: string, icon: string = '❓'): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.confirmDialog = {
+        show: true,
+        title,
+        message,
+        icon,
+        onConfirm: () => {
+          this.confirmDialog.show = false;
+          resolve(true);
+        },
+        onCancel: () => {
+          this.confirmDialog.show = false;
+          resolve(false);
+        }
+      };
+    });
+  }
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   baseOrders: Order[] = [];
@@ -420,7 +448,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   addUser() {
     if(!this.newUser.name || !this.newUser.email || !this.newUser.password) {
-      alert('Name, Email, and Password are required');
+      this.showNotification('Name, Email, and Password are required', 'error');
       return;
     }
     this.api.createUser(this.newUser).subscribe({
@@ -429,7 +457,7 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.newUser = { name: '', email: '', password: '', phone: '', role: 'user' };
         this.fetchUsers();
       },
-      error: (err) => alert(err.error?.message || 'Failed to create user')
+      error: (err) => this.showNotification(err.error?.message || 'Failed to create user', 'error')
     });
   }
 
@@ -457,8 +485,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
-  deleteUser(id: string) {
-    if(confirm('Delete this user?')) {
+  async deleteUser(id: string) {
+    if(await this.showConfirm('Delete User', 'Delete this user?')) {
       this.api.deleteUser(id).subscribe(() => this.fetchUsers());
     }
   }
@@ -506,8 +534,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
-  deleteAgent(id: string) {
-    if(confirm('Delete this agent?')) {
+  async deleteAgent(id: string) {
+    if(await this.showConfirm('Delete Agent', 'Delete this agent?')) {
       this.api.deleteAgent(id).subscribe(() => this.fetchAgents());
     }
   }
@@ -598,8 +626,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     return this.recipes.filter(r => r.category === categoryName).length;
   }
 
-  deleteCategory(id: string) {
-    if(confirm('Delete this category?')) {
+  async deleteCategory(id: string) {
+    if(await this.showConfirm('Delete Category', 'Delete this category?')) {
       this.api.deleteCategory(id).subscribe(() => this.fetchCategories());
     }
   }
@@ -610,14 +638,14 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   addRecipe() {
     if(!this.newItem.title || !this.newItem.price || !this.newItem.description) {
-      alert('Please fill out Title, Price, and Description');
+      this.showNotification('Please fill out Title, Price, and Description', 'error');
       return;
     }
     this.newItem.slug = this.newItem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     this.api.addRecipe(this.newItem).subscribe(() => {
       this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true };
       this.fetchRecipes();
-      alert('Item added successfully');
+      this.showNotification('Item added successfully', 'success');
     });
   }
 
@@ -635,8 +663,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
-  deleteRecipe(id: string) {
-    if(confirm('Delete this item?')) {
+  async deleteRecipe(id: string) {
+    if(await this.showConfirm('Delete Item', 'Delete this item?')) {
       this.api.deleteRecipe(id).subscribe(() => this.fetchRecipes());
     }
   }
@@ -655,7 +683,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
     this.api.saveSetting('foodybhai_qr', this.qrImageUrl).subscribe(() => {
       if (showNotification) {
-        alert('Settings saved successfully!');
+        this.showNotification('Settings saved successfully!', 'success');
       }
     });
   }
@@ -720,7 +748,7 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.showNotification(`Order cancelled. Customer notified!`, 'error');
       });
     } else {
-      alert('Please provide a reason for cancellation.');
+      this.showNotification('Please provide a reason for cancellation.', 'error');
     }
   }
 
@@ -739,7 +767,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   submitCancelRequest() {
     if (this.orderToCancel && this.cancelReason.trim()) {
       this.api.requestCancelOrder(this.orderToCancel, this.cancelReason.trim()).subscribe(() => {
-        alert('Cancellation request sent to admin.');
+        this.showNotification('Cancellation request sent to admin.', 'success');
         this.closeCancelModal();
         this.fetchOrders();
       });
@@ -750,11 +778,11 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.openCancelModal(orderId);
   }
 
-  resolveCancel(order: any, approve: boolean) {
-    if (confirm(`Are you sure you want to ${approve ? 'approve' : 'reject'} this cancellation request?`)) {
+  async resolveCancel(order: any, approve: boolean) {
+    if (await this.showConfirm('Confirm Action', `Are you sure you want to ${approve ? 'approve' : 'reject'} this cancellation request?`, '❓')) {
       let processRefund = false;
       if (approve && order.paymentMethod === 'online') {
-        processRefund = confirm(`This order was paid online. Do you want to process a refund now?`);
+        processRefund = await this.showConfirm('Refund Order?', `This order was paid online. Do you want to process a refund now?`, '💳');
       }
       this.api.resolveCancelOrder(order._id, approve, processRefund).subscribe(() => {
         this.fetchOrders();
@@ -763,8 +791,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
-  processRefund(order: any) {
-    if (confirm('Are you sure you want to process the refund for this order?')) {
+  async processRefund(order: any) {
+    if (await this.showConfirm('Process Refund', 'Are you sure you want to process the refund for this order?', '💳')) {
       this.api.processRefund(order._id).subscribe(() => {
         this.fetchOrders();
         this.showNotification('Refund processed successfully!', 'success');
