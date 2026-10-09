@@ -26,7 +26,9 @@ export interface Order {
     requested: boolean;
     reason: string;
     status: string;
+    requestedBy?: string;
   };
+  refundStatus?: string;
   cancellationDetails?: {
     cancelledBy: string;
     reason?: string;
@@ -180,7 +182,11 @@ export class ApiService {
     return this.http.put(`${this.apiUrl}/orders/agent/${orderId}/cancel-request`, { reason }, this.getHeaders());
   }
 
-  resolveCancelOrder(orderId: string, approve: boolean): Observable<any> {
-    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/resolve-cancel`, { approve }, this.getHeaders());
+  resolveCancelOrder(orderId: string, approve: boolean, processRefund: boolean = false): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/resolve-cancel`, { approve, processRefund }, this.getHeaders());
+  }
+  
+  processRefund(orderId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/refund`, {}, this.getHeaders());
   }
 }

@@ -27,6 +27,14 @@ export interface Order {
   createdAt?: string;
   rating?: number;
   review?: string;
+  paymentMethod?: string;
+  refundStatus?: string;
+  cancelRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string;
+    requestedBy?: string;
+  };
 }
 
 @Injectable({
@@ -50,6 +58,10 @@ export class OrderService {
 
   rateOrder(id: string, rating: number, review: string): Observable<Order> {
     return this.http.post<Order>(`${this.API_URL}/orders/${id}/rate`, { rating, review });
+  }
+
+  cancelOrder(id: string, reason: string): Observable<Order> {
+    return this.http.put<Order>(`${this.API_URL}/orders/${id}/cancel`, { reason });
   }
 
   getRestaurantStats(): Observable<any> {
