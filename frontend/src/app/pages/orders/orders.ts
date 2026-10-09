@@ -61,6 +61,19 @@ export class OrdersComponent implements OnInit, OnDestroy {
   isLoading = true;
   errorMessage = '';
   
+  notificationMessage = '';
+  notificationType: 'success' | 'error' | 'info' = 'success';
+
+  showNotification(message: string, type: 'success' | 'error' | 'info' = 'success') {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.notificationMessage = '';
+      this.cdr.detectChanges();
+    }, 4000);
+  }
+
   // Rating Modal
   showRateModal = false;
   showDetailsModal = false;
@@ -92,14 +105,22 @@ export class OrdersComponent implements OnInit, OnDestroy {
           this.orderService.getOrderHistory().subscribe({
             next: (data) => {
               if (data) {
-                // Check if any order changed to 'preparing'
+                // Check if any order changed status
                 data.forEach((newOrder: any) => {
                   const oldOrder = this.orders.find(o => (o._id || o.id) === (newOrder._id || newOrder.id));
-                  if (oldOrder && oldOrder.status !== 'preparing' && newOrder.status === 'preparing') {
-                    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                      new Notification('FoodyBhai Order Update', { body: `Your order is now preparing! Ready in ${newOrder.preparationTime} minutes.` });
-                    } else {
-                      alert(`Your order #${(newOrder._id || newOrder.id).slice(-6).toUpperCase()} is now preparing! Ready in ${newOrder.preparationTime} minutes.`);
+                  if (oldOrder && oldOrder.status !== newOrder.status) {
+                    let msg = '';
+                    if (newOrder.status === 'preparing') msg = `Your order is accepted & preparing! Ready in ${newOrder.preparationTime || 15} mins.`;
+                    else if (newOrder.status === 'ready') msg = `Your order is ready!`;
+                    else if (newOrder.status === 'out_for_delivery') msg = `Your order is out for delivery!`;
+                    else if (newOrder.status === 'delivered') msg = `Your order has been delivered!`;
+                    else if (newOrder.status === 'rejected') msg = `Your order was rejected/cancelled.`;
+                    
+                    if (msg) {
+                      this.showNotification(msg, newOrder.status === 'rejected' ? 'error' : 'success');
+                      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                        new Notification('FoodyBhai Order Update', { body: msg });
+                      }
                     }
                   }
                 });
