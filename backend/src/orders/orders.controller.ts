@@ -2,15 +2,16 @@ import { Controller, Req, Get, Post, Body, Patch, Param, Delete, Put, UseGuards,
 import { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @Post()
   async createOrder(@Req() req: any, @Body() orderData: any) {
-    const userId = req.user._id || req.user.id;
+    const userId = req.user ? (req.user._id || req.user.id) : undefined;
     return this.ordersService.createOrder(userId, orderData);
   }
 

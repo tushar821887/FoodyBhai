@@ -234,10 +234,7 @@ export class CartComponent implements OnDestroy {
 
   // --- Checkout: open Payment Modal ---
   checkout() {
-    if (!this.authService.isLoggedIn()) {
-      this.uiService.openAuthModal();
-      return;
-    }
+    // Allow guest checkout
     // Validate address
     if (this.orderType === 'delivery') {
       if (this.savedAddresses.length > 0 && !this.selectedAddressId) {

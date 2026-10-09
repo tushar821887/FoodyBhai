@@ -1,21 +1,23 @@
 const fs = require('fs');
-const path = require('path');
+const file = 'backend/src/orders/orders.controller.ts';
+let code = fs.readFileSync(file, 'utf8');
 
-const controllerPath = path.join(__dirname, 'backend', 'src', 'orders', 'orders.controller.ts');
-let content = fs.readFileSync(controllerPath, 'utf8');
-
-const newMethod = `  @UseGuards(JwtAuthGuard)
-  @Get('admin/all')`;
-
-const rateMethod = `  @UseGuards(JwtAuthGuard)
-  @Post(':id/rate')
-  async rateOrder(@Param('id') id: string, @Body('rating') rating: number, @Body('review') review: string) {
-    return this.ordersService.rateOrder(id, rating, review);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('admin/all')`;
-
-content = content.replace(newMethod, rateMethod);
-fs.writeFileSync(controllerPath, content);
-console.log('Fixed orders.controller.ts');
+if (!code.includes('OptionalJwtAuthGuard')) {
+  code = code.replace(
+    "import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';",
+    "import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';\nimport { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';"
+  );
+  
+  code = code.replace(
+    `  @UseGuards(JwtAuthGuard)\n  @Post()\n  async createOrder(@Req() req: any, @Body() orderData: any) {`,
+    `  @UseGuards(OptionalJwtAuthGuard)\n  @Post()\n  async createOrder(@Req() req: any, @Body() orderData: any) {`
+  );
+  
+  code = code.replace(
+    `    const userId = req.user._id || req.user.id;\n    return this.ordersService.createOrder(userId, orderData);`,
+    `    const userId = req.user ? (req.user._id || req.user.id) : undefined;\n    return this.ordersService.createOrder(userId, orderData);`
+  );
+  
+  fs.writeFileSync(file, code);
+  console.log("Patched orders controller");
+}
