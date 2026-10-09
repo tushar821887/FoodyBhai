@@ -558,6 +558,7 @@ export class OrdersPage implements OnInit, OnDestroy {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.qrImageUrl = e.target?.result as string;
+        this.cdr.detectChanges();
       };
       reader.readAsDataURL(file);
     }

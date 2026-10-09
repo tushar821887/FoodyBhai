@@ -823,8 +823,8 @@
                 <div class="qr-preview-card" *ngIf="qrImageUrl">
                   <img [src]="qrImageUrl" alt="QR Code Preview">
                   <div class="qr-actions">
-                    <button class="btn-change-qr" (click)="fileInput.click()">Change Image</button>
-                    <button class="btn-remove-qr" (click)="qrImageUrl = ''">Remove</button>
+                    <button type="button" class="btn-change-qr" (click)="fileInput.click()">Change Image</button>
+                    <button type="button" class="btn-remove-qr" (click)="qrImageUrl = ''">Remove</button>
                   </div>
                 </div>
                 
@@ -835,7 +835,7 @@
                   <p>Click to browse files (PNG, JPG)</p>
                 </div>
                 
-                <input #fileInput type="file" accept="image/*" style="display: none;" (change)="onFileSelected($event)">
+                <input #fileInput type="file" accept="image/*" style="visibility: hidden; position: absolute;" (change)="onFileSelected($event)">
               </div>
             </div>
 
