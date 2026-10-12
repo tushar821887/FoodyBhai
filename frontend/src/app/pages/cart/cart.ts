@@ -43,6 +43,11 @@ export class CartComponent implements OnDestroy {
   codConfirmed = false;
   qrImageUrl = '';
   upiId = '';
+  selectedQrMode: 'dynamic' | 'uploaded' = 'dynamic';
+
+  get hasCustomUploadedQr(): boolean {
+    return !!(this.qrImageUrl && !this.qrImageUrl.includes('wikimedia.org'));
+  }
   
   get effectiveUpiId(): string {
     return this.upiId || '8218870579@ptyes';
@@ -286,6 +291,7 @@ export class CartComponent implements OnDestroy {
     }
     // Open payment modal
     this.paymentMethod = 'online';
+    this.selectedQrMode = 'dynamic';
     this.codConfirmed = false;
     this.showPaymentModal = true;
   }

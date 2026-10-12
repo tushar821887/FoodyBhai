@@ -1425,10 +1425,75 @@
     </div>
 
     <!-- Online QR View -->
-    <div *ngIf="selectedPaymentMethod === 'online'" style="text-align: center; margin-bottom: 20px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-      <img [src]="qrImageUrl" style="width: 180px; height: 180px; margin-bottom: 15px; border-radius: 8px; object-fit: contain;">
-      <div style="font-size: 16px; font-weight: 700; color: #1e293b;">Scan to Pay</div>
-      <div style="font-size: 14px; color: #64748b; margin-top: 5px;">{{ upiId }}</div>
+    <div *ngIf="selectedPaymentMethod === 'online'" class="qr-collection-card">
+      
+      <!-- Amount Badge -->
+      <div class="qr-amount-banner">
+        <div class="qr-amount-meta">Exact Amount to Collect</div>
+        <div class="qr-amount-sum">₹{{ orderToDeliver?.totalAmount }}</div>
+        <div class="qr-amount-desc">Locked & verified for this order</div>
+      </div>
+
+      <!-- Mode Selector (Dynamic QR vs Uploaded Store QR) -->
+      <div class="qr-mode-selector" *ngIf="hasCustomUploadedQr">
+        <button type="button" 
+                class="qr-mode-pill" 
+                [class.active]="selectedQrMode === 'dynamic'"
+                (click)="selectedQrMode = 'dynamic'">
+          <i class="fa-solid fa-bolt"></i> Dynamic QR (₹{{ orderToDeliver?.totalAmount }})
+        </button>
+        <button type="button" 
+                class="qr-mode-pill" 
+                [class.active]="selectedQrMode === 'uploaded'"
+                (click)="selectedQrMode = 'uploaded'">
+          <i class="fa-solid fa-image"></i> Uploaded Store QR
+        </button>
+      </div>
+
+      <!-- QR Display Container -->
+      <div class="qr-code-box">
+        <!-- Dynamic QR -->
+        <ng-container *ngIf="selectedQrMode === 'dynamic'">
+          <img [src]="getDynamicQrUrl(orderToDeliver?.totalAmount)" 
+               alt="Dynamic Payment QR Code" 
+               class="qr-display-image">
+          <div class="qr-badge-status dynamic-badge">
+            <i class="fa-solid fa-qrcode"></i> Dynamic QR • Auto-fills ₹{{ orderToDeliver?.totalAmount }}
+          </div>
+        </ng-container>
+
+        <!-- Uploaded Store QR -->
+        <ng-container *ngIf="selectedQrMode === 'uploaded'">
+          <img [src]="qrImageUrl" 
+               alt="Store Payment QR Code" 
+               class="qr-display-image">
+          <div class="qr-badge-status store-badge">
+            <i class="fa-solid fa-store"></i> Uploaded Store QR
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Direct UPI Payment Link (for customer mobile or GPay/PhonePe intent) -->
+      <a [href]="getUpiPaymentString(orderToDeliver?.totalAmount)" 
+         class="btn-upi-intent">
+        <i class="fa-solid fa-bolt"></i> Open in UPI App (GPay / PhonePe / Paytm)
+      </a>
+
+      <!-- UPI ID Copy Pill -->
+      <div class="upi-copy-pill" (click)="copyUpiId()" title="Tap to copy UPI ID">
+        <i class="fa-solid fa-at"></i>
+        <span class="upi-text">{{ effectiveUpiId }}</span>
+        <button type="button" class="btn-copy-icon" (click)="copyUpiId(); $event.stopPropagation()">
+          <i class="fa-regular fa-copy"></i>
+        </button>
+      </div>
+
+      <!-- Instruction note -->
+      <p class="qr-helper-note">
+        <i class="fa-solid fa-circle-info"></i>
+        Customer scans with any UPI app. Once payment is received, tap <strong>Mark as Delivered</strong> below.
+      </p>
+
     </div>
 
     <!-- COD View -->

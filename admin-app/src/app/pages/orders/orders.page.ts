@@ -170,7 +170,40 @@ export class OrdersPage implements OnInit, OnDestroy {
   upiId: string = '';
   restaurantOpen = true;
   restaurantClosedReason = 'We are currently closed. Please check back later.';
-  qrImageUrl: string = 'https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg';
+  qrImageUrl: string = '';
+  selectedQrMode: 'dynamic' | 'uploaded' = 'dynamic';
+
+  get effectiveUpiId(): string {
+    return this.upiId || '8218870579@ptyes';
+  }
+
+  get hasCustomUploadedQr(): boolean {
+    return !!(this.qrImageUrl && !this.qrImageUrl.includes('wikimedia.org'));
+  }
+
+  getUpiPaymentString(amount?: number): string {
+    const upi = this.effectiveUpiId;
+    const amt = Number(amount || this.orderToDeliver?.totalAmount || 0).toFixed(2);
+    return `upi://pay?pa=${upi}&pn=FoodyBhai&am=${amt}&cu=INR&tn=FoodyBhaiOrder`;
+  }
+
+  getDynamicQrUrl(amount?: number): string {
+    const upiStr = this.getUpiPaymentString(amount);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiStr)}`;
+  }
+
+  copyUpiId() {
+    const upi = this.effectiveUpiId;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(upi).then(() => {
+        this.showNotification('UPI ID copied: ' + upi, 'success');
+      }).catch(() => {
+        this.showNotification('UPI ID: ' + upi, 'success');
+      });
+    } else {
+      this.showNotification('UPI ID: ' + upi, 'success');
+    }
+  }
 
   // Payment Modal
   showPaymentModal = false;
@@ -262,6 +295,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.connectToLiveOrderStream();
 
     this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
+    this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) this.upiId = res.value; });
+    this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) this.qrImageUrl = res.value; });
     this.fetchOrders();
 
     // Fast backup polling (every 4 seconds) to guarantee zero missed orders
@@ -1107,8 +1142,11 @@ export class OrdersPage implements OnInit, OnDestroy {
   openPaymentModal(order: any) {
     this.orderToDeliver = order;
     this.selectedPaymentMethod = order.paymentMethod === 'online' ? 'online' : 'cod';
+    this.selectedQrMode = 'dynamic';
     this.cashReceived = false;
     this.showPaymentModal = true;
+    this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) this.upiId = res.value; });
+    this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) this.qrImageUrl = res.value; });
   }
 
   confirmDelivery() {
