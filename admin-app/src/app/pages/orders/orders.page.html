@@ -118,6 +118,20 @@
       </div>
     </div>
 
+    <!-- Active Ringing Order Alert Banner -->
+    <div *ngIf="isRingingActive" class="notification-permission-banner animate-fade-in" style="margin-bottom: 20px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; border-radius: 14px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.45); border: 2px solid #ef4444;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 26px;">🔔</span>
+        <div>
+          <div style="font-size: 15px; font-weight: 800; letter-spacing: 0.3px;">NEW ORDER RINGING!</div>
+          <div style="font-size: 13px; opacity: 0.95;">Action required: Review pending order and accept.</div>
+        </div>
+      </div>
+      <button (click)="stopRinging()" style="background: white; color: #dc2626; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <span>🔕</span> Silence Alarm
+      </button>
+    </div>
+
     <!-- Stats row -->
     <div class="stats-grid">
       <div class="stat-card">

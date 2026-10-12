@@ -415,10 +415,12 @@ export class OrdersPage implements OnInit, OnDestroy {
         const pendingOrders = data.filter(o => o.status === 'pending');
         const pendingCount = pendingOrders.length;
         
-        if (pendingCount > 0 && !this.isRinging) {
-          this.startRinging();
-        } else if (pendingCount === 0 && this.isRinging) {
-          this.stopRinging();
+        if (!this.isAgent) {
+          if (pendingCount > 0 && !this.notificationService.isCurrentlyRinging()) {
+            this.startRinging();
+          } else if (pendingCount === 0 && this.notificationService.isCurrentlyRinging()) {
+            this.stopRinging();
+          }
         }
         
         this.orders = data;
@@ -544,6 +546,10 @@ export class OrdersPage implements OnInit, OnDestroy {
   stopRinging() {
     this.isRinging = false;
     this.notificationService.stopRinging();
+  }
+
+  get isRingingActive(): boolean {
+    return this.notificationService.isCurrentlyRinging();
   }
 
   setTab(tab: string) {
