@@ -3,6 +3,12 @@
   background: #fcf2ec;
   position: relative;
   overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hero::-webkit-scrollbar {
+  display: none;
 }
 
 .hero::before {
@@ -24,6 +30,7 @@
   align-items: center;
   position: relative;
   z-index: 1;
+  overflow: visible;
 }
 
 .hero-badges {
