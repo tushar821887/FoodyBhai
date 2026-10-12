@@ -176,6 +176,6 @@ img {
   }
 
   .main-content {
-    margin-top: 96px; /* perfectly matches compact mobile header */
+    margin-top: 104px; /* safe clearance below compact fixed mobile header */
   }
 }

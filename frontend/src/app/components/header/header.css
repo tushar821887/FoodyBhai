@@ -245,20 +245,20 @@
 
 @media (max-width: 768px) {
   .logo-img {
-    height: 44px;
+    height: 42px;
   }
   .header-inner {
-    padding: 0.5rem 0;
+    padding: 0.45rem 0 !important;
   }
   .header.scrolled .header-inner {
-    padding: 0.35rem 0;
+    padding: 0.3rem 0 !important;
   }
   .top-marquee {
-    padding: 5px 0;
+    padding: 4px 0 !important;
   }
   .marquee-content span {
-    font-size: 0.78rem;
-    padding: 0 2rem;
+    font-size: 0.76rem !important;
+    padding: 0 1.5rem;
   }
 }
 
@@ -392,12 +392,12 @@
 }
 
 .header-inner {
-  padding: 1.5rem 0;
+  padding: 1.25rem 0;
   transition: padding var(--transition-normal);
 }
 
 .header.scrolled .header-inner {
-  padding: 1rem 0;
+  padding: 0.85rem 0;
 }
 
 /* New Auth UI Styles */

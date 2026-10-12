@@ -26,6 +26,13 @@
   z-index: 1;
 }
 
+.hero-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
 .delivery-badge {
   display: inline-flex;
   align-items: center;
@@ -36,9 +43,14 @@
   border-radius: 50px;
   font-weight: 600;
   font-size: 0.9rem;
-  margin-bottom: 1.5rem;
   box-shadow: var(--shadow-sm);
   border: 1px solid rgba(255,71,87,0.2);
+}
+
+.delivery-badge.area-badge {
+  background: var(--primary-color);
+  color: white;
+  border: none;
 }
 
 .hero-title {
@@ -189,15 +201,19 @@
   }
 
   .hero-badges {
-    margin-bottom: 0.6rem !important;
-    gap: 6px !important;
-    justify-content: center;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.75rem !important;
   }
 
   .delivery-badge {
-    padding: 0.3rem 0.75rem;
+    padding: 0.35rem 0.8rem;
     font-size: 0.78rem;
     margin-bottom: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
   }
 
   .hero-title {
