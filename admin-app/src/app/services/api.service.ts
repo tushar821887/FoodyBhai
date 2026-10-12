@@ -28,6 +28,14 @@ export interface Order {
     status: string;
     requestedBy?: string;
   };
+  reassignRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string; // 'pending', 'approved', 'rejected'
+    requestedByAgent?: { name: string; phone: string };
+    requestedAt?: string;
+    resolvedAt?: string;
+  };
   refundStatus?: string;
   cancellationDetails?: {
     cancelledBy: string;
@@ -190,7 +198,22 @@ export class ApiService {
     return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/refund`, {}, this.getHeaders());
   }
 
+  requestReassignOrder(orderId: string, reason: string, agent?: { name: string; phone: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/agent/${orderId}/reassign-request`, { reason, agent }, this.getHeaders());
+  }
+
+  resolveReassignOrder(orderId: string, approve: boolean, newAgent?: { name: string; phone: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/resolve-reassign`, { approve, newAgent }, this.getHeaders());
+  }
+
   getContacts(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/contact`, this.getHeaders());
+  }
+
+  getOrderEventSource(): EventSource | null {
+    if (typeof window !== 'undefined' && 'EventSource' in window) {
+      return new EventSource(`${this.apiUrl}/orders/live-stream`);
+    }
+    return null;
   }
 }

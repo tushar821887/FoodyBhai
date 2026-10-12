@@ -8,10 +8,11 @@
 </div>
 
 <div class="dashboard-layout">
-  <!-- Desktop Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
+  <!-- Desktop & Mobile Sidebar -->
+  <aside class="sidebar" [class.mobile-open]="mobileMenuOpen">
+    <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
       <img src="assets/logo.png" alt="FoodyBhai" onerror="this.src='https://via.placeholder.com/150x50?text=FoodyBhai'">
+      <button class="sidebar-close-btn" (click)="closeMobileMenu()" aria-label="Close menu">✕</button>
     </div>
     <nav class="sidebar-nav">
       <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
@@ -43,9 +44,10 @@
         <i class="icon">💬</i>
         <span>Complaints/Contacts</span>
       </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cancel-requests'" (click)="setView('cancel-requests')">
+  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cancel-requests'" (click)="setView('cancel-requests')" style="position: relative;">
         <i class="icon">🔄</i>
-        <span>Refund & Cancel</span>
+        <span>Refund & Requests</span>
+        <span *ngIf="totalPendingRequestsCount > 0" style="background: #ef4444; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; margin-left: auto;">{{ totalPendingRequestsCount }}</span>
       </a>
       <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
         <i class="icon">⚙️</i>
@@ -58,12 +60,19 @@
       </button>
     </div>
   </aside>
+  <div class="sidebar-backdrop" *ngIf="mobileMenuOpen" (click)="closeMobileMenu()"></div>
 
   <!-- Main Content -->
   <main class="main-content">
     <!-- Mobile Sticky Header -->
     <div class="mobile-universal-header">
-      <img src="assets/logo.png" alt="FoodyBhai" onerror="this.src='https://via.placeholder.com/100x30?text=FoodyBhai'">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="mobile-menu-btn" (click)="toggleMobileMenu()" aria-label="Toggle menu" style="position: relative;">
+          <span>☰</span>
+          <span *ngIf="!isAgent && totalPendingRequestsCount > 0" style="position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; background: #ef4444; border-radius: 50%; border: 1.5px solid white;"></span>
+        </button>
+        <img src="assets/logo.png" alt="FoodyBhai" onerror="this.src='https://via.placeholder.com/100x30?text=FoodyBhai'">
+      </div>
       <button class="logout-btn-mobile" (click)="logout()">Logout</button>
     </div>
     <!-- DASHBOARD VIEW -->
@@ -81,6 +90,31 @@
             <span class="knob" [style.transform]="restaurantOpen ? 'translateX(22px)' : 'translateX(0)'" style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
           </span>
         </label>
+      </div>
+    </div>
+
+    <!-- Notification Permission Prompt Banner -->
+    <div *ngIf="showNotificationPermissionPrompt" class="notification-permission-banner animate-fade-in" style="margin-bottom: 20px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; border-radius: 14px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3); border: 1px solid #334155;">
+      <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 260px;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.18); border: 2px solid #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+          🔔
+        </div>
+        <div>
+          <div style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+            Enable Order Sound & Notifications
+          </div>
+          <div style="font-size: 13px; color: #94a3b8; line-height: 1.4;">
+            {{ isAgent ? 'Allow permissions so you receive immediate sound and status bar alerts when orders are assigned.' : 'Allow notification permissions so you hear the order alarm and get system tray alerts the moment orders arrive.' }}
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button (click)="allowNotifications()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+          <span>🔔</span> Allow Notifications
+        </button>
+        <button (click)="denyNotifications()" style="background: rgba(255, 255, 255, 0.1); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+          Don't Allow
+        </button>
       </div>
     </div>
 
@@ -271,13 +305,57 @@
               <!-- Admin Cancel Logic -->
               <button *ngIf="!isAgent" class="btn btn-outline-danger" style="width: 100%;" (click)="rejectOrder(order._id)">Cancel Order</button>
               
-              <!-- Agent Cancel Logic -->
+              <!-- Agent Cancel & Reassign Logic -->
               <ng-container *ngIf="isAgent">
+                <!-- Reassign Request Section -->
+                <div *ngIf="order.status === 'out_for_delivery'" style="width: 100%; margin-bottom: 8px;">
+                  <div *ngIf="order.reassignRequest?.status === 'pending'" style="padding: 10px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; font-size: 13px; color: #92400e; margin-bottom: 6px; text-align: left;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 12px; text-transform: uppercase;">
+                      <span>🔄 Reassign Requested</span>
+                      <span style="font-size: 10px; background: #fef3c7; padding: 2px 6px; border-radius: 8px;">Pending</span>
+                    </div>
+                    <div style="font-size: 12px; margin-top: 4px; color: #b45309;">
+                      <strong>Reason:</strong> {{ order.reassignRequest?.reason }}
+                    </div>
+                    <div style="font-size: 11px; margin-top: 3px; color: #d97706; font-style: italic;">
+                      Admin has been notified to reassign another agent.
+                    </div>
+                  </div>
+                  <button *ngIf="order.reassignRequest?.status !== 'pending'" class="btn btn-warning" style="width: 100%; background: #f59e0b; color: white; border: none; font-weight: 700; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);" (click)="openReassignModal(order)">
+                    <span>🔄</span> Request Reassign Agent
+                  </button>
+                </div>
+
+                <!-- Cancel Request Section -->
                 <button *ngIf="order.cancelRequest?.status === 'pending'" class="btn btn-outline-danger" style="width: 100%; opacity: 0.6; cursor: not-allowed;" disabled>Cancellation Requested</button>
                 <button *ngIf="order.cancelRequest?.status !== 'pending'" class="btn btn-outline-danger" style="width: 100%;" (click)="requestCancel(order._id)">Request Cancel</button>
               </ng-container>
             </div>
             
+            <!-- Admin Reassignment Request Approval Banner -->
+            <div *ngIf="!isAgent && order.reassignRequest?.status === 'pending'" style="margin-top: 10px; padding: 12px; background: #fff7ed; border: 1.5px solid #fb923c; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(251, 146, 60, 0.15);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 12px; color: #c2410c; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 5px;">
+                  <span>⚠️</span> Agent Reassignment Requested
+                </span>
+                <span style="font-size: 10px; background: #ffedd5; color: #9a3412; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Action Required</span>
+              </div>
+              <div style="font-size: 13px; color: #7c2d12; margin-bottom: 4px;">
+                <strong>Current Agent:</strong> 🛵 {{ order.reassignRequest?.requestedByAgent?.name || order.deliveryAgent?.name }} (📞 {{ order.reassignRequest?.requestedByAgent?.phone || order.deliveryAgent?.phone }})
+              </div>
+              <div style="font-size: 13px; color: #7c2d12; margin-bottom: 10px; background: white; padding: 8px 10px; border-radius: 6px; border: 1px solid #fed7aa;">
+                <strong>Reason:</strong> {{ order.reassignRequest?.reason }}
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-warning" style="flex: 2; padding: 8px 12px; font-size: 13px; font-weight: 700; background: #ea580c; color: white; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);" (click)="openApproveReassignModal(order)">
+                  <span>🔄</span> Approve & Reassign
+                </button>
+                <button class="btn btn-outline-danger" style="flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 600; background: white; border: 1px solid #f87171; color: #dc2626; border-radius: 6px; cursor: pointer;" (click)="rejectReassign(order)">
+                  <span>❌</span> Reject
+                </button>
+              </div>
+            </div>
+
             <!-- Admin Cancellation Approval Banner -->
             <div *ngIf="!isAgent && order.cancelRequest?.status === 'pending'" style="margin-top: 10px; padding: 10px; background: #fee2e2; border: 1px solid #f87171; border-radius: 6px;">
               <div style="font-size: 12px; color: #b91c1c; font-weight: bold; margin-bottom: 5px;">⚠️ {{ order.cancelRequest?.requestedBy || 'Agent' }} Requested Cancellation</div>
@@ -535,69 +613,59 @@
     <!-- AGENTS VIEW -->
     <ng-container *ngIf="currentView === 'agents'">
       <div class="settings-container animate-fade-in" style="max-width: 1000px; margin: 0 auto; padding-top: 20px;">
-        <div class="settings-header-banner" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); margin-bottom: 20px; border-radius: 12px; padding: 25px; color: white;">
-          <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700;">Delivery Agents</h2>
-          <p style="margin: 0; opacity: 0.9; font-size: 15px;">Manage your fleet of delivery partners.</p>
-        </div>
-
-        <div class="settings-card" style="margin-bottom: 20px;">
-          <div class="card-header-styled" style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-              <div class="icon-circle" style="background: #fef3c7; color: #f59e0b;">🛵</div>
-              <div><h3>Add New Agent</h3></div>
-            </div>
+        <div class="settings-header-banner" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); margin-bottom: 20px; border-radius: 12px; padding: 25px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+          <div>
+            <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700;">Delivery Agents</h2>
+            <p style="margin: 0; opacity: 0.9; font-size: 15px;">Manage your fleet of delivery partners.</p>
           </div>
-          <div class="settings-form-modern" style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <input type="text" [(ngModel)]="newAgentName" placeholder="Agent Name" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
-              <input type="text" [(ngModel)]="newAgentPhone" placeholder="Phone Number" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
-              <input type="email" [(ngModel)]="newAgentEmail" placeholder="Login Email (Optional)" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
-              <input type="password" [(ngModel)]="newAgentPassword" placeholder="Login Password (Optional)" class="input-with-icon" style="padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;">
-            </div>
-            <button class="btn-save-modern" style="background: #f59e0b; margin-top: 15px;" (click)="addAgent()" [disabled]="isAddingAgent">
-              <span class="save-icon">➕</span> Add Agent
-            </button>
-          </div>
+          <button (click)="openAddAgentModal()" style="background: white; color: #d97706; padding: 12px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; display: flex; align-items: center; gap: 8px; font-size: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+            <span>➕</span> Add New Agent
+          </button>
         </div>
 
         <div class="settings-card">
-          <div class="card-header-styled">
+          <div class="card-header-styled" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 15px;">
               <div class="icon-circle" style="background: #ecfdf5; color: #10b981;">📋</div>
-              <div><h3>Active Fleet</h3></div>
+              <div><h3 style="margin: 0;">Active Fleet ({{ agents.length }})</h3></div>
             </div>
+            <button (click)="openAddAgentModal()" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>➕</span> Add Agent
+            </button>
           </div>
-          <div style="padding: 20px; max-height: 500px; overflow-y: auto;">
-            <div *ngFor="let agent of agents" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #e2e8f0; gap: 15px;">
-              <div style="width: 50px; height: 50px; border-radius: 25px; background: #fef3c7; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #d97706;">
-                {{ agent.name?.charAt(0)?.toUpperCase() || 'A' }}
-              </div>
-              <div style="flex: 1; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <strong style="font-size: 16px; color: #1e293b;">{{ agent.name }}</strong>
-                  <span *ngIf="agent.email" style="font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">{{ agent.email }}</span>
+          <div style="padding: 20px; max-height: 550px; overflow-y: auto;">
+            <div *ngFor="let agent of agents" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 10px; border-bottom: 1px solid #e2e8f0; gap: 15px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 14px; min-width: 220px; flex: 1;">
+                <div style="width: 48px; height: 48px; border-radius: 24px; background: #fef3c7; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #d97706; flex-shrink: 0;">
+                  {{ agent.name?.charAt(0)?.toUpperCase() || 'A' }}
                 </div>
-                <div style="font-size: 13px; color: #475569; margin-top: 5px;">📞 {{ agent.phone }}</div>
-                <div style="margin-top: 8px; display: inline-flex; align-items: center;">
-                  <span style="background: #ecfdf5; color: #10b981; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid #a7f3d0;">
-                    📦 {{ getAgentDeliveryCount(agent.phone) }} Deliveries
-                  </span>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <strong style="font-size: 16px; color: #1e293b;">{{ agent.name }}</strong>
+                    <span *ngIf="agent.email" style="font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">{{ agent.email }}</span>
+                  </div>
+                  <div style="font-size: 13px; color: #475569; margin-top: 4px;">📞 {{ agent.phone }}</div>
+                  <div style="margin-top: 6px; display: inline-flex; align-items: center;">
+                    <span style="background: #ecfdf5; color: #10b981; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid #a7f3d0;">
+                      📦 {{ getAgentDeliveryCount(agent.phone) }} Deliveries
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div style="display: flex; gap: 8px; align-items: center;">
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                 <button 
                   [style.color]="agent.isActive !== false ? '#10b981' : '#64748b'" 
                   [style.background]="agent.isActive !== false ? '#ecfdf5' : '#f1f5f9'" 
-                  style="border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" 
+                  style="border: none; cursor: pointer; font-weight: 600; padding: 8px 14px; border-radius: 8px; font-size: 13px; transition: background 0.2s;" 
                   (click)="toggleAgentStatus(agent)">
                   {{ agent.isActive !== false ? '✅ Active' : '⏸️ Inactive' }}
                 </button>
-                <button style="color: #10b981; background: #ecfdf5; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'" (click)="viewAgentOrders(agent)">📦 Orders</button>
-                <button style="color: #0ea5e9; background: #e0f2fe; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" (click)="editAgent(agent)">✏️ Edit</button>
-                <button style="color: #ef4444; background: #fef2f2; border: none; cursor: pointer; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'" (click)="deleteAgent(agent.id || agent._id)">🗑️ Delete</button>
+                <button style="color: #10b981; background: #ecfdf5; border: none; cursor: pointer; font-weight: 600; padding: 8px 14px; border-radius: 8px; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'" (click)="viewAgentOrders(agent)">📦 Orders</button>
+                <button style="color: #0ea5e9; background: #e0f2fe; border: none; cursor: pointer; font-weight: 600; padding: 8px 14px; border-radius: 8px; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='#bae6fd'" onmouseout="this.style.background='#e0f2fe'" (click)="editAgent(agent)">✏️ Edit</button>
+                <button style="color: #ef4444; background: #fef2f2; border: none; cursor: pointer; font-weight: 600; padding: 8px 14px; border-radius: 8px; font-size: 13px; transition: background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'" (click)="deleteAgent(agent.id || agent._id)">🗑️ Delete</button>
               </div>
             </div>
-            <div *ngIf="agents.length === 0" style="color: #64748b; text-align: center; padding: 30px; font-size: 15px;">No agents added yet. Start by creating a new delivery partner above.</div>
+            <div *ngIf="agents.length === 0" style="color: #64748b; text-align: center; padding: 30px; font-size: 15px;">No agents added yet. Click "+ Add New Agent" above to add your first delivery partner.</div>
           </div>
         </div>
       </div>
@@ -906,6 +974,35 @@
             </div>
           </div>
         </div>
+
+        <!-- Notification & Sound Permissions Card -->
+        <div class="settings-card" style="margin-top: 25px;">
+          <div class="card-header-styled">
+            <div class="icon-circle" style="background: #fef2f2; color: #ef4444;">🔔</div>
+            <div>
+              <h3>System Notifications & Sound Alarms</h3>
+              <p>Configure device status bar notifications and audible ring permissions.</p>
+            </div>
+          </div>
+          <div style="padding: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="flex: 1; min-width: 260px;">
+              <div style="font-weight: 700; font-size: 16px; color: #1e293b; margin-bottom: 6px;">
+                Status: 
+                <span [style.color]="notificationPermissionState === 'granted' ? '#10b981' : (notificationPermissionState === 'denied' ? '#ef4444' : '#f59e0b')">
+                  {{ notificationPermissionState === 'granted' ? '✅ Enabled & Active' : (notificationPermissionState === 'denied' ? '❌ Blocked / Denied' : '⚠️ Permission Required') }}
+                </span>
+              </div>
+              <div style="font-size: 14px; color: #64748b; line-height: 1.4;">
+                {{ notificationPermissionState === 'granted' ? 'Sound alarms and system tray notifications are active for all new orders and alerts.' : 'Allow notification permissions to receive instant sound alarms and heads-up banners when new orders arrive.' }}
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button (click)="handleNotificationAction()" style="background: #ef4444; color: white; border: none; padding: 12px 22px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">
+                <span>🔔</span> {{ notificationPermissionState === 'granted' ? 'Test Ring & Sound' : 'Allow Notifications' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </ng-container>
 
@@ -914,8 +1011,8 @@
     
     <div class="settings-header-banner" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); margin-bottom: 25px; border-radius: 12px; padding: 25px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);">
       <div>
-        <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Refund & Cancel Requests</h2>
-        <p style="margin: 0; opacity: 0.9; font-size: 15px;">Review cancellation requests and process pending refunds.</p>
+        <h2 style="margin: 0 0 8px 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Refund, Cancel & Reassign Requests</h2>
+        <p style="margin: 0; opacity: 0.9; font-size: 15px;">Review cancellation requests, agent reassignment requests, and process pending refunds.</p>
       </div>
       <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; transition: transform 0.3s ease;" 
            (click)="fetchOrders()"
@@ -981,6 +1078,31 @@
                 ✅ Approve
               </button>
               <button class="btn btn-outline-danger" style="flex: 1; padding: 10px; font-size: 14px; font-weight: 600; border-radius: 6px; background: white; display: flex; justify-content: center; align-items: center; gap: 5px;" (click)="resolveCancel(order, false)">
+                ❌ Reject
+              </button>
+            </div>
+          </div>
+
+          <!-- Reassignment Request Approval -->
+          <div *ngIf="order.reassignRequest?.status === 'pending'" style="padding: 12px; background: #fff7ed; border: 1.5px solid #fb923c; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); margin-top: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🔄</span>
+                <span style="font-size: 13px; color: #9a3412; font-weight: 800; text-transform: uppercase;">Agent Reassignment Requested</span>
+              </div>
+              <span style="font-size: 10px; background: #ffedd5; color: #9a3412; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Action Required</span>
+            </div>
+            <div style="font-size: 13px; color: #7c2d12; margin-bottom: 6px;">
+              <strong>Current Agent:</strong> 🛵 {{ order.reassignRequest?.requestedByAgent?.name || order.deliveryAgent?.name }} (📞 {{ order.reassignRequest?.requestedByAgent?.phone || order.deliveryAgent?.phone }})
+            </div>
+            <div style="font-size: 13px; color: #7c2d12; margin-bottom: 12px; background: rgba(255,255,255,0.7); padding: 8px; border-radius: 6px; border: 1px solid rgba(251, 146, 60, 0.4);">
+              <strong>Reason:</strong> {{ order.reassignRequest?.reason || 'No reason provided.' }}
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-warning" style="flex: 2; padding: 10px; font-size: 14px; font-weight: 700; background: #ea580c; color: white; border: none; border-radius: 6px; display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer;" (click)="openApproveReassignModal(order)">
+                🔄 Approve & Reassign Agent
+              </button>
+              <button class="btn btn-outline-danger" style="flex: 1; padding: 10px; font-size: 14px; font-weight: 600; border-radius: 6px; background: white; border: 1px solid #f87171; color: #dc2626; display: flex; justify-content: center; align-items: center; gap: 5px; cursor: pointer;" (click)="rejectReassign(order)">
                 ❌ Reject
               </button>
             </div>
@@ -1068,6 +1190,31 @@
     </div>
   </div>
 </ng-container>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+      <a class="mobile-nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
+        <span class="mobile-nav-icon">📊</span>
+        <span class="mobile-nav-label">Orders</span>
+      </a>
+      <a class="mobile-nav-item" [class.active]="currentView === 'history'" (click)="setView('history')">
+        <span class="mobile-nav-icon">📜</span>
+        <span class="mobile-nav-label">History</span>
+      </a>
+      <a *ngIf="!isAgent" class="mobile-nav-item" [class.active]="currentView === 'payments'" (click)="setView('payments')">
+        <span class="mobile-nav-icon">💳</span>
+        <span class="mobile-nav-label">Payments</span>
+      </a>
+      <a *ngIf="!isAgent" class="mobile-nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
+        <span class="mobile-nav-icon">🍽️</span>
+        <span class="mobile-nav-label">Menu</span>
+      </a>
+      <a class="mobile-nav-item" [class.active]="mobileMenuOpen || ['agents', 'users', 'cancel-requests', 'contacts', 'settings'].includes(currentView)" (click)="toggleMobileMenu()" style="position: relative;">
+        <span class="mobile-nav-icon">☰</span>
+        <span class="mobile-nav-label">More</span>
+        <span *ngIf="!isAgent && totalPendingRequestsCount > 0" style="position: absolute; top: 6px; right: calc(50% - 15px); width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1.5px solid white;"></span>
+      </a>
+    </nav>
   </main>
 </div>
 
@@ -1278,6 +1425,54 @@
   </div>
 </div>
 
+<!-- Add Agent Modal -->
+<div class="modal-overlay" *ngIf="showAddAgentModal">
+  <div class="modal-content assign-modal" style="max-width: 440px; max-height: 90vh; display: flex; flex-direction: column;">
+    <div class="modal-header">
+      <div class="modal-icon-wrapper" style="background: #fef3c7; color: #d97706;">
+        <span class="modal-icon">🛵</span>
+      </div>
+      <h3>Add New Delivery Agent</h3>
+      <p class="modal-subtitle">Enter partner credentials to add them to your fleet.</p>
+    </div>
+    
+    <div style="flex: 1; overflow-y: auto; padding: 5px 0;">
+      <div class="settings-form-modern" style="padding: 0; display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group-modern" style="margin-bottom: 0;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Agent Name *</label>
+          <div class="input-with-icon">
+            <input type="text" [(ngModel)]="newAgentName" placeholder="Full Name (e.g. Rahul Sharma)" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box;">
+          </div>
+        </div>
+        <div class="form-group-modern" style="margin-bottom: 0;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Phone Number *</label>
+          <div class="input-with-icon">
+            <input type="tel" [(ngModel)]="newAgentPhone" placeholder="10-digit Phone Number" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box;">
+          </div>
+        </div>
+        <div class="form-group-modern" style="margin-bottom: 0;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Login Email (Optional)</label>
+          <div class="input-with-icon">
+            <input type="email" [(ngModel)]="newAgentEmail" placeholder="agent@foodybhai.com" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box;">
+          </div>
+        </div>
+        <div class="form-group-modern" style="margin-bottom: 0;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Login Password (Optional)</label>
+          <div class="input-with-icon">
+            <input type="password" [(ngModel)]="newAgentPassword" placeholder="Password for agent app login" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions full-width" style="margin-top: 20px;">
+      <button class="btn-cancel-modal" (click)="closeAddAgentModal()">Cancel</button>
+      <button class="btn-dispatch-modal" style="background: #f59e0b; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);" (click)="addAgent()" [disabled]="isAddingAgent || !newAgentName.trim() || !newAgentPhone.trim()">
+        {{ isAddingAgent ? 'Adding...' : '➕ Add Partner' }}
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Agent Modal -->
 <div class="modal-overlay" *ngIf="showEditAgentModal">
@@ -1353,38 +1548,106 @@
   </div>
 </div>
 
+<!-- Agent Reassign Modal -->
+<div class="modal-overlay" *ngIf="showReassignModal">
+  <div class="modal-content assign-modal" style="max-width: 440px;">
+    <div class="modal-header">
+      <div class="modal-icon-wrapper" style="background: #fef3c7; color: #d97706;">
+        <span class="modal-icon">🔄</span>
+      </div>
+      <h3>Request Reassignment</h3>
+      <p class="modal-subtitle">Order #{{ (orderToRequestReassign?._id || '').slice(-6).toUpperCase() }} - State reason for reassignment</p>
+    </div>
+    
+    <div class="settings-form-modern" style="padding: 0; margin-bottom: 20px;">
+      <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Quick Reason:</label>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px;">
+        <button *ngFor="let qr of quickReassignReasons" 
+                type="button"
+                (click)="selectQuickReason(qr)"
+                [style.background]="reassignReason === qr ? '#f59e0b' : '#f1f5f9'"
+                [style.color]="reassignReason === qr ? '#ffffff' : '#334155'"
+                [style.borderColor]="reassignReason === qr ? '#d97706' : '#cbd5e1'"
+                style="border: 1px solid; border-radius: 16px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          {{ qr }}
+        </button>
+      </div>
 
-  <!-- Mobile Bottom Navigation -->
-<nav class="mobile-nav">
-  <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
-    <i class="icon">📊</i>
-    <span>Orders</span>
-  </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'payments'" (click)="setView('payments')">
-    <i class="icon">💳</i>
-    <span>Pay</span>
-  </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
-    <i class="icon">🛵</i>
-    <span>Agents</span>
-  </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
-    <i class="icon">🍽️</i>
-    <span>Menu</span>
-  </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'users'" (click)="setView('users')">
-    <i class="icon">👥</i>
-    <span>Users</span>
-  </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cancel-requests'" (click)="setView('cancel-requests')">
-    <i class="icon">🔄</i>
-    <span>Refund & Cancel</span>
-  </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
-    <i class="icon">⚙️</i>
-    <span>Settings</span>
-  </a>
-</nav>
+      <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">Detailed Reason:</label>
+      <div class="form-group-modern" style="margin-bottom: 0;">
+        <div class="input-with-icon">
+          <textarea [(ngModel)]="reassignReason" placeholder="Please specify why you cannot deliver this order..." rows="3" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; resize: vertical; box-sizing: border-box;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions full-width">
+      <button class="btn-cancel-modal" (click)="closeReassignModal()">Cancel</button>
+      <button class="btn-dispatch-modal" style="background: #f59e0b; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);" [disabled]="!reassignReason.trim()" (click)="submitReassignRequest()">
+        Submit Request
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Approve Reassign Agent Modal -->
+<div class="modal-overlay" *ngIf="showApproveReassignModal">
+  <div class="modal-content assign-modal" style="max-width: 480px; max-height: 85vh; display: flex; flex-direction: column;">
+    <div class="modal-header">
+      <div class="modal-icon-wrapper" style="background: #ffedd5; color: #ea580c;">
+        <span class="modal-icon">🔄</span>
+      </div>
+      <h3>Reassign Delivery Agent</h3>
+      <p class="modal-subtitle">Order #{{ (orderToReassignAdmin?._id || '').slice(-6).toUpperCase() }} to {{ orderToReassignAdmin?.deliveryDetails?.name }}</p>
+    </div>
+
+    <!-- Request Details Banner -->
+    <div style="background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+      <div style="font-size: 11px; color: #c2410c; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">AGENT REASSIGNMENT REASON:</div>
+      <div style="font-size: 13px; color: #7c2d12; font-weight: 600;">"{{ orderToReassignAdmin?.reassignRequest?.reason }}"</div>
+      <div style="font-size: 12px; color: #9a3412; margin-top: 6px;">Requested by: 🛵 {{ orderToReassignAdmin?.reassignRequest?.requestedByAgent?.name || orderToReassignAdmin?.deliveryAgent?.name }} (📞 {{ orderToReassignAdmin?.reassignRequest?.requestedByAgent?.phone || orderToReassignAdmin?.deliveryAgent?.phone }})</div>
+    </div>
+
+    <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Select New Delivery Partner:</div>
+
+    <div class="agent-select-list" style="flex: 1; overflow-y: auto; max-height: 250px; margin-bottom: 15px;">
+      <div *ngFor="let agent of getActiveAgents()" 
+           class="agent-select-item" 
+           [class.selected]="selectedReassignAgent?.phone === agent.phone"
+           (click)="selectReassignAgent(agent)"
+           style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;"
+           [style.borderColor]="selectedReassignAgent?.phone === agent.phone ? '#ea580c' : '#e2e8f0'"
+           [style.background]="selectedReassignAgent?.phone === agent.phone ? '#fff7ed' : '#ffffff'">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
+            {{ agent.name?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div>
+            <strong style="color: #1e293b; font-size: 14px; display: block;">{{ agent.name }}</strong>
+            <span style="color: #64748b; font-size: 12px;">📞 {{ agent.phone }}</span>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span *ngIf="agent.phone === (orderToReassignAdmin?.deliveryAgent?.phone)" style="font-size: 11px; background: #fee2e2; color: #ef4444; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Current Agent</span>
+          <span *ngIf="agent.phone !== (orderToReassignAdmin?.deliveryAgent?.phone) && selectedReassignAgent?.phone === agent.phone" style="color: #ea580c; font-size: 18px; font-weight: bold;">✓</span>
+        </div>
+      </div>
+      <div *ngIf="getActiveAgents().length === 0" style="text-align: center; padding: 20px; color: #64748b; font-size: 13px;">
+        No active agents found in fleet.
+      </div>
+    </div>
+
+    <div class="modal-actions full-width">
+      <button class="btn-cancel-modal" (click)="closeApproveReassignModal()">Cancel</button>
+      <button class="btn-dispatch-modal" style="background: #ea580c; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);" [disabled]="!selectedReassignAgent" (click)="confirmApproveReassign()">
+        Confirm Reassignment
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- Agent Orders Modal -->
 <div class="modal-overlay" *ngIf="showAgentOrdersModal">
   <div class="modal-content assign-modal" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
@@ -1562,6 +1825,42 @@
     <div class="modal-actions full-width" style="display: flex; gap: 10px;">
       <button class="btn btn-light" style="flex: 1;" (click)="confirmDialog.onCancel()">Cancel</button>
       <button class="btn btn-primary" style="flex: 1;" (click)="confirmDialog.onConfirm()">Yes, Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Blocked Helper Guide Modal -->
+<div class="modal-overlay" *ngIf="showNotificationBlockedGuideModal">
+  <div class="modal-content assign-modal" style="max-width: 460px; max-height: 90vh; overflow-y: auto;">
+    <div class="modal-header">
+      <div class="modal-icon-wrapper" style="background: #fef2f2; color: #ef4444;">
+        <span class="modal-icon">🔔</span>
+      </div>
+      <h3 style="margin-bottom: 6px;">How to Allow Notifications</h3>
+      <p class="modal-subtitle">Notifications are currently blocked by your browser settings.</p>
+    </div>
+
+    <div style="padding: 10px 0; font-size: 14px; color: #334155; line-height: 1.6;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+        <strong style="color: #0f172a; display: block; margin-bottom: 10px; font-size: 15px;">To enable notifications on this device:</strong>
+        <ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <li>Look at your browser's top address bar (next to the website URL).</li>
+          <li>Click the <strong>🔒 Lock icon</strong> or <strong>🎚️ Tune/Settings icon</strong>.</li>
+          <li>Find <strong>Notifications</strong> and toggle/change it to <strong>Allow</strong>.</li>
+          <li>Click the green <strong>Re-Check & Test</strong> button below!</li>
+        </ol>
+      </div>
+
+      <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px 14px; color: #065f46; font-size: 13px;">
+        ✅ <strong>In-app sound alerts are already active!</strong> You will still hear the audio alarm when new orders arrive while this tab is open.
+      </div>
+    </div>
+
+    <div class="modal-actions full-width" style="margin-top: 20px; display: flex; gap: 10px;">
+      <button class="btn-cancel-modal" (click)="showNotificationBlockedGuideModal = false">Close</button>
+      <button class="btn-dispatch-modal" style="background: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);" (click)="recheckPermissionAfterUnblock()">
+        🔄 Re-Check & Test
+      </button>
     </div>
   </div>
 </div>

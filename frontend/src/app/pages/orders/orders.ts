@@ -82,6 +82,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   orderToRate: any = null;
   ratingValue = 5;
   reviewText = '';
+  showNotificationPermissionPrompt = false;
 
   constructor(
     private orderService: OrderService,
@@ -91,6 +92,54 @@ export class OrdersComponent implements OnInit, OnDestroy {
     private cartService: CartService,
     private sanitizer: DomSanitizer
   ) {}
+
+  checkNotificationPermission(): void {
+    if (typeof window !== 'undefined') {
+      const alreadyHandled = localStorage.getItem('foodybhai_cust_notif_prompted') || sessionStorage.getItem('customer_notif_dismissed');
+      if (alreadyHandled) {
+        this.showNotificationPermissionPrompt = false;
+        return;
+      }
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          this.showNotificationPermissionPrompt = false;
+          localStorage.setItem('foodybhai_cust_notif_prompted', 'true');
+          return;
+        }
+        if (Notification.permission === 'default') {
+          this.showNotificationPermissionPrompt = true;
+        }
+      }
+    }
+  }
+
+  async allowNotifications(): Promise<void> {
+    this.showNotificationPermissionPrompt = false;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('foodybhai_cust_notif_prompted', 'true');
+      if ('Notification' in window) {
+        try {
+          const res = await Notification.requestPermission();
+          if (res === 'granted') {
+            localStorage.setItem('foodybhai_cust_notif_status', 'granted');
+            this.showNotification('🔔 Notifications enabled! You will receive live order updates.', 'success');
+          } else {
+            this.showNotification('Notifications were not enabled.', 'error');
+          }
+        } catch (e) {}
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  denyNotifications(): void {
+    this.showNotificationPermissionPrompt = false;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('foodybhai_cust_notif_prompted', 'true');
+      localStorage.setItem('customer_notif_dismissed', 'true');
+    }
+    this.cdr.detectChanges();
+  }
 
   private mapUrlCache = new Map<string, any>();
 
@@ -118,9 +167,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   timerInterval: any;
 
   ngOnInit(): void {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    this.checkNotificationPermission();
     if (this.authService.isLoggedIn()) {
       this.loadOrders();
       this.timerInterval = setInterval(() => {

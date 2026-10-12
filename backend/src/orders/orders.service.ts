@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit');
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Subject, Observable } from 'rxjs';
 import { SettingsService } from '../settings/settings.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -7,6 +8,20 @@ import { Order, OrderDocument } from './schemas/order.schema';
 
 @Injectable()
 export class OrdersService {
+  private orderEvents$ = new Subject<{ type: string; data: any }>();
+
+  getOrderEvents(): Observable<{ type: string; data: any }> {
+    return this.orderEvents$.asObservable();
+  }
+
+  emitOrderEvent(type: string, data: any) {
+    try {
+      this.orderEvents$.next({ type, data });
+    } catch (err) {
+      console.error('Failed to emit order event:', err);
+    }
+  }
+
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     private settingsService: SettingsService
@@ -21,7 +36,9 @@ export class OrdersService {
       userId,
       ...orderData
     });
-    return order.save();
+    const saved = await order.save();
+    this.emitOrderEvent('new_order', saved);
+    return saved;
   }
 
   async getUserOrders(userId: string, phone?: string): Promise<OrderDocument[]> {
@@ -60,6 +77,7 @@ export class OrdersService {
       { new: true }
     ).exec();
     if (!order) throw new NotFoundException('Order not found');
+    this.emitOrderEvent('cancel_requested', order);
     return order;
   }
 
@@ -101,6 +119,10 @@ export class OrdersService {
     }
     if (deliveryAgent) {
       updateData.deliveryAgent = deliveryAgent;
+      if (existingOrder.reassignRequest && existingOrder.reassignRequest.status === 'pending') {
+        updateData['reassignRequest.status'] = 'approved';
+        updateData['reassignRequest.resolvedAt'] = new Date();
+      }
     }
 
     const order = await this.orderModel.findByIdAndUpdate(
@@ -112,6 +134,7 @@ export class OrdersService {
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+    this.emitOrderEvent('status_updated', order);
     return order;
   }
 
@@ -273,6 +296,57 @@ export class OrdersService {
       { new: true }
     );
     if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  async requestReassign(id: string, reason: string, agentInfo?: { name: string; phone: string }): Promise<OrderDocument> {
+    const existingOrder = await this.orderModel.findById(id);
+    if (!existingOrder) throw new NotFoundException('Order not found');
+
+    const agent = (agentInfo && agentInfo.phone) ? agentInfo : existingOrder.deliveryAgent;
+
+    const order = await this.orderModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          reassignRequest: {
+            requested: true,
+            reason,
+            status: 'pending',
+            requestedByAgent: agent,
+            requestedAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
+    if (!order) throw new NotFoundException('Order not found');
+    this.emitOrderEvent('reassign_requested', order);
+    return order;
+  }
+
+  async resolveReassignRequest(id: string, approve: boolean, newAgent?: { name: string; phone: string }): Promise<OrderDocument> {
+    const existingOrder = await this.orderModel.findById(id);
+    if (!existingOrder) throw new NotFoundException('Order not found');
+
+    const updateData: any = {
+      $set: {
+        'reassignRequest.status': approve ? 'approved' : 'rejected',
+        'reassignRequest.resolvedAt': new Date()
+      }
+    };
+
+    if (approve && newAgent) {
+      updateData.$set.deliveryAgent = newAgent;
+    }
+
+    const order = await this.orderModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+    if (!order) throw new NotFoundException('Order not found');
+    this.emitOrderEvent('reassign_resolved', order);
     return order;
   }
 }

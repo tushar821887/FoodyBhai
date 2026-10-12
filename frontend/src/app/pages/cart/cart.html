@@ -456,8 +456,13 @@
 
       <!-- Online: QR section -->
       @if (paymentMethod === 'online') {
-        <div class="qr-section animate-fade-in">
-          <p class="qr-instruction">Scan this QR code or pay to UPI ID below</p>
+        <div class="qr-section animate-fade-in" style="user-select: none;">
+          <div style="background: #fff0f1; border: 1px solid #ffd1d5; border-radius: 12px; padding: 10px 15px; margin-bottom: 15px;">
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700;">Exact Amount to Pay</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">₹{{ currentTotal }}</div>
+            <div style="font-size: 0.75rem; color: #666;">Locked & verified for this order</div>
+          </div>
+
           <div class="qr-wrapper">
             @if (dynamicQrUrl) {
               <img [src]="dynamicQrUrl" alt="Payment QR Code" class="qr-image">
@@ -468,16 +473,22 @@
               </div>
             }
           </div>
-          <div class="upi-id-box" *ngIf="upiId">
+
+          <!-- Direct Pay Button for Mobile APK -->
+          <a [href]="upiPaymentString" class="btn btn-primary w-100 mb-3 py-2" style="font-size: 0.95rem; text-decoration: none; border-radius: 10px;">
+            <i class="fa-solid fa-bolt"></i> Pay via UPI App (GPay/PhonePe/Paytm)
+          </a>
+
+          <div class="upi-id-box" (click)="copyUpiId()" style="cursor: pointer;" title="Tap to copy UPI ID">
             <i class="fa-solid fa-at"></i>
-            <span class="upi-id-text">{{ upiId }}</span>
-            <button class="upi-copy-btn" (click)="$event.stopPropagation()">
+            <span class="upi-id-text">{{ effectiveUpiId }}</span>
+            <button type="button" class="upi-copy-btn" (click)="copyUpiId(); $event.stopPropagation()">
               <i class="fa-regular fa-copy"></i>
             </button>
           </div>
           <p class="qr-note">
             <i class="fa-solid fa-circle-info"></i>
-            After paying, click "Place Order" below. We'll verify your payment.
+            Amount is fixed to ₹{{ currentTotal }}. After paying, tap "I've Paid — Place Order" below.
           </p>
         </div>
       }

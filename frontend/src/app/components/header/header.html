@@ -94,39 +94,55 @@
 <!-- Mobile Bottom Navigation -->
 <div class="mobile-bottom-nav">
   <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
-    <i class="fa-solid fa-house"></i>
+    <div class="nav-icon-wrap"><i class="fa-solid fa-house"></i></div>
     <span>Home</span>
   </a>
   <a routerLink="/menu" routerLinkActive="active" class="nav-item">
-    <i class="fa-solid fa-book-open"></i>
+    <div class="nav-icon-wrap"><i class="fa-solid fa-book-open"></i></div>
     <span>Menu</span>
   </a>
+  <a routerLink="/cart" routerLinkActive="active" class="nav-item cart-nav-item">
+    <div class="nav-icon-wrap">
+      <i class="fa-solid fa-cart-shopping"></i>
+      @if ((cartService.totalItems$ | async)! > 0) {
+        <span class="mobile-cart-badge">{{cartService.totalItems$ | async}}</span>
+      }
+    </div>
+    <span>Cart</span>
+  </a>
   @if (authService.isAuthenticated$ | async) {
-    <a routerLink="/orders" routerLinkActive="active" class="nav-item">
-      <i class="fa-solid fa-receipt"></i>
-      <span>Orders</span>
-    </a>
-    <a routerLink="/addresses" routerLinkActive="active" class="nav-item">
-      <i class="fa-solid fa-location-dot"></i>
-      <span>Address</span>
-    </a>
-    <a href="javascript:void(0)" (click)="logout()" class="nav-item">
-      <i class="fa-solid fa-arrow-right-from-bracket"></i>
-      <span>Logout</span>
-    </a>
+    <div class="nav-item account-nav-item" (click)="toggleAccountDropdown($event)">
+      <div class="nav-icon-wrap"><i class="fa-solid fa-user"></i></div>
+      <span>Account</span>
+      
+      @if (isAccountDropdownOpen) {
+        <div class="mobile-account-backdrop" (click)="isAccountDropdownOpen = false"></div>
+        <div class="mobile-account-dropdown animate-drop-up">
+          <div class="dropdown-header">
+            <span class="user-name">{{ (authService.currentUser$ | async)?.name }}</span>
+          </div>
+          <a routerLink="/profile" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+            <i class="fa-regular fa-user"></i> My Profile
+          </a>
+          <a routerLink="/orders" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+            <i class="fa-regular fa-folder-open"></i> My Orders
+          </a>
+          <a routerLink="/addresses" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+            <i class="fa-regular fa-address-book"></i> Addresses
+          </a>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item logout-btn" (click)="logout()">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+          </button>
+        </div>
+      }
+    </div>
   } @else {
     <a href="javascript:void(0)" (click)="openAuthModal()" class="nav-item">
-      <i class="fa-solid fa-user"></i>
+      <div class="nav-icon-wrap"><i class="fa-solid fa-user"></i></div>
       <span>Login</span>
     </a>
   }
-  <a routerLink="/cart" routerLinkActive="active" class="nav-item cart-nav-item">
-    <i class="fa-solid fa-cart-shopping"></i>
-    <span>Cart</span>
-    @if ((cartService.totalItems$ | async)! > 0) {
-      <span class="mobile-cart-badge">{{cartService.totalItems$ | async}}</span>
-    }
-  </a>
 </div>
 
 @if (isAuthModalOpen) {

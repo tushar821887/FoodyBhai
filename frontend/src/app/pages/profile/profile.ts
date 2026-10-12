@@ -132,4 +132,9 @@ export class Profile implements OnInit {
       }
     });
   }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
 }

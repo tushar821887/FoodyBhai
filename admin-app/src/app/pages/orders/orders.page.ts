@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FilterStatusPipe } from '../../pipes/filter-status.pipe';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Order } from '../../services/api.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-orders',
@@ -15,6 +16,35 @@ import { ApiService, Order } from '../../services/api.service';
 export class OrdersPage implements OnInit, OnDestroy {
   notifiedOrderIds = new Set<string>();
   notifiedCancelResolutions = new Set<string>();
+  notifiedReassignOrderIds = new Set<string>();
+  notifiedAgentReassignResolutions = new Set<string>();
+  knownOrderIds = new Set<string>();
+  isFirstLoad = true;
+  private eventSource: EventSource | null = null;
+  private notificationSub: any = null;
+
+  // Permission Prompt Banner
+  showNotificationPermissionPrompt = false;
+  notificationPermissionState: 'granted' | 'denied' | 'prompt' = 'prompt';
+  showNotificationBlockedGuideModal = false;
+
+  // Agent Reassignment Request Modal
+  showReassignModal = false;
+  orderToRequestReassign: any = null;
+  reassignReason = '';
+  quickReassignReasons: string[] = [
+    'Vehicle breakdown / puncture',
+    'Emergency / personal reason',
+    'Customer location outside delivery range',
+    'Extreme traffic delay / order pending too long',
+    'Severe weather / rain conditions',
+    'Battery low / phone issue'
+  ];
+
+  // Admin Reassignment Approval Modal
+  showApproveReassignModal = false;
+  orderToReassignAdmin: any = null;
+  selectedReassignAgent: any = null;
   
   getMapUrl(order: any) {
     const origin = encodeURIComponent('127, Bhatwara, Meerut - 250002');
@@ -60,6 +90,15 @@ export class OrdersPage implements OnInit, OnDestroy {
   currentTab: string = 'pending';
   currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
+  mobileMenuOpen = false;
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  closeMobileMenu() {
+    this.mobileMenuOpen = false;
+  }
   
   showCancelModal = false;
   cancelReason = '';
@@ -99,6 +138,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   newUser: any = { name: '', email: '', password: '', phone: '', role: 'user' };
   showEditUserModal = false;
   agents: any[] = [];
+  showAddAgentModal = false;
   newAgentName = '';
   newAgentPhone = '';
   newAgentEmail = '';
@@ -141,7 +181,12 @@ export class OrdersPage implements OnInit, OnDestroy {
     }, 4000);
   }
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef, private sanitizer: DomSanitizer) {}
+  constructor(
+    private api: ApiService,
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer,
+    private notificationService: NotificationService
+  ) {}
 
   private mapUrlCache = new Map<string, any>();
 
@@ -173,24 +218,181 @@ export class OrdersPage implements OnInit, OnDestroy {
     if (this.currentUser && this.currentUser.role === 'agent') {
       this.isAgent = true;
       this.currentTab = 'out_for_delivery';
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') {
-        Notification.requestPermission();
-      }
     }
-    try {
-      this.ringAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-      this.ringAudio.loop = true;
-    } catch(e) {}
+
+    // Check if notification permission is needed
+    this.checkNotificationPermission();
+
+    // When user taps a standard Android notification, bring app to front and navigate to order
+    this.notificationSub = this.notificationService.notificationAction$.subscribe((extra) => {
+      console.log('App opened via notification click:', extra);
+      this.stopRinging();
+      this.currentView = 'dashboard';
+      if (this.isAgent) {
+        this.currentTab = 'out_for_delivery';
+      } else {
+        this.currentTab = 'pending';
+      }
+      this.fetchOrders();
+      this.cdr.detectChanges();
+    });
+
+    // Connect to instant real-time order stream (SSE)
+    this.connectToLiveOrderStream();
 
     this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
     this.fetchOrders();
-    this.pollInterval = setInterval(() => this.fetchOrders(), 10000);
+
+    // Fast backup polling (every 4 seconds) to guarantee zero missed orders
+    this.pollInterval = setInterval(() => this.fetchOrders(), 4000);
     this.timerInterval = setInterval(() => this.cdr.detectChanges(), 1000);
+  }
+
+  async checkNotificationPermission() {
+    this.notificationPermissionState = await this.notificationService.checkPermission();
+    const alreadyHandled = typeof window !== 'undefined' ? 
+      (localStorage.getItem('foodybhai_notif_permission_handled') || localStorage.getItem('notif_banner_dismissed')) : null;
+
+    if (this.notificationPermissionState === 'granted') {
+      // Permission is already active; never show prompt banner
+      this.showNotificationPermissionPrompt = false;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('foodybhai_notif_permission_handled', 'true');
+        localStorage.setItem('foodybhai_notif_permission_status', 'granted');
+        // Quietly unlock audio context on very first user tap anywhere
+        const unlockAudioOnGesture = () => {
+          this.notificationService.unlockAudio();
+          document.removeEventListener('click', unlockAudioOnGesture);
+          document.removeEventListener('touchstart', unlockAudioOnGesture);
+        };
+        document.addEventListener('click', unlockAudioOnGesture, { once: true, passive: true });
+        document.addEventListener('touchstart', unlockAudioOnGesture, { once: true, passive: true });
+      }
+    } else if (alreadyHandled) {
+      // User has already responded previously (Allow or Don't Allow); never ask again
+      this.showNotificationPermissionPrompt = false;
+    } else {
+      // First time only: ask the user
+      this.showNotificationPermissionPrompt = true;
+    }
+    this.cdr.detectChanges();
+  }
+
+  async allowNotifications() {
+    // Permanently remember that the user has been prompted so it never asks again
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('foodybhai_notif_permission_handled', 'true');
+    }
+    this.showNotificationPermissionPrompt = false;
+    this.notificationService.unlockAudio();
+
+    const currentState = await this.notificationService.checkPermission();
+    if (currentState === 'denied') {
+      this.notificationPermissionState = 'denied';
+      this.showNotificationBlockedGuideModal = true;
+      this.showNotification('Sound alarm is ready. Notifications are blocked in browser settings (see instructions).', 'error');
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const granted = await this.notificationService.requestPermission();
+    if (granted) {
+      this.notificationPermissionState = 'granted';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('foodybhai_notif_permission_status', 'granted');
+      }
+      this.showNotification('🔔 Notifications & sound alerts enabled!', 'success');
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate([200, 100, 200]); } catch(e) {}
+      }
+    } else {
+      this.notificationPermissionState = 'denied';
+      this.showNotificationBlockedGuideModal = true;
+      this.showNotification('Notifications were blocked in your browser. Please allow them via the address bar.', 'error');
+    }
+    this.cdr.detectChanges();
+  }
+
+  async handleNotificationAction() {
+    if (this.notificationPermissionState === 'granted') {
+      this.testNotificationAndSound();
+      return;
+    }
+    await this.allowNotifications();
+  }
+
+  testNotificationAndSound() {
+    this.notificationService.unlockAudio();
+    this.notificationService.startRinging();
+    setTimeout(() => this.notificationService.stopRinging(), 2500);
+    this.notificationService.sendNotification({
+      title: '🔔 Test Alert - FoodyBhai',
+      body: 'Notifications and sound alarms are working perfectly!'
+    });
+    this.showNotification('🔔 Sound alarm & test notification triggered!', 'success');
+  }
+
+  async recheckPermissionAfterUnblock() {
+    const state = await this.notificationService.checkPermission();
+    this.notificationPermissionState = state;
+    if (state === 'granted') {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('foodybhai_notif_permission_handled', 'true');
+        localStorage.setItem('foodybhai_notif_permission_status', 'granted');
+      }
+      this.showNotificationBlockedGuideModal = false;
+      this.showNotificationPermissionPrompt = false;
+      this.showNotification('✅ Notifications & sound alerts are now active!', 'success');
+      this.notificationService.sendNotification({
+        title: '🔔 FoodyBhai Alerts Active',
+        body: 'You will now receive instant notifications when orders arrive!'
+      });
+    } else {
+      this.showNotification('Still blocked. Please toggle Notifications to Allow in the address bar (🔒 icon), then re-check.', 'error');
+    }
+    this.cdr.detectChanges();
+  }
+
+  denyNotifications() {
+    this.showNotificationPermissionPrompt = false;
+    if (typeof window !== 'undefined') {
+      // Permanently remember that user dismissed it so they are never nagged again
+      localStorage.setItem('foodybhai_notif_permission_handled', 'true');
+      localStorage.setItem('foodybhai_notif_permission_status', 'denied');
+      localStorage.setItem('notif_banner_dismissed', 'true');
+    }
+    this.showNotification('Notifications paused. You can enable them anytime from Settings.', 'error');
+    this.cdr.detectChanges();
+  }
+
+  connectToLiveOrderStream() {
+    try {
+      this.eventSource = this.api.getOrderEventSource();
+      if (this.eventSource) {
+        this.eventSource.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            console.log('⚡ Instant live order event received:', payload);
+            // Instant fetch the moment customer places order!
+            this.fetchOrders();
+          } catch (e) {
+            console.error('Failed to parse SSE live payload:', e);
+          }
+        };
+        this.eventSource.onerror = (err) => {
+          console.warn('SSE live order stream reconnecting...', err);
+        };
+      }
+    } catch (e) {
+      console.warn('Could not initialize EventSource stream:', e);
+    }
   }
 
   ngOnDestroy() {
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.eventSource) this.eventSource.close();
+    if (this.notificationSub) this.notificationSub.unsubscribe();
     this.stopRinging();
   }
 
@@ -210,7 +412,8 @@ export class OrdersPage implements OnInit, OnDestroy {
   fetchOrders() {
     this.api.getAllOrders().subscribe({
       next: (data) => {
-        const pendingCount = data.filter(o => o.status === 'pending').length;
+        const pendingOrders = data.filter(o => o.status === 'pending');
+        const pendingCount = pendingOrders.length;
         
         if (pendingCount > 0 && !this.isRinging) {
           this.startRinging();
@@ -230,13 +433,16 @@ export class OrdersPage implements OnInit, OnDestroy {
            myOrders.forEach(o => {
              if (!this.notifiedOrderIds.has(o._id)) {
                this.notifiedOrderIds.add(o._id);
-               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                 new Notification('New Delivery Assigned!', {
-                   body: `Order #${o._id.slice(-6).toUpperCase()} to ${o.deliveryDetails.address}`,
-                 });
-                 this.startRinging();
-                 setTimeout(() => this.stopRinging(), 4000);
-               }
+               const shortId = o._id.slice(-6).toUpperCase();
+               const address = o.deliveryDetails?.address || 'Customer Location';
+               this.notificationService.sendNotification({
+                 title: `🛵 Delivery Assigned: #${shortId}!`,
+                 body: `Deliver to ${address}. Tap to open route & details.`,
+                 data: { orderId: o._id, ...o }
+               });
+               this.showNotification(`🛵 Delivery #${shortId} assigned to you!`, 'success');
+               this.startRinging();
+               setTimeout(() => this.stopRinging(), 5000);
              }
            });
 
@@ -245,15 +451,77 @@ export class OrdersPage implements OnInit, OnDestroy {
              const key = o._id + '-' + o.cancelRequest?.status;
              if (!this.notifiedCancelResolutions.has(key)) {
                this.notifiedCancelResolutions.add(key);
-               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                 const resolution = o.cancelRequest?.status === 'approved' ? 'Approved' : 'Rejected';
-                 new Notification(`Cancel Request ${resolution}!`, {
-                   body: `Your cancellation request for Order #${o._id.slice(-6).toUpperCase()} was ${resolution.toLowerCase()}.`,
-                 });
-               }
+               const resolution = o.cancelRequest?.status === 'approved' ? 'Approved' : 'Rejected';
+               const shortId = o._id.slice(-6).toUpperCase();
+               this.notificationService.sendNotification({
+                 title: `Cancel Request ${resolution}!`,
+                 body: `Your cancellation request for Order #${shortId} was ${resolution.toLowerCase()}.`,
+                 data: { orderId: o._id, ...o }
+               });
+             }
+           });
+
+           const myResolvedReassigns = data.filter(o => o.reassignRequest && o.reassignRequest.status !== 'pending' && (
+             (o.deliveryAgent && o.deliveryAgent.phone === this.currentUser.phone) ||
+             (o.reassignRequest.requestedByAgent && o.reassignRequest.requestedByAgent.phone === this.currentUser.phone)
+           ));
+           myResolvedReassigns.forEach(o => {
+             const key = o._id + '-reassign-' + o.reassignRequest?.status;
+             if (!this.notifiedAgentReassignResolutions.has(key)) {
+               this.notifiedAgentReassignResolutions.add(key);
+               const res = o.reassignRequest?.status === 'approved' ? 'Approved' : 'Rejected';
+               const shortId = o._id.slice(-6).toUpperCase();
+               this.showNotification(`Reassign request for Order #${shortId} was ${res.toLowerCase()}.`, res === 'Approved' ? 'success' : 'error');
+               this.notificationService.sendNotification({
+                 title: `Reassign Request ${res}!`,
+                 body: `Your reassignment request for Order #${shortId} was ${res.toLowerCase()}.`,
+                 data: { orderId: o._id, ...o }
+               });
+             }
+           });
+        } else {
+           // --- ADMIN NOTIFICATIONS ---
+           // 1. Detect New Incoming Pending Orders (Standard Android System Notification + Sound)
+           if (!this.isFirstLoad) {
+             const newPendingOrders = pendingOrders.filter(o => !this.knownOrderIds.has(o._id));
+             newPendingOrders.forEach(o => {
+               const shortId = o._id.slice(-6).toUpperCase();
+               const custName = o.deliveryDetails?.name || 'Customer';
+               const amount = o.totalAmount ? `₹${o.totalAmount}` : '';
+               const itemsCount = o.items ? `${o.items.length} item(s)` : '';
+               
+               this.notificationService.sendNotification({
+                 title: `🔔 NEW ORDER #${shortId} (${amount})!`,
+                 body: `${custName} ordered ${itemsCount}. Tap to view and accept order.`,
+                 data: { orderId: o._id, ...o }
+               });
+               this.showNotification(`🔔 New Order #${shortId} received (${amount})!`, 'success');
+               this.startRinging();
+             });
+           }
+
+           // 2. Detect Pending Agent Reassignment Requests
+           const pendingReassignOrders = data.filter(o => o.reassignRequest && o.reassignRequest.status === 'pending');
+           pendingReassignOrders.forEach(o => {
+             if (!this.notifiedReassignOrderIds.has(o._id)) {
+               this.notifiedReassignOrderIds.add(o._id);
+               const agentName = o.reassignRequest?.requestedByAgent?.name || o.deliveryAgent?.name || 'Agent';
+               const shortId = o._id.slice(-6).toUpperCase();
+               this.showNotification(`⚠️ Agent ${agentName} requested reassignment for Order #${shortId}! Reason: ${o.reassignRequest?.reason}`, 'error');
+               this.notificationService.sendNotification({
+                 title: `⚠️ Reassign Requested: Order #${shortId}`,
+                 body: `${agentName} requested reassignment: ${o.reassignRequest?.reason}`,
+                 data: { orderId: o._id, ...o }
+               });
+               this.startRinging();
+               setTimeout(() => this.stopRinging(), 5000);
              }
            });
         }
+
+        // Track all known orders
+        data.forEach(o => this.knownOrderIds.add(o._id));
+        this.isFirstLoad = false;
       },
       error: (err) => console.error('Failed to fetch orders', err)
     });
@@ -269,22 +537,13 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   startRinging() {
-    if (!this.ringAudio) return;
     this.isRinging = true;
-    const playPromise = this.ringAudio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        console.warn('Autoplay blocked. Click anywhere to allow audio.');
-        this.isRinging = false; // Reset so it can try again next tick if user clicked
-      });
-    }
+    this.notificationService.startRinging();
   }
 
   stopRinging() {
-    if (!this.ringAudio) return;
     this.isRinging = false;
-    this.ringAudio.pause();
-    this.ringAudio.currentTime = 0;
+    this.notificationService.stopRinging();
   }
 
   setTab(tab: string) {
@@ -471,6 +730,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts') {
     this.currentView = view;
+    this.closeMobileMenu();
     if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
       this.fetchCategories();
@@ -551,19 +811,39 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getAgents().subscribe(data => this.agents = data);
   }
 
+  openAddAgentModal() {
+    this.newAgentName = '';
+    this.newAgentPhone = '';
+    this.newAgentEmail = '';
+    this.newAgentPassword = '';
+    this.showAddAgentModal = true;
+  }
+
+  closeAddAgentModal() {
+    this.showAddAgentModal = false;
+    this.newAgentName = '';
+    this.newAgentPhone = '';
+    this.newAgentEmail = '';
+    this.newAgentPassword = '';
+  }
+
   addAgent() {
-    if(!this.newAgentName || !this.newAgentPhone) return;
+    if(!this.newAgentName.trim() || !this.newAgentPhone.trim()) {
+      this.showNotification('Agent Name and Phone Number are required', 'error');
+      return;
+    }
     this.isAddingAgent = true;
-    this.api.addAgent(this.newAgentName, this.newAgentPhone, this.newAgentEmail, this.newAgentPassword).subscribe({
+    this.api.addAgent(this.newAgentName.trim(), this.newAgentPhone.trim(), this.newAgentEmail.trim(), this.newAgentPassword.trim()).subscribe({
       next: () => {
-        this.newAgentName = '';
-        this.newAgentPhone = '';
-        this.newAgentEmail = '';
-        this.newAgentPassword = '';
+        this.closeAddAgentModal();
         this.isAddingAgent = false;
+        this.showNotification('Delivery partner added successfully!', 'success');
         this.fetchAgents();
       },
-      error: () => this.isAddingAgent = false
+      error: (err) => {
+        this.isAddingAgent = false;
+        this.showNotification(err.error?.message || 'Failed to add delivery agent', 'error');
+      }
     });
   }
 
@@ -907,14 +1187,109 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
 
+  // Agent Reassignment Methods
+  openReassignModal(order: any) {
+    this.orderToRequestReassign = order;
+    this.reassignReason = '';
+    this.showReassignModal = true;
+  }
+
+  closeReassignModal() {
+    this.showReassignModal = false;
+    this.orderToRequestReassign = null;
+    this.reassignReason = '';
+  }
+
+  selectQuickReason(reason: string) {
+    this.reassignReason = reason;
+  }
+
+  submitReassignRequest() {
+    if (!this.orderToRequestReassign || !this.reassignReason.trim()) return;
+    const agentInfo = {
+      name: this.currentUser?.name || this.orderToRequestReassign.deliveryAgent?.name || 'Agent',
+      phone: this.currentUser?.phone || this.orderToRequestReassign.deliveryAgent?.phone || ''
+    };
+    this.api.requestReassignOrder(this.orderToRequestReassign._id, this.reassignReason.trim(), agentInfo).subscribe({
+      next: () => {
+        this.showNotification('Reassignment request sent to admin.', 'success');
+        this.closeReassignModal();
+        this.fetchOrders();
+      },
+      error: (err) => this.showNotification(err.error?.message || 'Failed to submit request', 'error')
+    });
+  }
+
+  // Admin Reassignment Methods
+  openApproveReassignModal(order: any) {
+    this.orderToReassignAdmin = order;
+    this.selectedReassignAgent = null;
+    this.showApproveReassignModal = true;
+    if (this.agents.length === 0) {
+      this.fetchAgents();
+    }
+  }
+
+  closeApproveReassignModal() {
+    this.showApproveReassignModal = false;
+    this.orderToReassignAdmin = null;
+    this.selectedReassignAgent = null;
+  }
+
+  selectReassignAgent(agent: any) {
+    this.selectedReassignAgent = agent;
+  }
+
+  confirmApproveReassign() {
+    if (!this.orderToReassignAdmin || !this.selectedReassignAgent) return;
+    const newAgent = {
+      name: this.selectedReassignAgent.name,
+      phone: this.selectedReassignAgent.phone
+    };
+    this.api.resolveReassignOrder(this.orderToReassignAdmin._id, true, newAgent).subscribe({
+      next: () => {
+        this.showNotification(`Order reassigned to ${newAgent.name}. Fleet and customer updated!`, 'success');
+        this.closeApproveReassignModal();
+        this.fetchOrders();
+      },
+      error: (err) => this.showNotification(err.error?.message || 'Failed to reassign agent', 'error')
+    });
+  }
+
+  async rejectReassign(order: any) {
+    const agentName = order.reassignRequest?.requestedByAgent?.name || order.deliveryAgent?.name || 'Agent';
+    if (await this.showConfirm('Reject Reassignment', `Reject reassignment request from ${agentName}?`, '❌')) {
+      this.api.resolveReassignOrder(order._id, false).subscribe({
+        next: () => {
+          this.showNotification('Reassignment request rejected.', 'success');
+          this.fetchOrders();
+        },
+        error: (err) => this.showNotification(err.error?.message || 'Failed to reject request', 'error')
+      });
+    }
+  }
+
+  get pendingReassignCount(): number {
+    return this.orders.filter(o => o.reassignRequest && o.reassignRequest.status === 'pending').length;
+  }
+
+  get totalPendingRequestsCount(): number {
+    return this.orders.filter(o => 
+      (o.cancelRequest && o.cancelRequest.status === 'pending') || 
+      (o.reassignRequest && o.reassignRequest.status === 'pending') ||
+      (o.status === 'cancelled' && o.refundStatus === 'pending')
+    ).length;
+  }
+
   getCancelAndRefundOrders() {
     return this.baseOrders.filter(o => 
       (o.cancelRequest && o.cancelRequest.status === 'pending') || 
+      (o.reassignRequest && o.reassignRequest.status === 'pending') ||
       (o.status === 'cancelled')
     ).sort((a, b) => {
       // Sort pending requests and pending refunds first
-      const aNeedsAction = (a.cancelRequest?.status === 'pending') || (a.status === 'cancelled' && a.refundStatus === 'pending') ? 1 : 0;
-      const bNeedsAction = (b.cancelRequest?.status === 'pending') || (b.status === 'cancelled' && b.refundStatus === 'pending') ? 1 : 0;
+      const aNeedsAction = (a.cancelRequest?.status === 'pending') || (a.reassignRequest?.status === 'pending') || (a.status === 'cancelled' && a.refundStatus === 'pending') ? 1 : 0;
+      const bNeedsAction = (b.cancelRequest?.status === 'pending') || (b.reassignRequest?.status === 'pending') || (b.status === 'cancelled' && b.refundStatus === 'pending') ? 1 : 0;
       if (aNeedsAction !== bNeedsAction) return bNeedsAction - aNeedsAction;
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });

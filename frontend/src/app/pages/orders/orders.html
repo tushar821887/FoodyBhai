@@ -16,6 +16,25 @@
 
 <section class="section">
   <div class="container animate-fade-in">
+    <!-- Notification Permission Banner for Customer -->
+    <div *ngIf="showNotificationPermissionPrompt" style="margin-bottom: 24px; background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1.5px solid #fed7aa; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);">
+      <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 250px;">
+        <span style="font-size: 26px;">🔔</span>
+        <div>
+          <strong style="color: #9a3412; font-size: 15px; display: block; margin-bottom: 2px;">Enable Live Order Tracking Notifications</strong>
+          <span style="color: #7c2d12; font-size: 13px;">Allow FoodyBhai to notify you when your food is accepted, being prepared, and out for delivery!</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button (click)="allowNotifications()" style="background: #ea580c; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(234, 88, 12, 0.3);">
+          <span>🔔</span> Allow Notifications
+        </button>
+        <button (click)="denyNotifications()" style="background: white; color: #7c2d12; border: 1px solid #fed7aa; padding: 9px 14px; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer;">
+          Don't Allow
+        </button>
+      </div>
+    </div>
+
     @if (isLoading) {
       <div class="text-center" style="padding: 3rem;">
         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>

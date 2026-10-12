@@ -23,9 +23,14 @@
         </div>
       </div>
 
-      <button class="btn-edit-modern" (click)="isEditing = !isEditing">
-        <i class="fa-solid" [ngClass]="isEditing ? 'fa-xmark' : 'fa-pen'"></i> {{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
-      </button>
+      <div class="profile-actions-wrapper">
+        <button class="btn-edit-modern" (click)="isEditing = !isEditing">
+          <i class="fa-solid" [ngClass]="isEditing ? 'fa-xmark' : 'fa-pen'"></i> {{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
+        </button>
+        <button class="btn-logout-modern" (click)="logout()">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </button>
+      </div>
     </div>
 
     <!-- Alert Message -->

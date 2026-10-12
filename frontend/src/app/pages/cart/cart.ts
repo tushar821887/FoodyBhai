@@ -44,10 +44,31 @@ export class CartComponent implements OnDestroy {
   qrImageUrl = '';
   upiId = '';
   
+  get effectiveUpiId(): string {
+    return this.upiId || '8218870579@ptyes';
+  }
+
+  get upiPaymentString(): string {
+    const upi = this.effectiveUpiId;
+    const amount = Number(this.currentTotal).toFixed(2);
+    return `upi://pay?pa=${upi}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder`;
+  }
+
   get dynamicQrUrl(): string {
-    if (!this.upiId) return this.qrImageUrl; // fallback
-    const upiStr = `upi://pay?pa=${this.upiId}&pn=FoodyBhai&am=${this.currentTotal}&cu=INR`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiStr)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(this.upiPaymentString)}`;
+  }
+
+  copyUpiId() {
+    const upi = this.effectiveUpiId;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(upi).then(() => {
+        this.showToast('UPI ID copied: ' + upi, 'success');
+      }).catch(() => {
+        this.showToast('UPI ID: ' + upi, 'info');
+      });
+    } else {
+      this.showToast('UPI ID: ' + upi, 'info');
+    }
   }
 
   restaurantOpen = true;

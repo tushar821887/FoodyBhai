@@ -1,4 +1,6 @@
-import { Controller, Req, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Res } from '@nestjs/common';
+import { Controller, Req, Get, Post, Body, Patch, Param, Delete, Put, UseGuards, Res, Sse, MessageEvent } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Response } from 'express';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -7,6 +9,13 @@ import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  @Sse('live-stream')
+  streamLiveOrders(): Observable<MessageEvent> {
+    return this.ordersService.getOrderEvents().pipe(
+      map(event => ({ data: JSON.stringify(event) } as MessageEvent))
+    );
+  }
 
   @UseGuards(OptionalJwtAuthGuard)
   @Post()
@@ -95,6 +104,31 @@ export class OrdersController {
   @Put('admin/:id/refund')
   async processRefund(@Param('id') id: string) {
     return this.ordersService.processRefund(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('agent/:id/reassign-request')
+  async requestReassign(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @Body('agent') agentBody: any,
+    @Req() req: any
+  ) {
+    const agent = (agentBody && agentBody.phone) ? agentBody : {
+      name: req.user?.name || 'Agent',
+      phone: req.user?.phone || ''
+    };
+    return this.ordersService.requestReassign(id, reason, agent);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('admin/:id/resolve-reassign')
+  async resolveReassignRequest(
+    @Param('id') id: string,
+    @Body('approve') approve: boolean,
+    @Body('newAgent') newAgent?: { name: string; phone: string }
+  ) {
+    return this.ordersService.resolveReassignRequest(id, approve, newAgent);
   }
 
 }

@@ -84,6 +84,16 @@ export class Order {
   };
 
   @Prop({ type: Object, required: false })
+  reassignRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string; // 'pending', 'approved', 'rejected'
+    requestedByAgent?: { name: string; phone: string };
+    requestedAt?: Date;
+    resolvedAt?: Date;
+  };
+
+  @Prop({ type: Object, required: false })
   cancellationDetails?: {
     cancelledBy: string; // 'Restaurant', 'Customer', 'Delivery Agent'
     reason?: string;

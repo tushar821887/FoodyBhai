@@ -791,6 +791,8 @@
   box-shadow: 0 25px 60px rgba(0,0,0,0.25);
   overflow: hidden;
   animation: slideUp 0.3s cubic-bezier(.21,1.02,.73,1);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 @keyframes slideUp {

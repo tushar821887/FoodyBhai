@@ -111,10 +111,10 @@
 }
 
 .btn-edit-modern {
-  position: absolute;
-  right: 30px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
+  right: auto;
+  top: auto;
+  transform: none;
   background: white;
   border: 2px solid #e2e8f0;
   color: #334155;
@@ -456,4 +456,44 @@
   .badges-row { justify-content: center; }
   .btn-edit-modern { position: relative; right: auto; top: auto; transform: none; margin-top: 25px; }
   .email { justify-content: center; }
+}
+
+.profile-actions-wrapper {
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.btn-logout-modern {
+  background: white;
+  border: 2px solid #fee2e2;
+  color: #ef4444;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-logout-modern:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+@media (max-width: 900px) {
+  .profile-actions-wrapper {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+    margin-top: 25px;
+    justify-content: center;
+  }
 }

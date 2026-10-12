@@ -40,9 +40,9 @@ export class Header implements OnInit {
   
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    // Close dropdown if clicking outside
+    // Close dropdown if clicking outside (works for both desktop and mobile)
     const target = event.target as HTMLElement;
-    if (!target.closest('.account-dropdown-wrapper')) {
+    if (!target.closest('.account-dropdown-wrapper') && !target.closest('.account-nav-item')) {
       this.isAccountDropdownOpen = false;
     }
   }
