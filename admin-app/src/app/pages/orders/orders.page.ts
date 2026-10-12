@@ -111,6 +111,27 @@ export class OrdersPage implements OnInit, OnDestroy {
   // Menu Category Form
   newCategoryName = '';
   newCategoryDesc = '';
+  newCategoryIcon = '';
+  newCategoryImg = '';
+
+  presetIcons = [
+    { label: 'PopCorn', icon: '🍿', type: 'emoji' },
+    { label: 'Thali & Meals', icon: 'fa-solid fa-utensils', type: 'fa' },
+    { label: 'Rice & Biryani', icon: 'fa-solid fa-bowl-rice', type: 'fa' },
+    { label: 'Puri & Sabzi', icon: 'fa-solid fa-plate-wheat', type: 'fa' },
+    { label: 'Main Course', icon: 'fa-solid fa-bowl-food', type: 'fa' },
+    { label: 'Snacks', icon: 'fa-solid fa-cookie-bite', type: 'fa' },
+    { label: 'Drinks & Beverages', icon: 'fa-solid fa-glass-water', type: 'fa' },
+    { label: 'Hot Tea / Coffee', icon: 'fa-solid fa-mug-hot', type: 'fa' },
+    { label: 'Fresh Salad', icon: 'fa-solid fa-leaf', type: 'fa' },
+    { label: 'Raita & Sides', icon: 'fa-solid fa-spoon', type: 'fa' },
+    { label: 'Special Combos', icon: 'fa-solid fa-fire-flame-curved', type: 'fa' },
+    { label: 'Burger', icon: 'fa-solid fa-burger', type: 'fa' },
+    { label: 'Pizza', icon: 'fa-solid fa-pizza-slice', type: 'fa' },
+    { label: 'Ice Cream & Sweets', icon: 'fa-solid fa-ice-cream', type: 'fa' },
+    { label: 'Cake & Bakery', icon: 'fa-solid fa-cake-candles', type: 'fa' },
+    { label: 'Essentials & Grocery', icon: 'fa-solid fa-basket-shopping', type: 'fa' },
+  ];
   
   // Menu Item Form
   newItem = {
@@ -943,12 +964,53 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getCategories().subscribe(res => this.categories = res);
   }
 
+  selectPresetIcon(iconStr: string, isEdit = false) {
+    if (isEdit && this.editingCategory) {
+      this.editingCategory.icon = iconStr;
+      this.editingCategory.image = '';
+    } else {
+      this.newCategoryIcon = iconStr;
+      this.newCategoryImg = '';
+    }
+  }
+
+  onCategoryIconFileSelected(event: any, isEdit = false) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      if (isEdit && this.editingCategory) {
+        this.editingCategory.image = base64;
+      } else {
+        this.newCategoryImg = base64;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  isEmoji(str?: string): boolean {
+    if (!str) return false;
+    return !str.includes('fa-') && str.length <= 4;
+  }
+
   addCategory() {
-    if(!this.newCategoryName) return;
-    this.api.addCategory(this.newCategoryName, this.newCategoryDesc).subscribe(() => {
-      this.newCategoryName = '';
-      this.newCategoryDesc = '';
-      this.fetchCategories();
+    if(!this.newCategoryName) {
+      this.showNotification('Please enter Category Name', 'error');
+      return;
+    }
+    this.api.addCategory(this.newCategoryName, this.newCategoryDesc, this.newCategoryIcon, this.newCategoryImg).subscribe({
+      next: () => {
+        this.newCategoryName = '';
+        this.newCategoryDesc = '';
+        this.newCategoryIcon = '';
+        this.newCategoryImg = '';
+        this.fetchCategories();
+        this.showNotification('Category created successfully!', 'success');
+      },
+      error: (err) => {
+        this.showNotification(err.error?.message || 'Failed to create category', 'error');
+      }
     });
   }
 
@@ -958,9 +1020,21 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   saveCategoryEdit() {
     if(!this.editingCategory) return;
-    this.api.updateCategory(this.editingCategory.id, this.editingCategory.name, this.editingCategory.description).subscribe(() => {
-      this.editingCategory = null;
-      this.fetchCategories();
+    this.api.updateCategory(
+      this.editingCategory.id, 
+      this.editingCategory.name, 
+      this.editingCategory.description,
+      this.editingCategory.icon,
+      this.editingCategory.image
+    ).subscribe({
+      next: () => {
+        this.editingCategory = null;
+        this.fetchCategories();
+        this.showNotification('Category updated successfully!', 'success');
+      },
+      error: (err) => {
+        this.showNotification(err.error?.message || 'Failed to update category', 'error');
+      }
     });
   }
 

@@ -14,12 +14,17 @@ import { RecipeService, Recipe } from '../../services/recipe.service';
 })
 export class Home implements OnInit {
   popularItems: Recipe[] = [];
-  categories: {name: string, slug: string, description: string, icon?: string}[] = [];
+  categories: {name: string, slug: string, description: string, icon?: string, image?: string}[] = [];
   isLoading = true;
 
   private recipeService = inject(RecipeService);
   private platformId = inject(PLATFORM_ID);
   private cdr = inject(ChangeDetectorRef);
+
+  isEmoji(str?: string): boolean {
+    if (!str) return false;
+    return !str.includes('fa-') && str.length <= 4;
+  }
 
   ngOnInit() {
     this.recipeService.getCategories().subscribe(cats => {

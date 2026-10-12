@@ -124,11 +124,11 @@ export class ApiService {
   getCategories() {
     return this.http.get<any[]>(`${this.apiUrl}/categories`);
   }
-  addCategory(name: string, description?: string) {
-    return this.http.post<any>(`${this.apiUrl}/categories`, { name, description }, this.getHeaders());
+  addCategory(name: string, description?: string, icon?: string, image?: string) {
+    return this.http.post<any>(`${this.apiUrl}/categories`, { name, description, icon, image }, this.getHeaders());
   }
-  updateCategory(id: string, name: string, description?: string) {
-    return this.http.put<any>(`${this.apiUrl}/categories/${id}`, { name, description }, this.getHeaders());
+  updateCategory(id: string, name: string, description?: string, icon?: string, image?: string) {
+    return this.http.put<any>(`${this.apiUrl}/categories/${id}`, { name, description, icon, image }, this.getHeaders());
   }
 
   deleteCategory(id: string) {

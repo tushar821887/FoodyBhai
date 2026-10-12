@@ -11,6 +11,12 @@ export class Category {
 
   @Prop()
   description: string;
+
+  @Prop({ default: '' })
+  icon: string;
+
+  @Prop({ default: '' })
+  image: string;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

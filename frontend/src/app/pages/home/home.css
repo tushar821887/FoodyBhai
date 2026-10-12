@@ -183,6 +183,20 @@
   color: var(--primary-color);
   font-size: 1.8rem;
   transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.category-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.category-emoji {
+  font-size: 2.1rem;
+  line-height: 1;
+  display: inline-block;
 }
 
 .category-card h3 {
@@ -262,6 +276,10 @@
     height: 42px !important;
     font-size: 1.2rem !important;
     margin-bottom: 0.4rem !important;
+  }
+
+  .category-emoji {
+    font-size: 1.35rem !important;
   }
 
   .category-card h3 {
