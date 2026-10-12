@@ -65,17 +65,17 @@
                   <span class="user-name">{{ (authService.currentUser$ | async)?.name }}</span>
                   <span class="user-email">{{ (authService.currentUser$ | async)?.email }}</span>
                 </div>
-                <a routerLink="/orders" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+                <a routerLink="/orders" class="dropdown-item" (click)="closeAccountDropdown($event)">
                   <i class="fa-regular fa-folder-open"></i> My Orders
                 </a>
-                <a routerLink="/addresses" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+                <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
                   <i class="fa-regular fa-address-book"></i> My Addresses
                 </a>
-                <a routerLink="/profile" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+                <a routerLink="/profile" class="dropdown-item" (click)="closeAccountDropdown($event)">
                   <i class="fa-regular fa-user"></i> My Account
                 </a>
                 <div class="dropdown-divider"></div>
-                <button class="dropdown-item logout-btn" (click)="logout()">
+                <button type="button" class="dropdown-item logout-btn" (click)="logout()">
                   <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
                 </button>
               </div>
@@ -111,27 +111,29 @@
     <span>Cart</span>
   </a>
   @if (authService.isAuthenticated$ | async) {
-    <div class="nav-item account-nav-item" (click)="toggleAccountDropdown($event)">
-      <div class="nav-icon-wrap"><i class="fa-solid fa-user"></i></div>
-      <span>Account</span>
+    <div class="account-nav-wrapper">
+      <button type="button" class="nav-item account-nav-btn" [class.active]="isAccountDropdownOpen" (click)="toggleAccountDropdown($event)">
+        <div class="nav-icon-wrap"><i class="fa-solid fa-user"></i></div>
+        <span>Account</span>
+      </button>
       
       @if (isAccountDropdownOpen) {
-        <div class="mobile-account-backdrop" (click)="isAccountDropdownOpen = false"></div>
-        <div class="mobile-account-dropdown animate-drop-up">
+        <div class="mobile-account-dropdown animate-drop-up" (click)="$event.stopPropagation()">
           <div class="dropdown-header">
             <span class="user-name">{{ (authService.currentUser$ | async)?.name }}</span>
+            <span class="user-email" *ngIf="(authService.currentUser$ | async)?.email">{{ (authService.currentUser$ | async)?.email }}</span>
           </div>
-          <a routerLink="/profile" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+          <a routerLink="/profile" class="dropdown-item" (click)="closeAccountDropdown($event)">
             <i class="fa-regular fa-user"></i> My Profile
           </a>
-          <a routerLink="/orders" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+          <a routerLink="/orders" class="dropdown-item" (click)="closeAccountDropdown($event)">
             <i class="fa-regular fa-folder-open"></i> My Orders
           </a>
-          <a routerLink="/addresses" class="dropdown-item" (click)="isAccountDropdownOpen = false">
+          <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
             <i class="fa-regular fa-address-book"></i> Addresses
           </a>
           <div class="dropdown-divider"></div>
-          <button class="dropdown-item logout-btn" (click)="logout()">
+          <button type="button" class="dropdown-item logout-btn" (click)="logout()">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
           </button>
         </div>
@@ -144,6 +146,10 @@
     </a>
   }
 </div>
+
+@if (isAccountDropdownOpen) {
+  <div class="mobile-account-backdrop" (click)="closeAccountDropdown($event)" (touchstart)="closeAccountDropdown($event)"></div>
+}
 
 @if (isAuthModalOpen) {
   <app-auth-modal (close)="closeAuthModal()"></app-auth-modal>

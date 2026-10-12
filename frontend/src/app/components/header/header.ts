@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 import { CartService } from '../../services/cart.service';
 import { LocationService } from '../../services/location.service';
 import { AuthService } from '../../services/auth.service';
@@ -24,12 +25,20 @@ export class Header implements OnInit {
     public cartService: CartService, 
     public locationService: LocationService,
     public authService: AuthService,
-    public uiService: UiService
+    public uiService: UiService,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.uiService.authModalOpen$.subscribe(isOpen => {
       this.isAuthModalOpen = isOpen;
+    });
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.closeAccountDropdown();
+      this.closeMenu();
     });
   }
 
@@ -40,10 +49,25 @@ export class Header implements OnInit {
   
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    // Close dropdown if clicking outside (works for both desktop and mobile)
     const target = event.target as HTMLElement;
-    if (!target.closest('.account-dropdown-wrapper') && !target.closest('.account-nav-item')) {
-      this.isAccountDropdownOpen = false;
+    if (
+      !target.closest('.account-dropdown-wrapper') &&
+      !target.closest('.account-nav-wrapper') &&
+      !target.closest('.mobile-account-dropdown')
+    ) {
+      this.closeAccountDropdown();
+    }
+  }
+
+  @HostListener('document:touchstart', ['$event'])
+  onDocumentTouch(event: TouchEvent) {
+    const target = event.target as HTMLElement;
+    if (
+      !target.closest('.account-dropdown-wrapper') &&
+      !target.closest('.account-nav-wrapper') &&
+      !target.closest('.mobile-account-dropdown')
+    ) {
+      this.closeAccountDropdown();
     }
   }
 
@@ -75,13 +99,21 @@ export class Header implements OnInit {
   toggleAccountDropdown(event?: Event) {
     if (event) {
       event.stopPropagation();
+      event.preventDefault();
     }
     this.isAccountDropdownOpen = !this.isAccountDropdownOpen;
   }
 
+  closeAccountDropdown(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isAccountDropdownOpen = false;
+  }
+
   logout() {
     this.authService.logout();
-    this.isAccountDropdownOpen = false;
+    this.closeAccountDropdown();
     this.closeMenu();
   }
 }
