@@ -245,7 +245,20 @@
 
 @media (max-width: 768px) {
   .logo-img {
-    height: 55px;
+    height: 44px;
+  }
+  .header-inner {
+    padding: 0.5rem 0;
+  }
+  .header.scrolled .header-inner {
+    padding: 0.35rem 0;
+  }
+  .top-marquee {
+    padding: 5px 0;
+  }
+  .marquee-content span {
+    font-size: 0.78rem;
+    padding: 0 2rem;
   }
 }
 

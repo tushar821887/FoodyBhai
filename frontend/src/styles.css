@@ -157,24 +157,25 @@ img {
 /* Responsive */
 @media (max-width: 768px) {
   :root {
-    --container-padding: 1rem;
-    --section-padding: 2.5rem;
+    --container-padding: 0.9rem;
+    --section-padding: 1.25rem;
   }
   
   .section-title {
-    font-size: 2rem;
+    font-size: 1.6rem;
+    margin-bottom: 0.35rem;
   }
-}
 
+  .section-subtitle {
+    font-size: 0.88rem;
+    margin-bottom: 1.25rem;
+  }
 
-@media (max-width: 768px) {
   body {
-    padding-bottom: 60px; /* space for bottom nav */
+    padding-bottom: 64px; /* space for bottom nav */
   }
-}
 
-@media (max-width: 768px) {
   .main-content {
-    margin-top: 140px;
+    margin-top: 96px; /* perfectly matches compact mobile header */
   }
 }

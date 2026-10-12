@@ -146,8 +146,140 @@
   color: var(--text-light);
 }
 
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.category-card {
+  background: white;
+  padding: 1.8rem 1.2rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.category-icon-box {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 71, 87, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.2rem auto;
+  color: var(--primary-color);
+  font-size: 1.8rem;
+  transition: all 0.3s ease;
+}
+
+.category-card h3 {
+  color: var(--secondary-color);
+  margin-bottom: 0.4rem;
+  font-size: 1.15rem;
+}
+
+.category-desc {
+  color: var(--text-light);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
 @media (max-width: 992px) {
   .about-grid {
     grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-grid {
+    gap: 1.25rem;
+  }
+
+  .about-img {
+    border-radius: 18px;
+    max-height: 200px;
+  }
+
+  .about-img img {
+    height: 190px;
+    width: 100%;
+    object-fit: cover;
+  }
+
+  .features-list {
+    margin-top: 1.25rem;
+  }
+
+  .features-list li {
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .feature-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+
+  .feature-text h4 {
+    font-size: 0.98rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .feature-text p {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  /* Compact 3-Column Mobile Category Bubbles (Zomato/Swiggy Style) */
+  .category-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.65rem !important;
+  }
+
+  .category-card {
+    padding: 0.75rem 0.4rem !important;
+    border-radius: 12px !important;
+  }
+
+  .category-icon-box {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.2rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  .category-card h3 {
+    font-size: 0.78rem !important;
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .category-desc {
+    display: none !important;
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    margin-top: 1.25rem;
   }
 }

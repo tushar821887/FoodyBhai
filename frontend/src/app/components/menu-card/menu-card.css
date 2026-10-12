@@ -132,3 +132,32 @@
   background: var(--primary-color);
   color: #fff;
 }
+
+@media (max-width: 768px) {
+  .card-img-wrapper {
+    height: 160px;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .item-name {
+    font-size: 1.05rem;
+  }
+
+  .item-price {
+    font-size: 1.05rem;
+  }
+
+  .item-desc {
+    font-size: 0.82rem;
+    margin-bottom: 0.8rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .add-to-cart-btn {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+  }
+}
