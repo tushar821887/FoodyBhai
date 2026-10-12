@@ -374,7 +374,7 @@
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
@@ -382,15 +382,32 @@
   z-index: 3000;
   padding: 16px;
   box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-content {
   background: white;
   width: 90%;
-  max-width: 360px;
+  max-width: 420px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin: auto;
   border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 20px 22px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.modal-content::-webkit-scrollbar,
+.assign-modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.assign-modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .modal-content h3 {
@@ -669,10 +686,15 @@
 /* Beautiful Assign Agent Modal Styles */
 .assign-modal {
   max-width: 420px;
-  padding: 30px;
+  width: 100%;
+  padding: 20px 22px;
   border-radius: 20px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin: auto;
+  box-sizing: border-box;
 }
 
 @keyframes slideUp {
@@ -682,31 +704,31 @@
 
 .modal-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .modal-icon-wrapper {
-  width: 60px;
-  height: 60px;
+  width: 44px;
+  height: 44px;
   background: #fef2f2;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px auto;
-  font-size: 28px;
+  margin: 0 auto 8px auto;
+  font-size: 22px;
 }
 
 .modal-header h3 {
-  font-size: 22px;
+  font-size: 19px;
   color: #1e293b;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
   font-weight: 700;
 }
 
 .modal-subtitle {
   color: #64748b;
-  font-size: 14px;
+  font-size: 13px;
   margin: 0;
 }
 
@@ -805,10 +827,10 @@
 
 .btn-cancel-modal, .btn-dispatch-modal {
   flex: 1;
-  padding: 14px;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 15px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
   border: none;
   transition: all 0.2s;
@@ -1332,23 +1354,23 @@
 /* Online QR Payment Collection Modal Styles */
 .qr-collection-card {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   background: #f8fafc;
-  padding: 16px 14px;
-  border-radius: 16px;
+  padding: 10px 12px;
+  border-radius: 14px;
   border: 1px solid #e2e8f0;
 }
 
 .qr-amount-banner {
   background: #fff0f1;
   border: 1px solid #ffd1d5;
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
 }
 
 .qr-amount-meta {
-  font-size: 11px;
+  font-size: 10px;
   color: #888;
   text-transform: uppercase;
   font-weight: 700;
@@ -1356,32 +1378,32 @@
 }
 
 .qr-amount-sum {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
   color: #ff4757;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .qr-amount-desc {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #64748b;
 }
 
 .qr-mode-selector {
   display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: 4px;
+  margin-bottom: 8px;
   background: #e2e8f0;
-  padding: 3px;
-  border-radius: 10px;
+  padding: 2px;
+  border-radius: 8px;
 }
 
 .qr-mode-pill {
   flex: 1;
-  padding: 7px 10px;
+  padding: 5px 8px;
   border: none;
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   background: transparent;
@@ -1390,13 +1412,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .qr-mode-pill.active {
   background: #ffffff;
   color: #ff4757;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .qr-code-box {
@@ -1404,29 +1426,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .qr-display-image {
-  width: 180px;
-  height: 180px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
   background: #ffffff;
-  padding: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 6px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
 }
 
 .qr-badge-status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
+  gap: 5px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 20px;
-  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 16px;
+  margin-top: 6px;
 }
 
 .qr-badge-status.dynamic-badge {
@@ -1445,17 +1467,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  padding: 11px 14px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, #ff4757, #ff6b81);
   color: #ffffff !important;
-  border-radius: 10px;
+  border-radius: 8px;
   text-decoration: none;
   font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.25);
+  font-size: 12px;
+  margin-bottom: 6px;
+  box-shadow: 0 3px 8px rgba(255, 71, 87, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1466,13 +1488,13 @@
 .upi-copy-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 6px 14px;
+  border-radius: 6px;
+  padding: 4px 10px;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   transition: all 0.15s ease;
 }
 
@@ -1482,7 +1504,7 @@
 
 .upi-text {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   color: #1e293b;
 }
 
@@ -1491,22 +1513,22 @@
   border: none;
   color: #ff4757;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   padding: 0;
   display: flex;
   align-items: center;
 }
 
 .qr-helper-note {
-  font-size: 11px;
+  font-size: 10px;
   color: #64748b;
   margin: 0;
   background: #ffffff;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
   border: 1px solid #f1f5f9;
   text-align: left;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .qr-helper-note i {
