@@ -6,12 +6,13 @@ import { Dialog } from '@capacitor/dialog';
 import { Header } from './components/header/header';
 import { Footer } from './components/footer/footer';
 import { LocationModalComponent } from './components/location-modal/location-modal';
+import { AppDownloadBannerComponent } from './components/app-download-banner/app-download-banner';
 import { OrderService } from './services/order.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, Header, Footer, LocationModalComponent],
+  imports: [CommonModule, RouterOutlet, Header, Footer, LocationModalComponent, AppDownloadBannerComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

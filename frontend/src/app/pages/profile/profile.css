@@ -497,3 +497,163 @@
     justify-content: center;
   }
 }
+
+/* Official Android App Widget */
+.app-widget-card {
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-widget-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+.app-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.app-status-badge.status-ready {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.app-status-badge.status-update {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.app-widget-body {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.app-widget-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.app-widget-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.app-widget-info p {
+  margin: 0 0 8px 0;
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.app-widget-versions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ver-pill {
+  font-size: 11px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #475569;
+}
+
+.app-widget-notes {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.app-widget-notes strong {
+  display: block;
+  color: #b45309;
+  margin-bottom: 2px;
+}
+
+.app-widget-notes p {
+  margin: 0;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+.app-widget-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-app-action {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-app-update {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-app-update:hover {
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-app-download {
+  background: #0f172a;
+  color: white;
+}
+
+.btn-app-download:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.btn-app-open {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-app-open:hover {
+  background: #e2e8f0;
+}

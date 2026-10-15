@@ -14,6 +14,7 @@ import { CartService } from '../../services/cart.service';
 export class RecipeDetail implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   recipe: Recipe | undefined;
+  relatedRecipes: Recipe[] = [];
   schemaMarkup: SafeHtml = '';
 
   private route = inject(ActivatedRoute);
@@ -28,13 +29,25 @@ export class RecipeDetail implements OnInit {
       const slug = params.get('slug');
       if (slug) {
         this.recipeService.getRecipeBySlug(slug).subscribe(recipe => {
-          this.recipe = recipe; this.cdr.detectChanges();
+          this.recipe = recipe;
           if (recipe) {
             this.setSeoTags(recipe);
             this.generateSchema(recipe);
+            this.loadRelatedRecipes(recipe);
           }
+          this.cdr.detectChanges();
         });
       }
+    });
+  }
+
+  loadRelatedRecipes(currentRecipe: Recipe) {
+    this.recipeService.getRecipes().subscribe(all => {
+      if (!all || all.length === 0) return;
+      const sameCategory = all.filter(r => r.slug !== currentRecipe.slug && r.category === currentRecipe.category);
+      const otherCategories = all.filter(r => r.slug !== currentRecipe.slug && r.category !== currentRecipe.category);
+      this.relatedRecipes = [...sameCategory, ...otherCategories].slice(0, 4);
+      this.cdr.detectChanges();
     });
   }
 

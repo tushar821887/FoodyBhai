@@ -1,0 +1,90 @@
+<!-- Update/Download Notification Toast -->
+<div *ngIf="appUpdate.updateSuccessMessage" class="app-toast-alert animate-drop-down">
+  <div class="toast-content">
+    <span class="toast-icon">🚀</span>
+    <span class="toast-text">{{ appUpdate.updateSuccessMessage }}</span>
+  </div>
+</div>
+
+<!-- Mobile Smart App Banner (For web visitors on Android/Mobile) -->
+<aside *ngIf="!appUpdate.isNative && appUpdate.isAndroid && !appUpdate.isDismissed" class="mobile-app-banner animate-fade-in" aria-label="FoodyBhai Mobile App Banner">
+  <div class="banner-inner">
+    <button class="banner-close" (click)="appUpdate.dismissBanner()" aria-label="Dismiss app banner">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="banner-app-icon">
+      <img src="/assets/images/logo.png" alt="FoodyBhai App">
+    </div>
+    <div class="banner-details">
+      <div class="banner-title">
+        FoodyBhai App
+        <span *ngIf="appUpdate.hasUpdate" class="banner-update-badge">Update Available</span>
+      </div>
+      <div class="banner-subtext">
+        <span *ngIf="appUpdate.hasUpdate">New v{{ appUpdate.latestVersion }} • Performance & alerts</span>
+        <span *ngIf="!appUpdate.hasUpdate">4.8 ★ Free • Fast ordering & tracking</span>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <!-- If update available: show Update button -->
+      <button *ngIf="appUpdate.hasUpdate" class="btn-banner-action btn-update" (click)="appUpdate.downloadOrUpdateApk()">
+        <i class="fa-solid fa-arrows-rotate"></i> Update
+      </button>
+
+      <!-- If already installed and no update: show Open App button -->
+      <button *ngIf="!appUpdate.hasUpdate && appUpdate.isInstalledOnDevice" class="btn-banner-action btn-open" (click)="appUpdate.openApp()">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+      </button>
+
+      <!-- If first time: show Download button -->
+      <button *ngIf="!appUpdate.hasUpdate && !appUpdate.isInstalledOnDevice" class="btn-banner-action btn-download" (click)="appUpdate.downloadOrUpdateApk()">
+        <i class="fa-solid fa-download"></i> Get App
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- In-App / Full Update Modal -->
+<div *ngIf="appUpdate.showModal" class="app-update-modal-backdrop animate-fade-in" (click)="appUpdate.closeModal()">
+  <div class="app-update-modal-card animate-scale-up" (click)="$event.stopPropagation()">
+    <div class="modal-header-art">
+      <div class="art-circle">
+        <i class="fa-solid fa-rocket modal-rocket-icon"></i>
+      </div>
+    </div>
+
+    <div class="modal-body-content">
+      <span class="version-tag">Version {{ appUpdate.latestVersion }} Available</span>
+      <h2 class="modal-title">Time to Update FoodyBhai!</h2>
+      <p class="modal-desc">
+        A brand-new update for FoodyBhai is ready for you. Update now to enjoy the latest features, improved order speed, and instant notifications.
+      </p>
+
+      <div class="version-diff-card" *ngIf="appUpdate.isNative">
+        <div class="diff-item">
+          <span class="diff-label">Current Version:</span>
+          <span class="diff-val old-val">v{{ appUpdate.currentVersion }}</span>
+        </div>
+        <div class="diff-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="diff-item">
+          <span class="diff-label">New Version:</span>
+          <span class="diff-val new-val">v{{ appUpdate.latestVersion }}</span>
+        </div>
+      </div>
+
+      <div class="release-notes-box" *ngIf="appUpdate.releaseNotes">
+        <div class="notes-heading"><i class="fa-solid fa-sparkles"></i> What's New:</div>
+        <div class="notes-body">{{ appUpdate.releaseNotes }}</div>
+      </div>
+    </div>
+
+    <div class="modal-footer-actions">
+      <button class="btn-modal-update" (click)="appUpdate.downloadOrUpdateApk()">
+        <i class="fa-solid fa-download"></i> Update Now
+      </button>
+      <button class="btn-modal-later" (click)="appUpdate.closeModal()">
+        Later
+      </button>
+    </div>
+  </div>
+</div>

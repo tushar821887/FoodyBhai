@@ -6,6 +6,7 @@ import { OrderService } from '../../services/order.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Router, RouterModule } from '@angular/router';
+import { AppUpdateService } from '../../services/app-update.service';
 
 @Component({
   selector: 'app-profile',
@@ -37,6 +38,7 @@ export class Profile implements OnInit {
     private orderService: OrderService,
     private http: HttpClient,
     private router: Router,
+    public appUpdateService: AppUpdateService,
     private cdr: ChangeDetectorRef
   ) {}
 

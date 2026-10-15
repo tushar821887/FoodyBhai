@@ -9,6 +9,16 @@ import { AuthService, Address } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { Subscription } from 'rxjs';
 
+export interface UpiAppInfo {
+  id: string;
+  name: string;
+  packageName: string;
+  badge?: string;
+  color: string;
+  bgColor: string;
+  description: string;
+}
+
 @Component({
   selector: 'app-cart',
   standalone: true,
@@ -61,6 +71,131 @@ export class CartComponent implements OnDestroy {
 
   get dynamicQrUrl(): string {
     return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(this.upiPaymentString)}`;
+  }
+
+  // --- UPI Apps Selector ---
+  showUpiAppsModal = false;
+  selectedUpiApp: UpiAppInfo | null = null;
+
+  readonly upiApps: UpiAppInfo[] = [
+    {
+      id: 'gpay',
+      name: 'Google Pay',
+      packageName: 'com.google.android.apps.nbu.paisa.user',
+      badge: 'Popular',
+      color: '#1a73e8',
+      bgColor: '#e8f0fe',
+      description: 'Fast UPI payments with Google Pay'
+    },
+    {
+      id: 'phonepe',
+      name: 'PhonePe',
+      packageName: 'com.phonepe.app',
+      badge: 'Popular',
+      color: '#5f259f',
+      bgColor: '#f3e8ff',
+      description: 'UPI, Wallet & instant bank transfers'
+    },
+    {
+      id: 'paytm',
+      name: 'Paytm UPI',
+      packageName: 'net.one97.paytm',
+      badge: 'Fast',
+      color: '#002970',
+      bgColor: '#e0f2fe',
+      description: 'Instant payment via Paytm app'
+    },
+    {
+      id: 'bhim',
+      name: 'BHIM UPI',
+      packageName: 'in.org.npci.upiapp',
+      badge: 'NPCI',
+      color: '#00843d',
+      bgColor: '#dcfce7',
+      description: 'Govt. of India official UPI app'
+    },
+    {
+      id: 'cred',
+      name: 'CRED UPI',
+      packageName: 'com.dreamplug.androidapp',
+      badge: 'Rewards',
+      color: '#111827',
+      bgColor: '#f3f4f6',
+      description: 'Pay using CRED UPI & earn rewards'
+    },
+    {
+      id: 'amazonpay',
+      name: 'Amazon Pay',
+      packageName: 'in.amazon.mShop.android.shopping',
+      color: '#ea580c',
+      bgColor: '#ffedd5',
+      description: 'Amazon Pay UPI balance & bank'
+    },
+    {
+      id: 'any',
+      name: 'Other UPI Apps',
+      packageName: '',
+      badge: 'All Apps',
+      color: '#e11d48',
+      bgColor: '#ffe4e6',
+      description: 'Open Android system chooser for all installed UPI apps'
+    }
+  ];
+
+  openUpiAppsModal() {
+    this.showUpiAppsModal = true;
+  }
+
+  closeUpiAppsModal() {
+    this.showUpiAppsModal = false;
+  }
+
+  getUpiQueryString(): string {
+    const upi = this.effectiveUpiId;
+    const amount = Number(this.currentTotal).toFixed(2);
+    const tr = 'FB' + Date.now();
+    return `pa=${encodeURIComponent(upi)}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
+  }
+
+  getAppUpiLink(appId: string): string {
+    const query = this.getUpiQueryString();
+    const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+
+    switch (appId) {
+      case 'gpay':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`
+          : `tez://upi/pay?${query}`;
+      case 'phonepe':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;end`
+          : `phonepe://pay?${query}`;
+      case 'paytm':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;end`
+          : `paytmmp://pay?${query}`;
+      case 'bhim':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=in.org.npci.upiapp;end`
+          : `upi://pay?${query}`;
+      case 'cred':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.dreamplug.androidapp;end`
+          : `credpay://pay?${query}`;
+      case 'amazonpay':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=in.amazon.mShop.android.shopping;end`
+          : `upi://pay?${query}`;
+      case 'any':
+      default:
+        return `upi://pay?${query}`;
+    }
+  }
+
+  onAppSelected(app: UpiAppInfo) {
+    this.selectedUpiApp = app;
+    this.showUpiAppsModal = false;
+    this.showToast(`Opening ${app.name}... Please complete payment and tap "I've Paid".`, 'info');
   }
 
   copyUpiId() {
@@ -298,6 +433,7 @@ export class CartComponent implements OnDestroy {
 
   closePaymentModal() {
     this.showPaymentModal = false;
+    this.showUpiAppsModal = false;
   }
 
   confirmPaymentAndPlaceOrder() {

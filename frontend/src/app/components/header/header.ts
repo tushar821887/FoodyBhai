@@ -7,6 +7,7 @@ import { LocationService } from '../../services/location.service';
 import { AuthService } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal';
+import { AppUpdateService } from '../../services/app-update.service';
 
 @Component({
   selector: 'app-header',
@@ -26,6 +27,7 @@ export class Header implements OnInit {
     public locationService: LocationService,
     public authService: AuthService,
     public uiService: UiService,
+    public appUpdateService: AppUpdateService,
     private router: Router
   ) {}
 

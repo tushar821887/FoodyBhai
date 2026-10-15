@@ -40,6 +40,14 @@
         <a href="tel:8218870579" class="header-phone">
           <i class="fa-solid fa-phone"></i> +91 8218870579
         </a>
+
+        <button type="button" class="header-app-btn" (click)="appUpdateService.downloadOrUpdateApk()" [class.has-update]="appUpdateService.hasUpdate" [title]="appUpdateService.hasUpdate ? 'Update Available to v' + appUpdateService.latestVersion : 'Download Android App'">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <span class="action-label">{{ appUpdateService.hasUpdate ? 'Update App' : 'Get App' }}</span>
+          @if (appUpdateService.hasUpdate) {
+            <span class="app-badge-dot"></span>
+          }
+        </button>
         
         <a routerLink="/cart" class="cart-toggle-btn" style="text-decoration: none;">
           <i class="fa-solid fa-cart-shopping"></i>
@@ -74,6 +82,10 @@
                 <a routerLink="/profile" class="dropdown-item" (click)="closeAccountDropdown($event)">
                   <i class="fa-regular fa-user"></i> My Account
                 </a>
+                <button type="button" class="dropdown-item app-dropdown-item" (click)="appUpdateService.downloadOrUpdateApk(); closeAccountDropdown($event)">
+                  <i class="fa-solid fa-mobile-screen-button"></i>
+                  <span>{{ appUpdateService.hasUpdate ? '🔄 Update App (v' + appUpdateService.latestVersion + ')' : (appUpdateService.isInstalledOnDevice ? '📱 Open / Reinstall App' : '📱 Download App (.apk)') }}</span>
+                </button>
                 <div class="dropdown-divider"></div>
                 <button type="button" class="dropdown-item logout-btn" (click)="logout()">
                   <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
@@ -132,6 +144,10 @@
           <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
             <i class="fa-regular fa-address-book"></i> Addresses
           </a>
+          <button type="button" class="dropdown-item app-dropdown-item" (click)="appUpdateService.downloadOrUpdateApk(); closeAccountDropdown($event)">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <span>{{ appUpdateService.hasUpdate ? '🔄 Update App (v' + appUpdateService.latestVersion + ')' : (appUpdateService.isInstalledOnDevice ? '📱 Open / Reinstall App' : '📱 Download App (.apk)') }}</span>
+          </button>
           <div class="dropdown-divider"></div>
           <button type="button" class="dropdown-item logout-btn" (click)="logout()">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout

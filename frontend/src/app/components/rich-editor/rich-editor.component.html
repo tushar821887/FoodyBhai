@@ -1,0 +1,457 @@
+<div class="rich-editor-wrapper" [class.fullscreen-mode]="isFullscreen" [class.is-disabled]="disabled">
+  
+  <!-- TOP TOOLBAR -->
+  <div class="rich-editor-toolbar" role="toolbar" aria-label="Rich Text Editor Toolbar">
+    
+    <!-- GROUP: History (Undo / Redo) -->
+    <div class="toolbar-group">
+      <button type="button" class="toolbar-btn" (click)="undo()" title="Undo (Ctrl+Z)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-rotate-left"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="redo()" title="Redo (Ctrl+Y)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- GROUP: Font Family Dropdown -->
+    <div class="toolbar-group dropdown-container">
+      <button type="button" class="toolbar-btn toolbar-btn-dropdown" (click)="toggleDropdown('font', $event)" [disabled]="disabled || isSourceMode" title="Font Family">
+        <i class="fa-solid fa-font"></i>
+        <span class="btn-label">Font</span>
+        <i class="fa-solid fa-chevron-down caret"></i>
+      </button>
+      <div class="dropdown-menu font-menu" *ngIf="activeDropdown === 'font'">
+        <button type="button" class="dropdown-item" *ngFor="let font of fonts" (click)="setFont(font)" [style.font-family]="font === 'Default' ? 'inherit' : font">
+          {{ font }}
+        </button>
+      </div>
+    </div>
+
+    <!-- GROUP: Font Size Dropdown -->
+    <div class="toolbar-group dropdown-container">
+      <button type="button" class="toolbar-btn toolbar-btn-dropdown" (click)="toggleDropdown('fontSize', $event)" [disabled]="disabled || isSourceMode" title="Font Size">
+        <i class="fa-solid fa-text-height"></i>
+        <span class="btn-label">Size</span>
+        <i class="fa-solid fa-chevron-down caret"></i>
+      </button>
+      <div class="dropdown-menu" *ngIf="activeDropdown === 'fontSize'">
+        <button type="button" class="dropdown-item" *ngFor="let size of fontSizes" (click)="setFontSize(size.value)">
+          {{ size.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- GROUP: Paragraph & Headings Dropdown -->
+    <div class="toolbar-group dropdown-container">
+      <button type="button" class="toolbar-btn toolbar-btn-dropdown" (click)="toggleDropdown('heading', $event)" [disabled]="disabled || isSourceMode" title="Paragraph & Headings">
+        <i class="fa-solid fa-heading"></i>
+        <span class="btn-label">Style</span>
+        <i class="fa-solid fa-chevron-down caret"></i>
+      </button>
+      <div class="dropdown-menu" *ngIf="activeDropdown === 'heading'">
+        <button type="button" class="dropdown-item" (click)="formatBlock('P')">Normal Paragraph</button>
+        <button type="button" class="dropdown-item" (click)="formatBlock('H1')"><strong style="font-size: 1.3em;">Heading 1</strong></button>
+        <button type="button" class="dropdown-item" (click)="formatBlock('H2')"><strong style="font-size: 1.15em;">Heading 2</strong></button>
+        <button type="button" class="dropdown-item" (click)="formatBlock('H3')"><strong style="font-size: 1.05em;">Heading 3</strong></button>
+        <button type="button" class="dropdown-item" (click)="formatBlock('H4')">Heading 4</button>
+        <button type="button" class="dropdown-item" (click)="formatBlock('BLOCKQUOTE')">
+          <i class="fa-solid fa-quote-left"></i> Quote Block
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- GROUP: Inline Text Styles -->
+    <div class="toolbar-group">
+      <button type="button" class="toolbar-btn" (click)="exec('bold')" title="Bold (Ctrl+B)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-bold"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('italic')" title="Italic (Ctrl+I)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-italic"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('underline')" title="Underline (Ctrl+U)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-underline"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('strikeThrough')" title="Strikethrough" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-strikethrough"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('subscript')" title="Subscript" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-subscript"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('superscript')" title="Superscript" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-superscript"></i>
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- GROUP: Color & Highlighter Dropdowns -->
+    <div class="toolbar-group dropdown-container">
+      <button type="button" class="toolbar-btn" (click)="toggleDropdown('textColor', $event)" title="Text Color" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-font" style="border-bottom: 3px solid #e11d48;"></i>
+      </button>
+      <div class="dropdown-menu palette-dropdown" *ngIf="activeDropdown === 'textColor'">
+        <div class="palette-title">Text Color</div>
+        <div class="color-grid">
+          <button type="button" class="color-dot" *ngFor="let c of textColors" [style.background-color]="c" (click)="setTextColor(c)" [title]="c"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-group dropdown-container">
+      <button type="button" class="toolbar-btn" (click)="toggleDropdown('highlightColor', $event)" title="Highlight Color" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-highlighter" style="color: #d97706;"></i>
+      </button>
+      <div class="dropdown-menu palette-dropdown" *ngIf="activeDropdown === 'highlightColor'">
+        <div class="palette-title">Highlight Background</div>
+        <div class="color-grid">
+          <button type="button" class="color-dot" *ngFor="let c of highlightColors" [style.background-color]="c" (click)="setHighlightColor(c)" [title]="c"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- GROUP: Alignment -->
+    <div class="toolbar-group">
+      <button type="button" class="toolbar-btn" (click)="exec('justifyLeft')" title="Align Left" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-align-left"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('justifyCenter')" title="Align Center" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-align-center"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('justifyRight')" title="Align Right" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-align-right"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('justifyFull')" title="Justify" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-align-justify"></i>
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- GROUP: Lists & Indents -->
+    <div class="toolbar-group">
+      <button type="button" class="toolbar-btn" (click)="exec('insertUnorderedList')" title="Bullet List" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-list-ul"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('insertOrderedList')" title="Numbered List" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-list-ol"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="insertChecklist()" title="Interactive Task / Checklist" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-list-check"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('outdent')" title="Decrease Indent" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-outdent"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="exec('indent')" title="Increase Indent" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-indent"></i>
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- GROUP: Pro Features (Table, Link, Image, Video, Callout) -->
+    <div class="toolbar-group">
+      <!-- Table Modal Trigger -->
+      <button type="button" class="toolbar-btn pro-btn" (click)="openTableModal()" title="Insert Table (Paid Tier Feature)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-table"></i>
+      </button>
+
+      <!-- Link Modal Trigger -->
+      <button type="button" class="toolbar-btn" (click)="openLinkModal()" title="Insert / Edit Link" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-link"></i>
+      </button>
+      <button type="button" class="toolbar-btn" (click)="unlink()" title="Remove Link" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-unlink"></i>
+      </button>
+
+      <!-- Image Modal Trigger -->
+      <button type="button" class="toolbar-btn pro-btn" (click)="openImageModal()" title="Insert Image / Upload File (Paid Tier Feature)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-image"></i>
+      </button>
+
+      <!-- Video Embed Modal Trigger -->
+      <button type="button" class="toolbar-btn pro-btn" (click)="openVideoModal()" title="Embed Video (YouTube / Vimeo)" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-video"></i>
+      </button>
+
+      <!-- Callout Box Dropdown -->
+      <div class="dropdown-container">
+        <button type="button" class="toolbar-btn" (click)="toggleDropdown('callout', $event)" title="Insert Callout Alert Box" [disabled]="disabled || isSourceMode">
+          <i class="fa-solid fa-circle-exclamation" style="color: #f59e0b;"></i>
+          <i class="fa-solid fa-chevron-down caret"></i>
+        </button>
+        <div class="dropdown-menu" *ngIf="activeDropdown === 'callout'">
+          <button type="button" class="dropdown-item" (click)="insertCalloutBox('chef')">
+            👨‍🍳 Chef's Secret Box
+          </button>
+          <button type="button" class="dropdown-item" (click)="insertCalloutBox('tip')">
+            💡 Pro Cooking Tip Box
+          </button>
+          <button type="button" class="dropdown-item" (click)="insertCalloutBox('warning')">
+            ⚠️ Important Caution Box
+          </button>
+        </div>
+      </div>
+
+      <!-- Food Emoji Picker -->
+      <div class="dropdown-container">
+        <button type="button" class="toolbar-btn" (click)="toggleDropdown('emoji', $event)" title="Food Emojis & Badges" [disabled]="disabled || isSourceMode">
+          <i class="fa-solid fa-face-smile" style="color: #eab308;"></i>
+          <i class="fa-solid fa-chevron-down caret"></i>
+        </button>
+        <div class="dropdown-menu emoji-grid-menu" *ngIf="activeDropdown === 'emoji'">
+          <div class="emoji-grid">
+            <button type="button" class="emoji-btn" *ngFor="let emoji of foodEmojis" (click)="insertEmoji(emoji)">
+              {{ emoji }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chef Pre-built Templates Dropdown -->
+      <div class="dropdown-container" *ngIf="showTemplates">
+        <button type="button" class="toolbar-btn pro-badge-btn" (click)="toggleDropdown('templates', $event)" title="Prebuilt Chef Templates" [disabled]="disabled || isSourceMode">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: #7c3aed;"></i>
+          <span class="btn-label">Templates</span>
+          <span class="pro-tag">PRO</span>
+        </button>
+        <div class="dropdown-menu" *ngIf="activeDropdown === 'templates'">
+          <button type="button" class="dropdown-item" (click)="insertRecipeTemplate()">
+            <i class="fa-solid fa-utensils"></i> Chef's Recipe Layout
+          </button>
+          <button type="button" class="dropdown-item" (click)="insertNutritionTable()">
+            <i class="fa-solid fa-table-cells"></i> Nutrition Fact Table
+          </button>
+        </div>
+      </div>
+
+      <!-- Code Snippet -->
+      <button type="button" class="toolbar-btn" (click)="insertCodeBlock()" title="Insert Code Block" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-code"></i>
+      </button>
+
+      <!-- Horizontal Rule -->
+      <button type="button" class="toolbar-btn" (click)="insertHorizontalRule()" title="Insert Divider Line" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-minus"></i>
+      </button>
+
+      <!-- Clear Formatting -->
+      <button type="button" class="toolbar-btn" (click)="clearFormatting()" title="Clear Formatting" [disabled]="disabled || isSourceMode">
+        <i class="fa-solid fa-eraser"></i>
+      </button>
+    </div>
+
+    <!-- Right Side Toolbar Actions -->
+    <div class="toolbar-group right-group">
+      <!-- HTML Source View Toggle -->
+      <button type="button" class="toolbar-btn" [class.active]="isSourceMode" (click)="toggleSourceMode()" title="Toggle HTML Source Code View" *ngIf="showSourceView" [disabled]="disabled">
+        <i class="fa-solid fa-code"></i>
+        <span class="btn-label">HTML</span>
+      </button>
+
+      <!-- Fullscreen Toggle -->
+      <button type="button" class="toolbar-btn" [class.active]="isFullscreen" (click)="toggleFullscreen()" title="Toggle Fullscreen">
+        <i class="fa-solid" [ngClass]="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- EDITOR CONTENT AREA -->
+  <div class="editor-body">
+    <!-- WYSIWYG Contenteditable Area -->
+    <div
+      #editorArea
+      class="editor-canvas"
+      [hidden]="isSourceMode"
+      [attr.contenteditable]="!disabled"
+      [attr.data-placeholder]="placeholder"
+      [style.minHeight]="minHeight"
+      [style.maxHeight]="isFullscreen ? 'none' : maxHeight"
+      (input)="onEditorInput()"
+      (blur)="onBlur()">
+    </div>
+
+    <!-- Raw HTML Source Editor -->
+    <textarea
+      class="source-editor"
+      *ngIf="isSourceMode"
+      [value]="rawHtmlContent"
+      (input)="onRawHtmlInput($event)"
+      [style.minHeight]="minHeight"
+      [style.maxHeight]="isFullscreen ? 'none' : maxHeight"
+      placeholder="Type or paste raw HTML here..."
+      [disabled]="disabled">
+    </textarea>
+  </div>
+
+  <!-- BOTTOM STATUS BAR -->
+  <div class="editor-statusbar">
+    <div class="status-left">
+      <span class="status-badge"><i class="fa-solid fa-pen-nib"></i> {{ wordCount }} words</span>
+      <span class="status-divider">•</span>
+      <span class="status-badge">{{ charCount }} characters</span>
+      <span class="status-divider">•</span>
+      <span class="status-badge"><i class="fa-solid fa-clock"></i> {{ readingTime }}</span>
+      <span class="status-divider" *ngIf="isSourceMode">•</span>
+      <span class="status-badge source-mode-badge" *ngIf="isSourceMode">
+        <i class="fa-solid fa-code"></i> Source Editing Mode
+      </span>
+    </div>
+    <div class="status-right">
+      <button type="button" class="status-action-btn" (click)="copyHtml()" title="Copy entire clean HTML to clipboard">
+        <i class="fa-solid fa-copy"></i> Copy HTML
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS / DIALOG OVERLAYS (TABLE, LINK, IMAGE, VIDEO)                     -->
+  <!-- ========================================================================= -->
+
+  <!-- TABLE MODAL -->
+  <div class="modal-backdrop" *ngIf="activeDropdown === 'table'" (click)="closeDropdowns()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-table"></i> Insert Table</div>
+        <button type="button" class="modal-close" (click)="closeDropdowns()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rows (1 - 20)</label>
+            <input type="number" min="1" max="20" [(ngModel)]="tableData.rows" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Columns (1 - 10)</label>
+            <input type="number" min="1" max="10" [(ngModel)]="tableData.cols" class="form-input" />
+          </div>
+        </div>
+        <div class="form-group checkbox-group">
+          <label class="custom-checkbox">
+            <input type="checkbox" [(ngModel)]="tableData.hasHeader" />
+            <span>Include Styled Header Row</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDropdowns()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="insertTable()">Insert Table</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINK MODAL -->
+  <div class="modal-backdrop" *ngIf="activeDropdown === 'link'" (click)="closeDropdowns()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-link"></i> Insert Link</div>
+        <button type="button" class="modal-close" (click)="closeDropdowns()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>URL / Web Address *</label>
+          <input type="url" [(ngModel)]="linkData.url" placeholder="https://example.com" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Display Text</label>
+          <input type="text" [(ngModel)]="linkData.text" placeholder="Click here..." class="form-input" />
+        </div>
+        <div class="form-group checkbox-group">
+          <label class="custom-checkbox">
+            <input type="checkbox" [(ngModel)]="linkData.targetBlank" />
+            <span>Open in new tab</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDropdowns()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="insertLink()" [disabled]="!linkData.url">Insert Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMAGE MODAL (URL or Local File Upload) -->
+  <div class="modal-backdrop" *ngIf="activeDropdown === 'image'" (click)="closeDropdowns()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-image"></i> Insert Image (Pro Feature)</div>
+        <button type="button" class="modal-close" (click)="closeDropdowns()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Local File Upload Drop Area -->
+        <div class="upload-dropzone" (click)="fileInput.click()">
+          <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+          <p><strong>Click to choose file</strong> or drag & drop image here</p>
+          <small>JPG, PNG, WEBP, GIF up to 5MB</small>
+          <input #fileInput type="file" accept="image/*" (change)="onImageFileSelected($event)" style="display: none;" />
+        </div>
+
+        <div class="or-divider"><span>OR ENTER URL</span></div>
+
+        <div class="form-group">
+          <label>Image Web Address (URL)</label>
+          <input type="url" [(ngModel)]="imageData.url" placeholder="https://images.unsplash.com/..." class="form-input" />
+        </div>
+
+        <div class="image-preview-container" *ngIf="imageData.url">
+          <img [src]="imageData.url" alt="Preview" class="image-preview" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Alt Text / Description</label>
+            <input type="text" [(ngModel)]="imageData.alt" placeholder="Delicious Food Dish" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Width</label>
+            <select [(ngModel)]="imageData.width" class="form-input">
+              <option value="100%">100% (Full Width)</option>
+              <option value="75%">75% (Medium Large)</option>
+              <option value="50%">50% (Half Width)</option>
+              <option value="300px">300px (Fixed)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Alignment</label>
+            <select [(ngModel)]="imageData.align" class="form-input">
+              <option value="center">Center</option>
+              <option value="left">Left (Wrap text)</option>
+              <option value="right">Right (Wrap text)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDropdowns()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="insertImage()" [disabled]="!imageData.url">Insert Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO MODAL -->
+  <div class="modal-backdrop" *ngIf="activeDropdown === 'video'" (click)="closeDropdowns()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><i class="fa-solid fa-video"></i> Embed Video</div>
+        <button type="button" class="modal-close" (click)="closeDropdowns()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>YouTube or Vimeo Video Link *</label>
+          <input type="url" [(ngModel)]="videoData.url" placeholder="https://www.youtube.com/watch?v=..." class="form-input" />
+          <small class="form-hint">Paste full YouTube link or embed URL. It will automatically be rendered responsively in 16:9 ratio.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDropdowns()">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="insertVideo()" [disabled]="!videoData.url">Embed Video</button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -134,6 +134,52 @@
           </div>
         </div>
 
+        <!-- OFFICIAL ANDROID APP WIDGET -->
+        <div class="modern-card shadow-sm app-widget-card" *ngIf="!isEditing">
+          <div class="card-header d-flex justify-between align-center">
+            <h3><i class="fa-brands fa-android" style="color: #10b981;"></i> FoodyBhai Android App</h3>
+            <span class="app-status-badge" [ngClass]="appUpdateService.hasUpdate ? 'status-update' : 'status-ready'">
+              {{ appUpdateService.hasUpdate ? 'Update Available' : 'v' + appUpdateService.latestVersion }}
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="app-widget-body">
+              <div class="app-widget-icon">
+                <i class="fa-brands fa-android"></i>
+              </div>
+              <div class="app-widget-info">
+                <h4>Get the Official App</h4>
+                <p>Super fast checkout, instant order status alerts & live kitchen updates.</p>
+                <div class="app-widget-versions">
+                  <span class="ver-pill" *ngIf="appUpdateService.isInstalledOnDevice">
+                    Current: <strong>v{{ appUpdateService.currentVersion }}</strong>
+                  </span>
+                  <span class="ver-pill">
+                    Latest: <strong>v{{ appUpdateService.latestVersion }}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="app-widget-notes" *ngIf="appUpdateService.hasUpdate && appUpdateService.releaseNotes">
+              <strong><i class="fa-solid fa-wand-magic-sparkles"></i> What's new in v{{ appUpdateService.latestVersion }}:</strong>
+              <p>{{ appUpdateService.releaseNotes }}</p>
+            </div>
+
+            <div class="app-widget-actions">
+              <button *ngIf="appUpdateService.hasUpdate" class="btn-app-action btn-app-update" (click)="appUpdateService.downloadOrUpdateApk()">
+                <i class="fa-solid fa-arrows-rotate"></i> Update App to v{{ appUpdateService.latestVersion }}
+              </button>
+              <button *ngIf="!appUpdateService.hasUpdate" class="btn-app-action btn-app-download" (click)="appUpdateService.downloadOrUpdateApk()">
+                <i class="fa-solid fa-download"></i> {{ appUpdateService.isInstalledOnDevice ? 'Reinstall APK (v' + appUpdateService.latestVersion + ')' : 'Download APK (v' + appUpdateService.latestVersion + ')' }}
+              </button>
+              <button *ngIf="appUpdateService.isInstalledOnDevice && !appUpdateService.isNative" class="btn-app-action btn-app-open" (click)="appUpdateService.openApp()">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open App
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- RIGHT COLUMN -->

@@ -10,7 +10,8 @@
     "serve:ssr:foody-bhai": "node dist/foody-bhai/server/server.mjs",
     "cap:sync": "npx cap sync android",
     "cap:build": "ng build --configuration production && npx cap sync android",
-    "cap:open": "npx cap open android"
+    "cap:open": "npx cap open android",
+    "sync-apk": "node scripts/sync-apk.js"
   },
   "private": true,
   "packageManager": "npm@10.9.8",

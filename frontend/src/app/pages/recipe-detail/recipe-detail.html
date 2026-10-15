@@ -56,18 +56,24 @@
           </div>
 
           <div class="recipe-ingredients mb-5">
-            <h2>Ingredients</h2>
-            <ul class="ingredients-list">
-              @for (ingredient of recipe.ingredients; track ingredient) {
-                <li>
-                  <label class="custom-checkbox">
-                    <input type="checkbox">
-                    <span class="checkmark"></span>
-                    <span class="label-text">{{ingredient}}</span>
-                  </label>
-                </li>
+            <div class="section-heading-wrapper mb-3">
+              <h2 style="margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.6rem;">
+                <i class="fa-solid fa-mortar-pestle" style="color: var(--primary-color);"></i>
+                Chef's Ingredients & Spices
+              </h2>
+              <p class="ingredients-subtitle" style="color: #64748b; font-size: 0.95rem; margin-bottom: 0;">
+                Authentic ingredients curated by our chef to prepare this signature dish.
+              </p>
+            </div>
+
+            <div class="chef-ingredients-grid">
+              @for (ingredient of recipe.ingredients; track ingredient; let idx = $index) {
+                <div class="chef-ingredient-card">
+                  <span class="ingredient-badge">{{ idx + 1 }}</span>
+                  <span class="ingredient-text">{{ ingredient }}</span>
+                </div>
               }
-            </ul>
+            </div>
           </div>
 
           <div class="recipe-instructions mb-5">
@@ -92,6 +98,10 @@
               </ul>
             </div>
           }
+
+          @if (recipe.recipeHtml) {
+            <div class="recipe-rich-content mb-5" [innerHTML]="recipe.recipeHtml"></div>
+          }
         </div>
 
         <aside class="recipe-sidebar">
@@ -108,7 +118,22 @@
             </button>
           </div>
           
-          <!-- Can add related recipes widget here later -->
+          @if (relatedRecipes && relatedRecipes.length > 0) {
+            <div class="sidebar-widget related-recipes-widget">
+              <h3>Explore More Recipes</h3>
+              <div class="related-list">
+                @for (rel of relatedRecipes; track rel.slug) {
+                  <a [routerLink]="['/recipe', rel.slug]" class="related-item">
+                    <img [src]="rel.image" [alt]="rel.title" class="related-thumb" />
+                    <div class="related-info">
+                      <span class="related-title">{{ rel.title }}</span>
+                      <span class="related-meta">{{ rel.category }} &bull; &#8377;{{ rel.price }}</span>
+                    </div>
+                  </a>
+                }
+              </div>
+            </div>
+          }
         </aside>
       </div>
     </div>

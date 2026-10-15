@@ -417,134 +417,269 @@
         </button>
       </div>
 
-      <!-- Payment Options -->
-      <div class="payment-options">
+      <!-- Scrollable Modal Body -->
+      <div class="payment-modal-body">
 
-        <!-- Online Option -->
-        <div class="payment-option-card" [class.selected]="paymentMethod === 'online'" (click)="paymentMethod = 'online'; codConfirmed = false">
-          <div class="payment-option-radio">
-            <div class="radio-circle" [class.active]="paymentMethod === 'online'">
-              @if (paymentMethod === 'online') { <i class="fa-solid fa-check"></i> }
+        <!-- Payment Options -->
+        <div class="payment-options">
+
+          <!-- Online Option -->
+          <div class="payment-option-card" [class.selected]="paymentMethod === 'online'" (click)="paymentMethod = 'online'; codConfirmed = false">
+            <div class="payment-option-radio">
+              <div class="radio-circle" [class.active]="paymentMethod === 'online'">
+                @if (paymentMethod === 'online') { <i class="fa-solid fa-check"></i> }
+              </div>
+            </div>
+            <div class="payment-option-icon online-icon">
+              <i class="fa-solid fa-qrcode"></i>
+            </div>
+            <div class="payment-option-info">
+              <span class="payment-option-title">Online Payment</span>
+              <span class="payment-option-desc">Pay via UPI / QR Code</span>
+            </div>
+            <span class="payment-option-badge online-badge">Recommended</span>
+          </div>
+
+          <!-- COD Option -->
+          <div class="payment-option-card" [class.selected]="paymentMethod === 'cod'" (click)="paymentMethod = 'cod'">
+            <div class="payment-option-radio">
+              <div class="radio-circle" [class.active]="paymentMethod === 'cod'">
+                @if (paymentMethod === 'cod') { <i class="fa-solid fa-check"></i> }
+              </div>
+            </div>
+            <div class="payment-option-icon cod-icon">
+              <i class="fa-solid fa-money-bill-wave"></i>
+            </div>
+            <div class="payment-option-info">
+              <span class="payment-option-title">Cash on Delivery</span>
+              <span class="payment-option-desc">Pay when your order arrives</span>
             </div>
           </div>
-          <div class="payment-option-icon online-icon">
-            <i class="fa-solid fa-qrcode"></i>
-          </div>
-          <div class="payment-option-info">
-            <span class="payment-option-title">Online Payment</span>
-            <span class="payment-option-desc">Pay via UPI / QR Code</span>
-          </div>
-          <span class="payment-option-badge online-badge">Recommended</span>
         </div>
 
-        <!-- COD Option -->
-        <div class="payment-option-card" [class.selected]="paymentMethod === 'cod'" (click)="paymentMethod = 'cod'">
-          <div class="payment-option-radio">
-            <div class="radio-circle" [class.active]="paymentMethod === 'cod'">
-              @if (paymentMethod === 'cod') { <i class="fa-solid fa-check"></i> }
+        <!-- Online: QR section -->
+        @if (paymentMethod === 'online') {
+          <div class="qr-section animate-fade-in" style="user-select: none;">
+            <div style="background: #fff0f1; border: 1px solid #ffd1d5; border-radius: 12px; padding: 10px 15px; margin-bottom: 15px;">
+              <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700;">Exact Amount to Pay</div>
+              <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">₹{{ currentTotal }}</div>
+              <div style="font-size: 0.75rem; color: #666;">Locked & verified for this order</div>
             </div>
-          </div>
-          <div class="payment-option-icon cod-icon">
-            <i class="fa-solid fa-money-bill-wave"></i>
-          </div>
-          <div class="payment-option-info">
-            <span class="payment-option-title">Cash on Delivery</span>
-            <span class="payment-option-desc">Pay when your order arrives</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Online: QR section -->
-      @if (paymentMethod === 'online') {
-        <div class="qr-section animate-fade-in" style="user-select: none;">
-          <div style="background: #fff0f1; border: 1px solid #ffd1d5; border-radius: 12px; padding: 10px 15px; margin-bottom: 15px;">
-            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700;">Exact Amount to Pay</div>
-            <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">₹{{ currentTotal }}</div>
-            <div style="font-size: 0.75rem; color: #666;">Locked & verified for this order</div>
-          </div>
-
-          @if (hasCustomUploadedQr) {
-            <div class="qr-mode-selector mb-3" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px;">
-              <button type="button" 
-                      style="flex: 1; padding: 8px 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                      [style.background]="selectedQrMode === 'dynamic' ? '#ffffff' : 'transparent'"
-                      [style.color]="selectedQrMode === 'dynamic' ? 'var(--primary-color)' : '#64748b'"
-                      [style.boxShadow]="selectedQrMode === 'dynamic' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'"
-                      (click)="selectedQrMode = 'dynamic'">
-                <i class="fa-solid fa-bolt"></i> Dynamic QR (₹{{ currentTotal }})
-              </button>
-              <button type="button" 
-                      style="flex: 1; padding: 8px 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                      [style.background]="selectedQrMode === 'uploaded' ? '#ffffff' : 'transparent'"
-                      [style.color]="selectedQrMode === 'uploaded' ? 'var(--primary-color)' : '#64748b'"
-                      [style.boxShadow]="selectedQrMode === 'uploaded' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'"
-                      (click)="selectedQrMode = 'uploaded'">
-                <i class="fa-solid fa-image"></i> Uploaded Store QR
-              </button>
-            </div>
-          }
-
-          <div class="qr-wrapper">
-            @if (selectedQrMode === 'uploaded' && qrImageUrl) {
-              <img [src]="qrImageUrl" alt="Store Payment QR Code" class="qr-image">
-            } @else if (dynamicQrUrl) {
-              <img [src]="dynamicQrUrl" alt="Payment QR Code" class="qr-image">
-            } @else {
-              <div class="qr-placeholder">
-                <i class="fa-solid fa-qrcode"></i>
-                <p>QR code not set. Please contact the restaurant.</p>
+            @if (hasCustomUploadedQr) {
+              <div class="qr-mode-selector mb-3" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px;">
+                <button type="button" 
+                        style="flex: 1; padding: 8px 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                        [style.background]="selectedQrMode === 'dynamic' ? '#ffffff' : 'transparent'"
+                        [style.color]="selectedQrMode === 'dynamic' ? 'var(--primary-color)' : '#64748b'"
+                        [style.boxShadow]="selectedQrMode === 'dynamic' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'"
+                        (click)="selectedQrMode = 'dynamic'">
+                  <i class="fa-solid fa-bolt"></i> Dynamic QR (₹{{ currentTotal }})
+                </button>
+                <button type="button" 
+                        style="flex: 1; padding: 8px 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                        [style.background]="selectedQrMode === 'uploaded' ? '#ffffff' : 'transparent'"
+                        [style.color]="selectedQrMode === 'uploaded' ? 'var(--primary-color)' : '#64748b'"
+                        [style.boxShadow]="selectedQrMode === 'uploaded' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'"
+                        (click)="selectedQrMode = 'uploaded'">
+                  <i class="fa-solid fa-image"></i> Uploaded Store QR
+                </button>
               </div>
             }
-          </div>
 
-          <!-- Direct Pay Button for Mobile APK -->
-          <a [href]="upiPaymentString" class="btn btn-primary w-100 mb-3 py-2" style="font-size: 0.95rem; text-decoration: none; border-radius: 10px;">
-            <i class="fa-solid fa-bolt"></i> Pay via UPI App (GPay/PhonePe/Paytm)
-          </a>
+            <div class="qr-wrapper">
+              @if (selectedQrMode === 'uploaded' && qrImageUrl) {
+                <img [src]="qrImageUrl" alt="Store Payment QR Code" class="qr-image">
+              } @else if (dynamicQrUrl) {
+                <img [src]="dynamicQrUrl" alt="Payment QR Code" class="qr-image">
+              } @else {
+                <div class="qr-placeholder">
+                  <i class="fa-solid fa-qrcode"></i>
+                  <p>QR code not set. Please contact the restaurant.</p>
+                </div>
+              }
+            </div>
 
-          <div class="upi-id-box" (click)="copyUpiId()" style="cursor: pointer;" title="Tap to copy UPI ID">
-            <i class="fa-solid fa-at"></i>
-            <span class="upi-id-text">{{ effectiveUpiId }}</span>
-            <button type="button" class="upi-copy-btn" (click)="copyUpiId(); $event.stopPropagation()">
-              <i class="fa-regular fa-copy"></i>
+            <!-- Direct Pay Button / UPI App Selector Trigger -->
+            <button type="button" 
+                    class="btn-upi-selector-trigger w-100 mb-3" 
+                    (click)="openUpiAppsModal()">
+              <div class="upi-trigger-content">
+                <div class="upi-trigger-left">
+                  <div class="upi-trigger-icon">
+                    <i class="fa-solid fa-bolt"></i>
+                  </div>
+                  <div class="upi-trigger-text">
+                    <span class="upi-trigger-title">Pay via UPI App</span>
+                    <span class="upi-trigger-subtitle">GPay, PhonePe, Paytm, BHIM & more</span>
+                  </div>
+                </div>
+                <div class="upi-trigger-right">
+                  <span class="upi-app-pill gpay-pill">GPay</span>
+                  <span class="upi-app-pill phonepe-pill">PhonePe</span>
+                  <span class="upi-app-pill paytm-pill">Paytm</span>
+                  <i class="fa-solid fa-chevron-right chevron-icon"></i>
+                </div>
+              </div>
             </button>
+
+            <!-- If user has chosen a UPI app -->
+            @if (selectedUpiApp) {
+              <div class="selected-upi-card mb-3 animate-fade-in">
+                <div class="selected-upi-header">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <span class="selected-upi-label">Chosen: <strong>{{ selectedUpiApp.name }}</strong></span>
+                  </div>
+                  <button type="button" class="btn-change-upi" (click)="openUpiAppsModal()">
+                    Change <i class="fa-solid fa-arrows-rotate ms-1"></i>
+                  </button>
+                </div>
+                <a [href]="getAppUpiLink(selectedUpiApp.id)" 
+                   (click)="onAppSelected(selectedUpiApp)" 
+                   class="btn-open-chosen-app">
+                  <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Open {{ selectedUpiApp.name }} (₹{{ currentTotal }})
+                </a>
+              </div>
+            }
+
+            <div class="upi-id-box" (click)="copyUpiId()" style="cursor: pointer;" title="Tap to copy UPI ID">
+              <i class="fa-solid fa-at"></i>
+              <span class="upi-id-text">{{ effectiveUpiId }}</span>
+              <button type="button" class="upi-copy-btn" (click)="copyUpiId(); $event.stopPropagation()">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+            <p class="qr-note">
+              <i class="fa-solid fa-circle-info"></i>
+              Amount is fixed to ₹{{ currentTotal }}. After paying, tap "I've Paid — Place Order" below.
+            </p>
           </div>
-          <p class="qr-note">
-            <i class="fa-solid fa-circle-info"></i>
-            Amount is fixed to ₹{{ currentTotal }}. After paying, tap "I've Paid — Place Order" below.
+        }
+
+        <!-- COD: Confirmation checkbox -->
+        @if (paymentMethod === 'cod') {
+          <div class="cod-section animate-fade-in">
+            <div class="cod-info-card">
+              <i class="fa-solid fa-hand-holding-dollar cod-big-icon"></i>
+              <div>
+                <h6>Cash on Delivery Selected</h6>
+                <p>Please keep exact change of <strong>₹{{ currentTotal }}</strong> ready when your order arrives.</p>
+              </div>
+            </div>
+            <label class="cod-confirm-label">
+              <input type="checkbox" [(ngModel)]="codConfirmed" class="cod-checkbox">
+              <span>I agree to pay <strong>₹{{ currentTotal }}</strong> in cash upon delivery / pickup.</span>
+            </label>
+          </div>
+        }
+
+      </div>
+
+      <!-- Pinned Footer Action Button -->
+      <div class="payment-modal-footer">
+        <button class="btn-place-order"
+                [disabled]="isPlacingOrder || (paymentMethod === 'cod' && !codConfirmed)"
+                (click)="confirmPaymentAndPlaceOrder()">
+          @if (isPlacingOrder) {
+            <i class="fa-solid fa-spinner fa-spin me-2"></i> Placing Order...
+          } @else if (paymentMethod === 'online') {
+            <i class="fa-solid fa-check me-2"></i> I've Paid — Place Order
+          } @else {
+            <i class="fa-solid fa-bag-shopping me-2"></i> Place Order (COD)
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ===================== UPI APPS CHOOSER MODAL ===================== -->
+@if (showUpiAppsModal) {
+  <div class="modal-overlay upi-chooser-overlay" (click)="closeUpiAppsModal()">
+    <div class="upi-chooser-container animate-fade-in" (click)="$event.stopPropagation()">
+      
+      <!-- Chooser Header -->
+      <div class="upi-chooser-header">
+        <div class="d-flex align-items-center gap-3">
+          <div class="upi-chooser-header-icon">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </div>
+          <div>
+            <h4 class="upi-chooser-title">Choose UPI App</h4>
+            <p class="upi-chooser-subtitle">Pay <strong>₹{{ currentTotal }}</strong> to Foody Bhai</p>
+          </div>
+        </div>
+        <button type="button" class="upi-chooser-close-btn" (click)="closeUpiAppsModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Chooser Body -->
+      <div class="upi-chooser-body">
+        <p class="upi-chooser-instructions">
+          Select your installed UPI app to pay directly:
+        </p>
+
+        <div class="upi-apps-list">
+          @for (app of upiApps; track app.id) {
+            <a [href]="getAppUpiLink(app.id)"
+               (click)="onAppSelected(app)"
+               class="upi-app-card"
+               [class.selected-app]="selectedUpiApp?.id === app.id">
+              <div class="upi-app-card-icon" [style.background]="app.bgColor">
+                @if (app.id === 'gpay') {
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M23.49 12.28c0-.85-.07-1.46-.22-2.1H12v4.03h6.58c-.14.99-.8 2.27-2.07 3.12v2.54h3.32c1.97-1.81 3.66-4.59 3.66-7.59z" fill="#4285F4"/><path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.32-2.54c-.9.63-2.12 1.09-3.61 1.09-3.23 0-6.02-2.18-7.01-5.18H2.53v2.63C4.54 21.1 8.01 24 12 24z" fill="#34A853"/><path d="M4.99 14.46c-.26-.77-.41-1.6-.41-2.46s.15-1.69.41-2.46V6.91H2.53C1.71 8.54 1.25 10.37 1.25 12.28s.46 3.74 1.28 5.37l2.46-3.19z" fill="#FBBC05"/><path d="M12 4.75c1.77 0 3.03.77 3.71 1.41l2.7-2.65C16.8 1.94 14.54 1 12 1 8.01 1 4.54 3.9 2.53 7.89l2.46 2.65c.99-3 3.78-5.79 7.01-5.79z" fill="#EA4335"/></svg>
+                } @else if (app.id === 'phonepe') {
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#5f259f"/><path d="M19.5 8H13c-.6 0-1 .4-1 1v14c0 .6.4 1 1 1s1-.4 1-1v-4.5h4.5c3.6 0 6.5-2.9 6.5-6.5S22.6 8 19.5 8zm-.5 8.5H14v-6h5c2.2 0 4 1.8 4 4s-1.8 4-4 4z" fill="#ffffff"/><path d="M11 12.5h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+                } @else if (app.id === 'paytm') {
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#002970"/><path d="M7 16l4-7h5l-4 7h-5zm6 0l4-7h5l-4 7h-5z" fill="#00b9f5"/><path d="M19 16h4c1.7 0 3 1.3 3 3v0c0 1.7-1.3 3-3 3h-4v-6z" fill="#00b9f5"/></svg>
+                } @else if (app.id === 'bhim') {
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#00843d"/><path d="M8 8h10l6 8-6 8H8l6-8-6-8z" fill="#ff9933"/><path d="M14 12h6l3 4-3 4h-6l3-4-3-4z" fill="#ffffff"/></svg>
+                } @else if (app.id === 'cred') {
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#18181b"/><circle cx="16" cy="16" r="7" stroke="#ffffff" stroke-width="3" fill="none"/><path d="M16 13v6M13 16h6" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/></svg>
+                } @else if (app.id === 'amazonpay') {
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#232f3e"/><path d="M8 21c4.5 2.5 11.5 2.5 16 0" stroke="#ff9900" stroke-width="2.5" stroke-linecap="round"/><path d="M22 19l2.5 2-1 2.5" stroke="#ff9900" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+                } @else {
+                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/><path d="M10 20l7-12 3 5-5 7h-5z" fill="#097939"/><path d="M15 20l5-7 3 5-3 2h-5z" fill="#ed7524"/></svg>
+                }
+              </div>
+              <div class="upi-app-card-details">
+                <div class="upi-app-card-title-row">
+                  <span class="upi-app-card-name">{{ app.name }}</span>
+                  @if (app.badge) {
+                    <span class="upi-app-card-badge" [class.badge-popular]="app.badge === 'Popular'" [class.badge-npci]="app.badge === 'NPCI'">{{ app.badge }}</span>
+                  }
+                </div>
+                <span class="upi-app-card-sub">{{ app.description }}</span>
+              </div>
+              <div class="upi-app-card-cta">
+                <span class="pay-tag">Pay ₹{{ currentTotal }}</span>
+                <i class="fa-solid fa-chevron-right ms-1"></i>
+              </div>
+            </a>
+          }
+        </div>
+
+        <div class="upi-chooser-info-box mt-3">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="fa-solid fa-shield-halved text-success"></i>
+            <strong style="font-size: 0.85rem; color: #1e293b;">NPCI Verified Direct Payment</strong>
+          </div>
+          <p class="mb-0" style="font-size: 0.78rem; color: #64748b;">
+            After paying in your app, return here and tap <strong>"I've Paid — Place Order"</strong>.
           </p>
         </div>
-      }
 
-      <!-- COD: Confirmation checkbox -->
-      @if (paymentMethod === 'cod') {
-        <div class="cod-section animate-fade-in">
-          <div class="cod-info-card">
-            <i class="fa-solid fa-hand-holding-dollar cod-big-icon"></i>
-            <div>
-              <h6>Cash on Delivery Selected</h6>
-              <p>Please keep exact change of <strong>₹{{ currentTotal }}</strong> ready when your order arrives.</p>
-            </div>
-          </div>
-          <label class="cod-confirm-label">
-            <input type="checkbox" [(ngModel)]="codConfirmed" class="cod-checkbox">
-            <span>I agree to pay <strong>₹{{ currentTotal }}</strong> in cash upon delivery / pickup.</span>
-          </label>
-        </div>
-      }
+      </div>
 
-      <!-- Action Button -->
-      <button class="btn-place-order"
-              [disabled]="isPlacingOrder || (paymentMethod === 'cod' && !codConfirmed)"
-              (click)="confirmPaymentAndPlaceOrder()">
-        @if (isPlacingOrder) {
-          <i class="fa-solid fa-spinner fa-spin me-2"></i> Placing Order...
-        } @else if (paymentMethod === 'online') {
-          <i class="fa-solid fa-check me-2"></i> I've Paid — Place Order
-        } @else {
-          <i class="fa-solid fa-bag-shopping me-2"></i> Place Order (COD)
-        }
-      </button>
+      <!-- Chooser Footer -->
+      <div class="upi-chooser-footer">
+        <button type="button" class="btn btn-secondary w-100 py-2" (click)="closeUpiAppsModal()" style="border-radius: 10px;">
+          Back to Payment
+        </button>
+      </div>
 
     </div>
   </div>
