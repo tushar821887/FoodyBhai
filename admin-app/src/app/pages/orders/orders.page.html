@@ -896,9 +896,14 @@
                 <option value="">Select Category</option>
                 <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
               </select>
-              <label style="display: flex; align-items: center; gap: 10px; font-weight: 600;">
-                <input type="checkbox" [(ngModel)]="newItem.isVeg" style="width: 20px; height: 20px;"> Vegetarian?
-              </label>
+              <div style="display: flex; gap: 20px; align-items: center;">
+                <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" [(ngModel)]="newItem.isVeg" style="width: 20px; height: 20px;"> Vegetarian?
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer;">
+                  <input type="checkbox" [(ngModel)]="newItem.inStock" style="width: 20px; height: 20px;"> In Stock?
+                </label>
+              </div>
               <div style="grid-column: 1 / -1;">
                 <label style="font-weight: 600; font-size: 0.95rem; color: #334155; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                   <span style="display: flex; align-items: center; gap: 8px;">
@@ -929,8 +934,19 @@
                   <div style="font-size: 13px; color: #64748b; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.description || 'No description provided.' }}</div>
                   <div style="font-size: 12px; margin-top: 8px;"><span *ngIf="item.category" style="background: #f1f5f9; color: #475569; font-weight: 600; padding: 4px 8px; border-radius: 6px;">{{ item.category }}</span></div>
                 </div>
-                <div style="text-align: right; margin-right: 15px;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-right: 15px; min-width: 110px;">
                   <span style="color: #10b981; font-weight: 800; font-size: 18px;">₹{{ item.price }}</span>
+                  <button 
+                    type="button"
+                    (click)="toggleStock(item)" 
+                    [style.background]="item.inStock !== false ? '#ecfdf5' : '#fef2f2'"
+                    [style.color]="item.inStock !== false ? '#059669' : '#dc2626'"
+                    [style.border]="item.inStock !== false ? '1.5px solid #a7f3d0' : '1.5px solid #fecaca'"
+                    style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                    title="Click to toggle In Stock / Out of Stock">
+                    <span [style.background]="item.inStock !== false ? '#10b981' : '#ef4444'" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+                    {{ item.inStock !== false ? 'In Stock' : 'Out of Stock' }}
+                  </button>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                   <button style="color: #3b82f6; background: #eff6ff; border: none; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 6px;" (click)="editRecipe(item)">Edit</button>
@@ -1181,6 +1197,57 @@
             <div class="settings-footer" style="padding-top: 0;">
               <button class="btn-save-modern" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" (click)="saveAppSettings()">
                 <span class="save-icon">🚀</span> Publish & Save APK Version
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email (SMTP) & SMS OTP Gateway Card -->
+        <div class="settings-card" style="margin-top: 25px;">
+          <div class="card-header-styled">
+            <div class="icon-circle" style="background: #eff6ff; color: #2563eb;">📧</div>
+            <div>
+              <h3>Email (SMTP) & Mobile SMS Gateway</h3>
+              <p>Configure SMTP email and Fast2SMS for instant Password Reset OTP and Customer Order Alerts.</p>
+            </div>
+          </div>
+          <div class="settings-form-modern" style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+              <div class="form-group-modern" style="margin-bottom: 0;">
+                <label>SMTP Host / Server</label>
+                <input type="text" [(ngModel)]="smtpHost" placeholder="e.g. smtp.hostinger.com or smtp.gmail.com" class="input-with-icon">
+              </div>
+              <div class="form-group-modern" style="margin-bottom: 0;">
+                <label>SMTP Port</label>
+                <input type="text" [(ngModel)]="smtpPort" placeholder="587 or 465" class="input-with-icon">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+              <div class="form-group-modern" style="margin-bottom: 0;">
+                <label>SMTP Email / Username</label>
+                <input type="text" [(ngModel)]="smtpUser" placeholder="e.g. orders@foodybhai.in or yourgmail@gmail.com" class="input-with-icon">
+              </div>
+              <div class="form-group-modern" style="margin-bottom: 0;">
+                <label>SMTP Password / App Password</label>
+                <input type="password" [(ngModel)]="smtpPass" placeholder="••••••••••••" class="input-with-icon">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+              <div class="form-group-modern" style="margin-bottom: 0;">
+                <label>Sender 'From' Email / Display</label>
+                <input type="text" [(ngModel)]="smtpFrom" placeholder="e.g. Foody Bhai <orders@foodybhai.in>" class="input-with-icon">
+              </div>
+              <div class="form-group-modern" style="margin-bottom: 0;">
+                <label>Fast2SMS API Key (Optional for Mobile SMS)</label>
+                <input type="password" [(ngModel)]="fast2smsKey" placeholder="Enter Fast2SMS API Key" class="input-with-icon">
+              </div>
+            </div>
+
+            <div class="settings-footer" style="padding-top: 0; display: flex; justify-content: flex-end;">
+              <button class="btn-save-modern" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);" (click)="saveEmailSettings()">
+                <span class="save-icon">💾</span> Save Email & SMS Settings
               </button>
             </div>
           </div>
@@ -1654,9 +1721,14 @@
         <option value="">Select Category</option>
         <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
       </select>
-      <label style="display: flex; align-items: center; gap: 10px; font-weight: 600;">
-        <input type="checkbox" [(ngModel)]="editingRecipe.isVeg" style="width: 20px; height: 20px;"> Vegetarian?
-      </label>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer;">
+          <input type="checkbox" [(ngModel)]="editingRecipe.isVeg" style="width: 20px; height: 20px;"> Vegetarian?
+        </label>
+        <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer;">
+          <input type="checkbox" [(ngModel)]="editingRecipe.inStock" style="width: 20px; height: 20px;"> In Stock?
+        </label>
+      </div>
       <div style="grid-column: 1 / -1;">
         <label style="font-weight: 600; font-size: 0.95rem; color: #334155; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
           <span style="display: flex; align-items: center; gap: 8px;">

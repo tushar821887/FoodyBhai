@@ -65,6 +65,9 @@ export class Recipe {
   @Prop({ default: true })
   isVeg: boolean;
 
+  @Prop({ default: true })
+  inStock: boolean;
+
   @Prop({ required: true })
   price: number;
 

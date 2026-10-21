@@ -13,6 +13,9 @@ class DeliveryDetails {
 
   @Prop({ required: true })
   address: string;
+
+  @Prop({ required: false })
+  email?: string;
 }
 
 @Schema({ _id: false })

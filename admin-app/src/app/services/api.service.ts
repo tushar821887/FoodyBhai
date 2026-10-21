@@ -176,6 +176,10 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/recipes/${id}`, this.getHeaders());
   }
 
+  toggleRecipeStock(id: string, inStock: boolean) {
+    return this.http.put<any>(`${this.apiUrl}/recipes/${id}/stock`, { inStock }, this.getHeaders());
+  }
+
   
   // Users
 

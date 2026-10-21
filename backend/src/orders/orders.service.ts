@@ -1,13 +1,17 @@
 const PDFDocument = require('pdfkit');
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Subject, Observable } from 'rxjs';
 import { SettingsService } from '../settings/settings.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
+import { Recipe, RecipeDocument } from '../recipes/schemas/recipe.schema';
+import { UsersService } from '../users/users.service';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
   private orderEvents$ = new Subject<{ type: string; data: any }>();
 
   getOrderEvents(): Observable<{ type: string; data: any }> {
@@ -24,29 +28,199 @@ export class OrdersService {
 
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
-    private settingsService: SettingsService
+    @InjectModel(Recipe.name) private recipeModel: Model<RecipeDocument>,
+    private settingsService: SettingsService,
+    private usersService: UsersService,
+    private authService: AuthService,
   ) {}
 
-  async createOrder(userId: string, orderData: any): Promise<OrderDocument> {
+  async createOrder(userId: string | undefined, orderData: any): Promise<any> {
     const isOnline = await this.settingsService.getSetting('restaurant_open');
     if (isOnline && (isOnline.value === 'false' || isOnline.value === false)) {
       throw new BadRequestException('We are currently offline and not accepting orders.');
     }
+
+    // Verify stock availability for all items
+    if (orderData?.items && Array.isArray(orderData.items)) {
+      for (const item of orderData.items) {
+        const recipeId = item?.recipe?.id || item?.recipe?._id;
+        if (recipeId !== undefined && recipeId !== null) {
+          const filter = (typeof recipeId === 'string' && recipeId.match(/^[0-9a-fA-F]{24}$/))
+            ? { _id: recipeId }
+            : { id: Number(recipeId) };
+          const recipeDoc = await this.recipeModel.findOne(filter).exec();
+          if (recipeDoc && recipeDoc.inStock === false) {
+            throw new BadRequestException(`"${recipeDoc.title}" is currently out of stock. Please remove it from your order.`);
+          }
+        }
+      }
+    }
+
+    let guestAuth: any = null;
+    let resolvedUserId = userId;
+
+    const phone = orderData?.deliveryDetails?.phone;
+    const name = orderData?.deliveryDetails?.name;
+    const email = orderData?.deliveryDetails?.email;
+    const address = orderData?.deliveryDetails?.address;
+
+    // If user is not logged in, handle guest account association safely
+    if (!resolvedUserId && phone) {
+      try {
+        const cleanP = this.usersService.cleanPhone(phone);
+        const trimmedEmail = (email && email.trim()) ? email.trim().toLowerCase() : undefined;
+
+        let targetUser: any = null;
+        if (cleanP && cleanP.length >= 10) {
+          targetUser = await this.usersService.findByPhone(cleanP);
+        }
+        if (!targetUser && trimmedEmail) {
+          targetUser = await this.usersService.findByEmail(trimmedEmail);
+        }
+
+        if (targetUser) {
+          const hasRealPassword = !!targetUser.passwordHash && !targetUser.needsPasswordSet;
+
+          if (hasRealPassword) {
+            // Established account with password: DO NOT auto-login as this user!
+            resolvedUserId = targetUser._id.toString();
+            guestAuth = null;
+          } else {
+            // Unverified guest account without password
+            const targetEmail = targetUser.email?.toLowerCase();
+            const emailConflicts = trimmedEmail && targetEmail && !targetEmail.endsWith('@foodybhai.in') && targetEmail !== trimmedEmail;
+
+            if (emailConflicts) {
+              const freshGuest = await this.usersService.createGuestUser(name, phone, trimmedEmail, address);
+              resolvedUserId = freshGuest._id.toString();
+              const token = this.authService.generateTokenForUser(freshGuest);
+              guestAuth = {
+                accessToken: token,
+                user: {
+                  id: freshGuest._id.toString(),
+                  name: freshGuest.name,
+                  email: freshGuest.email,
+                  phone: freshGuest.phone,
+                  role: freshGuest.role,
+                  needsPasswordSet: true,
+                  isGuestConverted: true,
+                  addresses: freshGuest.addresses || [],
+                }
+              };
+            } else {
+              if (name && name.trim()) targetUser.name = name.trim();
+              if (trimmedEmail && targetEmail?.endsWith('@foodybhai.in')) targetUser.email = trimmedEmail;
+              await targetUser.save();
+
+              resolvedUserId = targetUser._id.toString();
+              const token = this.authService.generateTokenForUser(targetUser);
+              guestAuth = {
+                accessToken: token,
+                user: {
+                  id: targetUser._id.toString(),
+                  name: targetUser.name,
+                  email: targetUser.email,
+                  phone: targetUser.phone,
+                  role: targetUser.role,
+                  needsPasswordSet: true,
+                  isGuestConverted: true,
+                  addresses: targetUser.addresses || [],
+                }
+              };
+            }
+          }
+        } else {
+          // Brand new guest user
+          const newGuest = await this.usersService.createGuestUser(name, phone, trimmedEmail, address);
+          if (newGuest) {
+            resolvedUserId = newGuest._id.toString();
+            const token = this.authService.generateTokenForUser(newGuest);
+            guestAuth = {
+              accessToken: token,
+              user: {
+                id: newGuest._id.toString(),
+                name: newGuest.name,
+                email: newGuest.email,
+                phone: newGuest.phone,
+                role: newGuest.role,
+                needsPasswordSet: true,
+                isGuestConverted: true,
+                addresses: newGuest.addresses || [],
+              }
+            };
+          }
+        }
+      } catch (err) {
+        this.logger.error('Error handling guest user in order creation:', err);
+      }
+    }
+
     const order = new this.orderModel({
-      userId,
+      userId: resolvedUserId,
       ...orderData
     });
     const saved = await order.save();
     this.emitOrderEvent('new_order', saved);
-    return saved;
+
+    const result: any = saved.toObject();
+    if (guestAuth) {
+      result.guestAuth = guestAuth;
+    }
+    return result;
   }
 
   async getUserOrders(userId: string, phone?: string): Promise<OrderDocument[]> {
-    const query: any = { $or: [{ userId }] };
+    const orConditions: any[] = [{ userId }];
     if (phone) {
-      query.$or.push({ 'deliveryDetails.phone': phone });
+      const clean = this.usersService.cleanPhone(phone);
+      orConditions.push({ 'deliveryDetails.phone': phone.trim() });
+      if (clean && clean.length >= 10) {
+        orConditions.push(
+          { 'deliveryDetails.phone': clean },
+          { 'deliveryDetails.phone': '0' + clean },
+          { 'deliveryDetails.phone': '91' + clean },
+          { 'deliveryDetails.phone': '+91' + clean }
+        );
+      }
     }
-    return this.orderModel.find(query).sort({ createdAt: -1 }).exec();
+    return this.orderModel.find({ $or: orConditions }).sort({ createdAt: -1 }).exec();
+  }
+
+  async trackOrder(identifier: string): Promise<OrderDocument[]> {
+    if (!identifier) throw new BadRequestException('Identifier is required');
+    const trimmed = identifier.trim();
+    const cleanDigits = this.usersService.cleanPhone(trimmed);
+
+    // 1. Try finding by order ID (if valid Mongo ObjectId)
+    if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
+      const byId = await this.orderModel.findById(trimmed);
+      if (byId) return [byId];
+    }
+
+    // 2. Try finding by phone number or email in deliveryDetails
+    const orList: any[] = [
+      { 'deliveryDetails.phone': trimmed },
+      { 'deliveryDetails.email': trimmed.toLowerCase() },
+    ];
+
+    if (cleanDigits && cleanDigits.length >= 10) {
+      orList.push(
+        { 'deliveryDetails.phone': cleanDigits },
+        { 'deliveryDetails.phone': '0' + cleanDigits },
+        { 'deliveryDetails.phone': '91' + cleanDigits },
+        { 'deliveryDetails.phone': '+91' + cleanDigits }
+      );
+    }
+
+    // 3. If identifier is an email or phone, also search by matching user ID
+    if (trimmed.includes('@')) {
+      const user = await this.usersService.findByEmail(trimmed.toLowerCase());
+      if (user) {
+        orList.push({ userId: user._id });
+      }
+    }
+
+    return this.orderModel.find({ $or: orList }).sort({ createdAt: -1 }).limit(10).exec();
   }
 
   async cancelOrderCustomer(orderId: string, reason: string): Promise<OrderDocument> {

@@ -32,6 +32,11 @@ export class OrdersController {
     return this.ordersService.getUserOrders(userId, phone);
   }
 
+  @Get('track/:identifier')
+  async trackOrder(@Param('identifier') identifier: string) {
+    return this.ordersService.trackOrder(identifier);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Put(':id/cancel')
   async cancelOrderCustomer(@Param('id') id: string, @Body('reason') reason: string) {
@@ -54,7 +59,6 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   @Get('admin/all')
   async getAllOrders() {
-    // In a real app, check req.user.role === 'admin'
     return this.ordersService.getAllOrders();
   }
 
@@ -99,7 +103,6 @@ export class OrdersController {
     return this.ordersService.resolveCancelRequest(id, approve, processRefund);
   }
 
-
   @UseGuards(JwtAuthGuard)
   @Put('admin/:id/refund')
   async processRefund(@Param('id') id: string) {
@@ -130,5 +133,4 @@ export class OrdersController {
   ) {
     return this.ordersService.resolveReassignRequest(id, approve, newAgent);
   }
-
 }

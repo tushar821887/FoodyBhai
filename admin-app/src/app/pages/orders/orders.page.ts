@@ -146,6 +146,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     description: '',
     image: '',
     isVeg: true,
+    inStock: true,
     ingredientsRaw: '',
     recipeHtml: '',
     ingredients: []
@@ -186,6 +187,14 @@ export class OrdersPage implements OnInit, OnDestroy {
   appReleaseNotes: string = 'Bug fixes, performance improvements, and real-time live order tracking.';
   isUploadingApk = false;
   uploadedApkFileName = '';
+
+  // Email (SMTP) & SMS Settings
+  smtpHost: string = '';
+  smtpPort: string = '587';
+  smtpUser: string = '';
+  smtpPass: string = '';
+  smtpFrom: string = '';
+  fast2smsKey: string = '';
 
   get effectiveUpiId(): string {
     return this.upiId || '8218870579@ptyes';
@@ -315,6 +324,12 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getSetting('app_version').subscribe(res => { if (res && res.value) this.appVersion = res.value; });
     this.api.getSetting('app_download_url').subscribe(res => { if (res && res.value) this.appDownloadUrl = res.value; });
     this.api.getSetting('app_release_notes').subscribe(res => { if (res && res.value) this.appReleaseNotes = res.value; });
+    this.api.getSetting('smtp_host').subscribe(res => { if (res && res.value) this.smtpHost = res.value; });
+    this.api.getSetting('smtp_port').subscribe(res => { if (res && res.value) this.smtpPort = res.value; });
+    this.api.getSetting('smtp_user').subscribe(res => { if (res && res.value) this.smtpUser = res.value; });
+    this.api.getSetting('smtp_pass').subscribe(res => { if (res && res.value) this.smtpPass = res.value; });
+    this.api.getSetting('smtp_from').subscribe(res => { if (res && res.value) this.smtpFrom = res.value; });
+    this.api.getSetting('fast2sms_api_key').subscribe(res => { if (res && res.value) this.fast2smsKey = res.value; });
     this.fetchOrders();
 
     // Fast backup polling (every 4 seconds) to guarantee zero missed orders
@@ -830,6 +845,12 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.api.getSetting('app_version').subscribe(res => { if (res && res.value) this.appVersion = res.value; });
       this.api.getSetting('app_download_url').subscribe(res => { if (res && res.value) this.appDownloadUrl = res.value; });
       this.api.getSetting('app_release_notes').subscribe(res => { if (res && res.value) this.appReleaseNotes = res.value; });
+      this.api.getSetting('smtp_host').subscribe(res => { if (res && res.value) this.smtpHost = res.value; });
+      this.api.getSetting('smtp_port').subscribe(res => { if (res && res.value) this.smtpPort = res.value; });
+      this.api.getSetting('smtp_user').subscribe(res => { if (res && res.value) this.smtpUser = res.value; });
+      this.api.getSetting('smtp_pass').subscribe(res => { if (res && res.value) this.smtpPass = res.value; });
+      this.api.getSetting('smtp_from').subscribe(res => { if (res && res.value) this.smtpFrom = res.value; });
+      this.api.getSetting('fast2sms_api_key').subscribe(res => { if (res && res.value) this.fast2smsKey = res.value; });
     }
     if (view === 'agents') {
       this.fetchAgents();
@@ -1122,7 +1143,7 @@ export class OrdersPage implements OnInit, OnDestroy {
       }
     }
     this.api.addRecipe(this.newItem).subscribe(() => {
-      this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true, recipeHtml: '', ingredients: [] };
+      this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true, inStock: true, recipeHtml: '', ingredients: [] };
       this.fetchRecipes();
       this.showNotification('Item added successfully', 'success');
     });
@@ -1175,6 +1196,21 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  toggleStock(recipe: any) {
+    const newStock = recipe.inStock === false ? true : false;
+    recipe.inStock = newStock;
+    this.api.toggleRecipeStock(recipe.id || recipe._id, newStock).subscribe({
+      next: (updated) => {
+        recipe.inStock = updated.inStock !== false;
+        this.showNotification(`"${recipe.title}" is now ${recipe.inStock ? 'In Stock' : 'Out of Stock'}`, 'success');
+      },
+      error: (err) => {
+        recipe.inStock = !newStock;
+        this.showNotification('Failed to update stock status', 'error');
+      }
+    });
+  }
+
   saveSettings(showNotification = true) {
     this.api.saveSetting('foodybhai_upi', this.upiId).subscribe();
     this.api.saveSetting('restaurant_open', this.restaurantOpen ? 'true' : 'false').subscribe();
@@ -1185,6 +1221,20 @@ export class OrdersPage implements OnInit, OnDestroy {
       if (showNotification) {
         this.showNotification('Settings saved successfully!', 'success');
       }
+    });
+  }
+
+  saveEmailSettings(showNotification = true) {
+    this.api.saveSetting('smtp_host', this.smtpHost.trim()).subscribe();
+    this.api.saveSetting('smtp_port', this.smtpPort.trim() || '587').subscribe();
+    this.api.saveSetting('smtp_user', this.smtpUser.trim()).subscribe();
+    this.api.saveSetting('smtp_pass', this.smtpPass.trim()).subscribe();
+    this.api.saveSetting('smtp_from', this.smtpFrom.trim() || this.smtpUser.trim()).subscribe();
+    this.api.saveSetting('fast2sms_api_key', this.fast2smsKey.trim()).subscribe(() => {
+      if (showNotification) {
+        this.showNotification('Email & SMS Gateway settings saved successfully!', 'success');
+      }
+      this.cdr.detectChanges();
     });
   }
 

@@ -1,11 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class LoginDto {
-  @IsNotEmpty({ message: 'Email is required' })
-  @IsEmail({}, { message: 'Please provide a valid email address' })
+  @IsNotEmpty({ message: 'Email or phone number is required' })
+  @IsString({ message: 'Email or phone number must be a string' })
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.toLowerCase().trim() : value,
+    typeof value === 'string' ? value.trim() : value,
   )
   email: string;
 

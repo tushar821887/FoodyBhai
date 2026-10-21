@@ -39,4 +39,10 @@ export class RecipesController {
   async remove(@Request() req: any, @Param('id') id: string) {
     return this.recipesService.remove(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/stock')
+  async toggleStock(@Param('id') id: string, @Body('inStock') inStock?: boolean) {
+    return this.recipesService.toggleStock(id, inStock);
+  }
 }

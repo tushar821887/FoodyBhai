@@ -89,4 +89,15 @@ export class RecipesService {
     }
     return { success: true, message: 'Recipe deleted' };
   }
+
+  async toggleStock(id: string, inStock?: boolean): Promise<RecipeDocument> {
+    const filter = id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { id: Number(id) };
+    const recipe = await this.recipeModel.findOne(filter);
+    if (!recipe) {
+      throw new NotFoundException('Recipe with id ' + id + ' not found');
+    }
+    const newStock = inStock !== undefined ? inStock : (recipe.inStock === false ? true : false);
+    recipe.inStock = newStock;
+    return recipe.save();
+  }
 }

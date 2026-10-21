@@ -1,0 +1,162 @@
+[
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Navratri Combo Meals",
+    "id": "ctl_818765750",
+    "name": "4 Kuttu Aloo Paratha + curd + Aloo sabzi",
+    "price": 221,
+    "desc": "Enjoy a delicious Navratri fasting combo featuring golden kuttu aloo parathas served with vrat wale aloo and refreshing plain curd. A satisfying meal prepared with fasting-friendly ingredients and sendha namak, without onion or garlic.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/827/88c76ba3f384888d624a741f2747b827.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Navratri Combo Meals",
+    "id": "ctl_818765751",
+    "name": "4 Kuttu Paratha with Curd",
+    "price": 139,
+    "desc": "Enjoy a freshly prepared kuttu paratha, cooked until golden and served with a side of cool, creamy curd. A wholesome Navratri fasting meal made with fasting-friendly ingredients and sendha namak, without onion or garlic.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/f6c/dc129988972a93e4c8792899e6c82f6c.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Navratri Combo Meals",
+    "id": "ctl_818765752",
+    "name": "4 Kuttu Poori with Aloo Sabzi",
+    "price": 159,
+    "desc": "Enjoy crispy golden kuttu pooris served with delicious vrat wale aloo sabzi, seasoned with fasting-friendly spices and sendha namak. A satisfying traditional Navratri meal, prepared without onion or garlic.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/1a7/45c1e6038a39ebbd7bd6a7ec637b61a7.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Navratri Combo Meals",
+    "id": "ctl_818765753",
+    "name": "Vrat Special Thali",
+    "price": 201,
+    "desc": "Celebrate Navratri with our delicious Vrat Special Thali, featuring crispy kuttu pooris, vrat wale aloo sabzi, creamy curd. A satisfying festive meal prepared with fasting-friendly ingredients and sendha namak, without onion or garlic.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/9f0/279b2ef158cdb17d182fe9717892f9f0.jpg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Vrat Snacks & Sweets",
+    "id": "ctl_818765754",
+    "name": "Roasted Makhana",
+    "price": 139,
+    "desc": "Enjoy crunchy roasted makhana, lightly seasoned with fasting-friendly spices for a delicious and satisfying snack. Perfect for Navratri vrat or guilt-free munching, with a delightful crunch in every bite.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/2b4/8a3a455f8c98c79a7042b860df7132b4.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Vrat Snacks & Sweets",
+    "id": "ctl_818765755",
+    "name": "Fruit Chaat",
+    "price": 89,
+    "desc": "A refreshing mix of freshly cut red apples and sweet bananas, served without masala or added spices. A simple, naturally sweet and wholesome fruit snack, perfect for enjoying during Navratri fasting.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/ad5/2e13e6fbba4cb853beb3819e2ddddad5.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Vrat Snacks & Sweets",
+    "id": "ctl_818841255",
+    "name": "Vrat Ki Khichdi",
+    "price": 149,
+    "desc": "Enjoy comforting vrat chawal ki khichdi made with samak rice, tender potatoes, cumin and fresh coriander. Lightly seasoned and full of traditional flavour, this wholesome dish is perfect for Navratri fasting.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/cbc/63f449a77094fa324c2ccce07f65fcbc.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Vrat Snacks & Sweets",
+    "id": "ctl_818841256",
+    "name": "Plain Curd",
+    "price": 49,
+    "desc": "Enjoy fresh, creamy plain curd with a smooth texture and refreshing taste. A perfect accompaniment to your meal, vrat ki khichdi, paratha or any Indian thali.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/ea9/e6fc552d72c2757bb4c62d54691aeea9.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Special Menu",
+    "id": "ctl_818765745",
+    "name": "Kuttu Aloo Paratha",
+    "price": 35,
+    "desc": "A delicious fasting-special paratha made with kuttu (buckwheat) flour and flavorful mashed potato stuffing, seasoned with sendha namak and vrat-friendly spices. Cooked in ghee and served hot.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/bd9/c32232bee7bddd16f158cc02b7a95bd9.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Special Menu",
+    "id": "ctl_818765746",
+    "name": "Plain Kuttu Paratha",
+    "price": 30,
+    "desc": "A delicious traditional Kuttu Paratha made with nutritious buckwheat flour, seasoned with sendha namak and cooked to golden perfection. A simple, wholesome and tasty choice for your Navratri fasting meals.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/a18/51e92699dfd895fba71c1877e28eba18.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Special Menu",
+    "id": "ctl_818765747",
+    "name": "4 Kuttu Poori",
+    "price": 99,
+    "desc": "Crispy and delicious Kuttu Poori made with buckwheat flour and sendha namak. Deep-fried to golden perfection, these traditional Navratri fasting pooris are a tasty treat for your vrat meals.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/dac/66a8f37c4f42c40fb2bdf4a6bd4ebdac.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Special Menu",
+    "id": "ctl_818765749",
+    "name": "Vrat wale Aloo",
+    "price": 99,
+    "desc": "Delicious vrat wale aloo made with tender potatoes, mild fasting spices, sendha namak and fresh coriander. A flavourful Navratri special, prepared without onion or garlic and perfect for your fasting meals.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/f1c/484cf42f5e23fdbb0252f99d685c3f1c.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Special Menu",
+    "id": "ctl_818765756",
+    "name": "Vrat Aloo sabzi Gravy",
+    "price": 129,
+    "desc": "Enjoy tender potatoes simmered in a flavourful, lightly spiced gravy, garnished with fresh coriander. A comforting Navratri fasting special prepared with sendha namak and vrat-friendly spices, without onion or garlic.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/81b/45ea6feaaf1459c275a56d58477bc81b.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Navratri Special Menu",
+    "categoryName": "Special Menu",
+    "id": "ctl_818841254",
+    "name": "Kuttu Aloo Pakori ( 8-16 pcs)",
+    "price": 89,
+    "desc": "Enjoy crispy, golden potato pakoras coated in kuttu (buckwheat) flour batter and fried to perfection. A delicious Navratri fasting snack seasoned with sendha namak and served with refreshing green chutney. No onion or garlic.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/7f8/5a94448ddbc2b6a62cf2cfe01aae97f8.jpeg",
+    "tag": "Navratri"
+  },
+  {
+    "menuName": "Snacks",
+    "categoryName": "",
+    "id": "ctl_657955760",
+    "name": "Masala Macaroni",
+    "price": 109,
+    "desc": "The dish begins with boiled macaroni pasta, which is then sautéed with a mixture of onion, tomatoes and green chillies. The masala (spice mixed) includes ingredients like turmeric, cumin, coriander, garam masala and sometimes red chili powder, giving it a rich and tangy flavor.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/7b6/52b9c30359a4f66d1dcea88849a8d7b6.jpg",
+    "tag": "Macaroni"
+  },
+  {
+    "menuName": "Special Combos",
+    "categoryName": "Combos",
+    "id": "ctl_813487131",
+    "name": "Red Sauce Pasta + Macroni",
+    "price": 149,
+    "desc": "Delicious pasta and macaroni tossed in a rich, tangy red tomato sauce, blended with aromatic herbs, spices, and fresh vegetables. A flavorful, cheesy and comforting Italian-style treat, perfect for a quick and satisfying meal.",
+    "image": "https://b.zmtcdn.com/data/dish_photos/3e6/7285238fdd8e70920b4fed76346743e6.jpg",
+    "tag": "Macaroni"
+  }
+]
