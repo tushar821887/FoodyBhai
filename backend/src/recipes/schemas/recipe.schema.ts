@@ -67,6 +67,9 @@ export class Recipe {
 
   @Prop({ required: true })
   price: number;
+
+  @Prop()
+  recipeHtml?: string;
 }
 
 export const RecipeSchema = SchemaFactory.createForClass(Recipe);

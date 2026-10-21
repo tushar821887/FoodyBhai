@@ -1,0 +1,530 @@
+<div class="cms-studio-container">
+  
+  <!-- Top Banner -->
+  <div class="cms-studio-header">
+    <div class="header-left">
+      <div class="header-badge">
+        <span class="live-pulse"></span> HEADLESS CMS & PAGE BUILDER
+      </div>
+      <h2>🧩 Website Pages & Sections Studio</h2>
+      <p>Create routes, manage design grid layouts, customize font sizes, colors, spacing, and build website components dynamically like Strapi or Contentful.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-create-route" (click)="openNewRouteModal()">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>Create New Route</span>
+      </button>
+      <button type="button" class="btn-publish-live" (click)="publishAll()" [disabled]="isSaving">
+        <i class="fa-solid" [class.fa-circle-notch]="isSaving" [class.fa-spin]="isSaving" [class.fa-cloud-arrow-up]="!isSaving"></i>
+        <span>{{ isSaving ? 'Publishing...' : 'Publish Pages Live' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success animate-fade-in">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>{{ successMessage }}</span>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger animate-fade-in">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Route / Page Navigation Tabs -->
+  <div class="routes-navigation-bar">
+    <div class="routes-scroll-list">
+      <button *ngFor="let p of pages" 
+              type="button" 
+              class="route-pill-btn" 
+              [class.active]="selectedPage?.id === p.id"
+              (click)="selectPage(p)">
+        <span class="route-slug-icon">{{ p.slug === '' ? '🏠' : '📄' }}</span>
+        <span class="route-name">{{ p.title }}</span>
+        <span class="route-path-tag">/{{ p.slug }}</span>
+        <span *ngIf="p.isCustomRoute" class="custom-badge">CUSTOM</span>
+        <button *ngIf="p.isCustomRoute" type="button" class="btn-del-route" (click)="$event.stopPropagation(); deletePage(p)" title="Delete Route">×</button>
+      </button>
+      
+      <button type="button" class="btn-add-route-mini" (click)="openNewRouteModal()">
+        <i class="fa-solid fa-plus"></i> Add Route
+      </button>
+    </div>
+  </div>
+
+  <!-- Main 3-Column Studio Workspace -->
+  <div class="cms-workspace-grid" *ngIf="selectedPage">
+    
+    <!-- Column 1: Section Navigator -->
+    <div class="cms-column-sections">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Page Sections ({{ selectedPage.sections.length || 0 }})</span>
+        </div>
+        <button type="button" class="btn-add-section-sm" (click)="openAddSectionModal()">
+          <i class="fa-solid fa-plus"></i> Add Section
+        </button>
+      </div>
+
+      <div class="sections-list-wrap">
+        <div *ngIf="!selectedPage.sections || selectedPage.sections.length === 0" class="empty-sections-notice">
+          <p>No sections on this page yet.</p>
+          <button type="button" class="btn-primary-sm" (click)="openAddSectionModal()">Add First Section</button>
+        </div>
+
+        <div *ngFor="let sec of selectedPage.sections; let i = index" 
+             class="section-item-card"
+             [class.active]="selectedSection?.id === sec.id"
+             (click)="selectSection(sec)">
+          
+          <div class="section-card-top">
+            <span class="section-type-badge">{{ sec.type.toUpperCase() }}</span>
+            <div class="section-order-btns">
+              <button type="button" class="order-btn" [disabled]="i === 0" (click)="$event.stopPropagation(); moveSectionUp(i)" title="Move Up">↑</button>
+              <button type="button" class="order-btn" [disabled]="i === selectedPage.sections.length - 1" (click)="$event.stopPropagation(); moveSectionDown(i)" title="Move Down">↓</button>
+              <button type="button" class="order-btn del" (click)="$event.stopPropagation(); removeSection(i)" title="Delete Section">🗑️</button>
+            </div>
+          </div>
+
+          <div class="section-card-title">
+            {{ sec.title || ('Untitled ' + sec.type) }}
+          </div>
+
+          <div class="section-card-meta">
+            <label class="switch-mini" (click)="$event.stopPropagation()">
+              <input type="checkbox" [(ngModel)]="sec.isEnabled">
+              <span class="slider round"></span>
+            </label>
+            <span class="status-label">{{ sec.isEnabled !== false ? 'Enabled' : 'Hidden' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Visual Inspector & Design Grid Properties -->
+    <div class="cms-column-inspector" *ngIf="selectedSection">
+      
+      <!-- Panel Header -->
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Design Grid & Properties Inspector</span>
+        </div>
+        <span class="active-type-pill">{{ selectedSection.type }}</span>
+      </div>
+
+      <div class="inspector-scroll-area">
+        
+        <!-- Accordion 1: Content Fields -->
+        <div class="inspector-box">
+          <h4 class="box-title"><i class="fa-solid fa-pen-nib"></i> Section Content</h4>
+          
+          <div class="form-group-cms">
+            <label>Badge / Highlight Tag</label>
+            <input type="text" [(ngModel)]="selectedSection.badge" placeholder="e.g. ⚡ FASTEST DELIVERY, HOT DEAL" class="cms-input">
+          </div>
+
+          <div class="form-group-cms">
+            <label>Section Heading Title</label>
+            <input type="text" [(ngModel)]="selectedSection.title" placeholder="Enter bold headline..." class="cms-input">
+          </div>
+
+          <div class="form-group-cms">
+            <label>Section Subtitle / Description</label>
+            <textarea [(ngModel)]="selectedSection.subtitle" rows="3" placeholder="Supporting text..." class="cms-input"></textarea>
+          </div>
+
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'promo_cta' || selectedSection.type === 'image_text'">
+            <div class="form-group-cms">
+              <label>Primary Button Text</label>
+              <input type="text" [(ngModel)]="selectedSection.buttonText" placeholder="e.g. Order Menu" class="cms-input">
+            </div>
+            <div class="form-group-cms">
+              <label>Primary Button URL Link</label>
+              <input type="text" [(ngModel)]="selectedSection.buttonLink" placeholder="/menu or https://..." class="cms-input">
+            </div>
+          </div>
+
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero'">
+            <div class="form-group-cms">
+              <label>Secondary Button Text</label>
+              <input type="text" [(ngModel)]="selectedSection.secondaryButtonText" placeholder="e.g. Special Offers" class="cms-input">
+            </div>
+            <div class="form-group-cms">
+              <label>Secondary Button Link</label>
+              <input type="text" [(ngModel)]="selectedSection.secondaryButtonLink" placeholder="/page/offers" class="cms-input">
+            </div>
+          </div>
+
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'image_text'">
+            <label>Image URL</label>
+            <input type="text" [(ngModel)]="selectedSection.imageUrl" placeholder="https://images.unsplash.com/..." class="cms-input">
+          </div>
+
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'image_text' || selectedSection.type === 'hero'">
+            <label>Image Placement</label>
+            <select [(ngModel)]="selectedSection.imagePosition" class="cms-input">
+              <option value="right">Right Side (Standard)</option>
+              <option value="left">Left Side (Flipped)</option>
+            </select>
+          </div>
+
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'rich_text'">
+            <label>Rich Content (HTML or Markdown text)</label>
+            <textarea [(ngModel)]="selectedSection.content" rows="6" class="cms-input" placeholder="<p>Detailed formatted paragraph content...</p>"></textarea>
+          </div>
+
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'custom_html'">
+            <label>Custom HTML / Embed Script / Iframe</label>
+            <textarea [(ngModel)]="selectedSection.rawHtml" rows="6" class="cms-input font-code" placeholder="<div>Custom HTML embed...</div>"></textarea>
+          </div>
+        </div>
+
+        <!-- Accordion 2: Card Items List (Features, FAQ, Testimonials) -->
+        <div class="inspector-box" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'faq' || selectedSection.type === 'testimonials'">
+          <div class="box-title-row">
+            <h4 class="box-title"><i class="fa-solid fa-list-check"></i> Grid Items ({{ selectedSection.items?.length || 0 }})</h4>
+            <button type="button" class="btn-add-item-mini" (click)="addItemToSection()">
+              <i class="fa-solid fa-plus"></i> Add Item
+            </button>
+          </div>
+
+          <div class="items-list-editor">
+            <div *ngFor="let item of selectedSection.items; let itemIdx = index" class="item-editor-row">
+              <div class="item-editor-header">
+                <span class="item-number">#{{ itemIdx + 1 }}</span>
+                <button type="button" class="btn-remove-item" (click)="removeItemFromSection(itemIdx)">✕</button>
+              </div>
+
+              <div class="form-row-2col" *ngIf="selectedSection.type === 'features'">
+                <div class="form-group-cms" style="max-width: 80px;">
+                  <label>Icon / Emoji</label>
+                  <input type="text" [(ngModel)]="item.icon" class="cms-input text-center">
+                </div>
+                <div class="form-group-cms" style="flex: 1;">
+                  <label>Title</label>
+                  <input type="text" [(ngModel)]="item.title" class="cms-input">
+                </div>
+              </div>
+
+              <div class="form-group-cms" *ngIf="selectedSection.type === 'faq'">
+                <label>Question</label>
+                <input type="text" [(ngModel)]="item.title" placeholder="Question..." class="cms-input">
+              </div>
+
+              <div class="form-row-2col" *ngIf="selectedSection.type === 'testimonials'">
+                <div class="form-group-cms">
+                  <label>Customer Name</label>
+                  <input type="text" [(ngModel)]="item.title" placeholder="Name..." class="cms-input">
+                </div>
+                <div class="form-group-cms">
+                  <label>Location / Badge</label>
+                  <input type="text" [(ngModel)]="item.role" placeholder="e.g. Meerut Cantt" class="cms-input">
+                </div>
+              </div>
+
+              <div class="form-group-cms">
+                <label>{{ selectedSection.type === 'faq' ? 'Answer' : 'Description / Review' }}</label>
+                <textarea [(ngModel)]="item.description" rows="2" class="cms-input"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 3: Design Grid, Sizes, Width & Colors -->
+        <div class="inspector-box">
+          <h4 class="box-title"><i class="fa-solid fa-palette"></i> Design Grid & Style Properties</h4>
+          
+          <!-- Typography & Text Sizes -->
+          <div class="form-row-2col">
+            <div class="form-group-cms">
+              <label>Headline Font Size</label>
+              <select [(ngModel)]="selectedSection.style.titleFontSize" class="cms-input">
+                <option value="26px">Small (26px)</option>
+                <option value="32px">Medium (32px)</option>
+                <option value="36px">Large (36px - Standard)</option>
+                <option value="44px">Extra Large (44px)</option>
+                <option value="52px">Hero Jumbo (52px)</option>
+              </select>
+            </div>
+            <div class="form-group-cms">
+              <label>Body Font Size</label>
+              <select [(ngModel)]="selectedSection.style.contentFontSize" class="cms-input">
+                <option value="14px">Small (14px)</option>
+                <option value="16px">Regular (16px - Standard)</option>
+                <option value="18px">Lead Large (18px)</option>
+                <option value="20px">Big (20px)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Text Alignment & Max-Width -->
+          <div class="form-row-2col">
+            <div class="form-group-cms">
+              <label>Text Alignment</label>
+              <select [(ngModel)]="selectedSection.style.textAlign" class="cms-input">
+                <option value="left">Left Aligned</option>
+                <option value="center">Centered</option>
+                <option value="right">Right Aligned</option>
+              </select>
+            </div>
+            <div class="form-group-cms">
+              <label>Container Max-Width</label>
+              <select [(ngModel)]="selectedSection.style.maxWidth" class="cms-input">
+                <option value="800px">Narrow (800px)</option>
+                <option value="1000px">Standard (1000px)</option>
+                <option value="1200px">Wide (1200px - Recommended)</option>
+                <option value="100%">Full Width (100%)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Spacing (Padding Top & Bottom) -->
+          <div class="form-row-2col">
+            <div class="form-group-cms">
+              <label>Padding Top</label>
+              <select [(ngModel)]="selectedSection.style.paddingTop" class="cms-input">
+                <option value="20px">Compact (20px)</option>
+                <option value="40px">Medium (40px)</option>
+                <option value="60px">Spacious (60px - Standard)</option>
+                <option value="90px">Hero Large (90px)</option>
+              </select>
+            </div>
+            <div class="form-group-cms">
+              <label>Padding Bottom</label>
+              <select [(ngModel)]="selectedSection.style.paddingBottom" class="cms-input">
+                <option value="20px">Compact (20px)</option>
+                <option value="40px">Medium (40px)</option>
+                <option value="60px">Spacious (60px - Standard)</option>
+                <option value="90px">Hero Large (90px)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Grid Columns & Gap (if features or testimonials) -->
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'testimonials'">
+            <div class="form-group-cms">
+              <label>Grid Columns</label>
+              <select [(ngModel)]="selectedSection.style.gridColumns" class="cms-input">
+                <option [ngValue]="2">2 Columns</option>
+                <option [ngValue]="3">3 Columns (Recommended)</option>
+                <option [ngValue]="4">4 Columns</option>
+              </select>
+            </div>
+            <div class="form-group-cms">
+              <label>Grid Gap</label>
+              <select [(ngModel)]="selectedSection.style.gridGap" class="cms-input">
+                <option value="16px">Tight (16px)</option>
+                <option value="24px">Standard (24px)</option>
+                <option value="32px">Spacious (32px)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Background Color & Gradient -->
+          <div class="form-row-2col">
+            <div class="form-group-cms">
+              <label>Background Color</label>
+              <div class="picker-input-wrap">
+                <input type="color" [(ngModel)]="selectedSection.style.backgroundColor" class="color-picker-native">
+                <input type="text" [(ngModel)]="selectedSection.style.backgroundColor" placeholder="transparent or #fff" class="cms-input">
+              </div>
+            </div>
+            <div class="form-group-cms">
+              <label>Custom Text Color</label>
+              <div class="picker-input-wrap">
+                <input type="color" [(ngModel)]="selectedSection.style.textColor" class="color-picker-native">
+                <input type="text" [(ngModel)]="selectedSection.style.textColor" placeholder="inherit or #fff" class="cms-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Border Radius -->
+          <div class="form-group-cms">
+            <label>Card / Container Border Radius</label>
+            <select [(ngModel)]="selectedSection.style.borderRadius" class="cms-input">
+              <option value="0px">Sharp Corners (0px)</option>
+              <option value="12px">Rounded (12px)</option>
+              <option value="18px">Modern Smooth (18px)</option>
+              <option value="24px">Curved Pill (24px)</option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Column 3: Real-Time Preview Canvas -->
+    <div class="cms-column-preview">
+      <div class="preview-device-header">
+        <span class="preview-heading"><i class="fa-solid fa-eye"></i> Real-Time Canvas Preview</span>
+        <div class="device-toggles">
+          <button type="button" class="dev-btn" [class.active]="previewMode === 'desktop'" (click)="previewMode = 'desktop'">
+            <i class="fa-solid fa-desktop"></i> Desktop
+          </button>
+          <button type="button" class="dev-btn" [class.active]="previewMode === 'mobile'" (click)="previewMode = 'mobile'">
+            <i class="fa-solid fa-mobile-screen"></i> Mobile
+          </button>
+        </div>
+      </div>
+
+      <div class="preview-viewport" [class.mobile-view]="previewMode === 'mobile'">
+        <div class="preview-page-canvas">
+          
+          <div *ngFor="let sec of selectedPage.sections" 
+               class="canvas-section-box"
+               [class.focused-section]="selectedSection?.id === sec.id"
+               [style.padding-top]="sec.style.paddingTop || '40px'"
+               [style.padding-bottom]="sec.style.paddingBottom || '40px'"
+               [style.background-color]="sec.style.backgroundColor || 'transparent'"
+               [style.background]="sec.style.backgroundGradient || sec.style.backgroundColor || 'transparent'"
+               [style.color]="sec.style.textColor || 'inherit'">
+            
+            <div class="container" [style.max-width]="sec.style.maxWidth || '1100px'" [style.text-align]="sec.style.textAlign || 'center'">
+              
+              <div *ngIf="sec.badge" class="preview-badge-pill">{{ sec.badge }}</div>
+              
+              <h2 [style.font-size]="sec.style.titleFontSize || '32px'" style="font-weight: 800; margin-bottom: 0.5rem;">
+                {{ sec.title }}
+              </h2>
+              
+              <p *ngIf="sec.subtitle" [style.font-size]="sec.style.contentFontSize || '16px'" style="opacity: 0.85; margin-bottom: 1.5rem; line-height: 1.5;">
+                {{ sec.subtitle }}
+              </p>
+
+              <!-- Hero & Banner Image -->
+              <div *ngIf="sec.imageUrl && (sec.type === 'hero' || sec.type === 'image_text')" style="margin: 1.5rem 0; border-radius: 16px; overflow: hidden; max-height: 250px;">
+                <img [src]="sec.imageUrl" style="width: 100%; height: 250px; object-fit: cover;">
+              </div>
+
+              <!-- Buttons -->
+              <div *ngIf="sec.buttonText" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-primary" style="margin-right: 0.5rem;">{{ sec.buttonText }}</button>
+                <button *ngIf="sec.secondaryButtonText" type="button" class="btn btn-secondary">{{ sec.secondaryButtonText }}</button>
+              </div>
+
+              <!-- Feature Cards Mockup -->
+              <div *ngIf="sec.items && sec.items.length > 0" 
+                   style="display: grid; gap: 1rem; margin-top: 1.5rem;"
+                   [style.grid-template-columns]="previewMode === 'mobile' ? '1fr' : 'repeat(' + (sec.style.gridColumns || 3) + ', 1fr)'">
+                <div *ngFor="let it of sec.items" style="background: white; border: 1px solid #ede2d8; padding: 1.25rem; border-radius: 12px; text-align: center; color: #241814;">
+                  <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">{{ it.icon || '✨' }}</div>
+                  <strong style="display: block; font-size: 1rem; margin-bottom: 0.3rem;">{{ it.title }}</strong>
+                  <span style="font-size: 0.85rem; color: #716661;">{{ it.description }}</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: Create New Route -->
+  <div class="cms-modal-overlay" *ngIf="showNewRouteModal">
+    <div class="cms-modal-box">
+      <div class="cms-modal-header">
+        <h3><i class="fa-solid fa-plus-circle"></i> Create New Website Route</h3>
+        <button type="button" class="btn-close-modal" (click)="showNewRouteModal = false">✕</button>
+      </div>
+
+      <div class="cms-modal-body">
+        <div class="form-group-cms">
+          <label>Page Title</label>
+          <input type="text" [(ngModel)]="newRouteTitle" placeholder="e.g. Special Offers, Party Catering, Careers" class="cms-input">
+        </div>
+
+        <div class="form-group-cms">
+          <label>URL Route Slug (Path)</label>
+          <div class="slug-input-wrapper">
+            <span class="slug-prefix">foodybhai.com/</span>
+            <input type="text" [(ngModel)]="newRouteSlug" placeholder="offers" class="cms-input slug-field">
+          </div>
+          <span class="field-hint">Use lowercase letters and dashes only (e.g. deals, diwali-special, catering).</span>
+        </div>
+
+        <div class="form-group-cms">
+          <label>SEO Meta Description (Optional)</label>
+          <textarea [(ngModel)]="newRouteMeta" rows="2" placeholder="Page description for Google search engines..." class="cms-input"></textarea>
+        </div>
+      </div>
+
+      <div class="cms-modal-footer">
+        <button type="button" class="btn-cancel" (click)="showNewRouteModal = false">Cancel</button>
+        <button type="button" class="btn-primary-confirm" (click)="createRoute()">Create Route</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Section Component -->
+  <div class="cms-modal-overlay" *ngIf="showAddSectionModal">
+    <div class="cms-modal-box" style="max-width: 650px;">
+      <div class="cms-modal-header">
+        <h3><i class="fa-solid fa-shapes"></i> Add Section Component</h3>
+        <button type="button" class="btn-close-modal" (click)="showAddSectionModal = false">✕</button>
+      </div>
+
+      <div class="cms-modal-body">
+        <p class="modal-intro">Choose a pre-built section component to add to <strong>/{{ selectedPage?.slug }}</strong>:</p>
+
+        <div class="components-picker-grid">
+          <div class="comp-card" (click)="addSection('hero')">
+            <div class="comp-icon">🎯</div>
+            <strong>Hero Banner</strong>
+            <span>Headline, CTA buttons, and high-impact image slice.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('features')">
+            <div class="comp-icon">✨</div>
+            <strong>Features Grid</strong>
+            <span>2, 3, or 4-column card grid with custom icons and benefits.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('image_text')">
+            <div class="comp-icon">🖼️</div>
+            <strong>Image + Text Split</strong>
+            <span>Side-by-side story block with responsive layout.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('promo_cta')">
+            <div class="comp-icon">🔥</div>
+            <strong>Promo / CTA Banner</strong>
+            <span>High-conversion coupon code banner with gradient background.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('faq')">
+            <div class="comp-icon">❓</div>
+            <strong>FAQ Accordion</strong>
+            <span>Collapsible question and answer list for customer inquiries.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('testimonials')">
+            <div class="comp-icon">💬</div>
+            <strong>Testimonials Grid</strong>
+            <span>Social proof review cards with star ratings and avatars.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('rich_text')">
+            <div class="comp-icon">📝</div>
+            <strong>Rich Text / Article</strong>
+            <span>Standard paragraphs, announcements, and legal policies.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('custom_html')">
+            <div class="comp-icon">💻</div>
+            <strong>Custom HTML / Embed</strong>
+            <span>Embed Google Maps, Instagram posts, or custom widgets.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

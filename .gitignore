@@ -7,8 +7,8 @@ tmp/
 out-tsc/
 bazel-out/
 .DS_Store
-Thumbs.db
 *.apk
+!frontend/public/downloads/foodybhai.apk
 
 # IDEs and editors
 .idea/

@@ -36,7 +36,7 @@
 /* Mobile Smart App Banner */
 .mobile-app-banner {
   position: fixed;
-  bottom: 68px; /* Above bottom mobile navigation */
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px)); /* Above bottom mobile navigation */
   left: 12px;
   right: 12px;
   z-index: 9999;
@@ -140,9 +140,9 @@
 }
 
 .btn-download {
-  background: #ea580c;
+  background: var(--primary-gradient, var(--primary-color, #ea580c));
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 4px 12px var(--primary-glow, rgba(234, 88, 12, 0.3));
 }
 
 .btn-update {
@@ -187,7 +187,7 @@
 }
 
 .modal-header-art {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%));
   padding: 28px 20px 20px;
   display: flex;
   justify-content: center;
@@ -215,8 +215,8 @@
 
 .version-tag {
   display: inline-block;
-  background: #ffedd5;
-  color: #c2410c;
+  background: var(--primary-light, #ffedd5);
+  color: var(--primary-dark, #c2410c);
   font-size: 12px;
   font-weight: 800;
   padding: 4px 12px;
@@ -313,7 +313,7 @@
 
 .btn-modal-update {
   width: 100%;
-  background: #ea580c;
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%));
   color: #ffffff;
   border: none;
   padding: 14px;
@@ -325,12 +325,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  box-shadow: 0 4px 14px var(--primary-glow, rgba(234, 88, 12, 0.35));
   transition: all 0.2s ease;
 }
 
 .btn-modal-update:hover {
-  background: #c2410c;
+  filter: brightness(0.92);
 }
 
 .btn-modal-later {

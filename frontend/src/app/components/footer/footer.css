@@ -100,12 +100,12 @@
 
 .delivery-badge {
   display: inline-block;
-  background: rgba(255, 71, 87, 0.1);
+  background: rgba(249, 95, 0, 0.15);
   color: var(--primary-color);
   padding: 0.5rem 1rem;
   border-radius: 50px;
-  border: 1px solid var(--primary-color);
-  font-weight: 500;
+  border: 1px solid var(--primary-border);
+  font-weight: 600;
   margin-top: 1rem;
 }
 
@@ -132,6 +132,6 @@
 
 @media (max-width: 768px) {
   .footer {
-    padding-bottom: 70px; /* Space for bottom nav */
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 24px)); /* Safe space for bottom nav */
   }
 }

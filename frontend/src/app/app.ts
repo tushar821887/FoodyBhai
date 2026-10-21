@@ -8,6 +8,7 @@ import { Footer } from './components/footer/footer';
 import { LocationModalComponent } from './components/location-modal/location-modal';
 import { AppDownloadBannerComponent } from './components/app-download-banner/app-download-banner';
 import { OrderService } from './services/order.service';
+import { ThemeService } from './services/theme.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -25,6 +26,7 @@ export class App implements OnInit {
     private router: Router,
     private location: Location,
     private orderService: OrderService,
+    private themeService: ThemeService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 

@@ -78,7 +78,7 @@
                   <div style="display: flex; gap: 10px;">
                     <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;"
                            [style.border-color]="orderType === 'delivery' ? 'var(--primary-color)' : '#e2e8f0'"
-                           [style.background]="orderType === 'delivery' ? '#fff0f2' : 'transparent'">
+                           [style.background]="orderType === 'delivery' ? '#fff5ed' : 'transparent'">
                       <input type="radio" name="orderType" value="delivery" [(ngModel)]="orderType" style="display: none;">
                       <i class="fa-solid fa-motorcycle" style="margin-right: 5px;" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#64748b'"></i>
                       <span [style.font-weight]="orderType === 'delivery' ? '600' : 'normal'"
@@ -86,7 +86,7 @@
                     </label>
                     <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;"
                            [style.border-color]="orderType === 'pickup' ? 'var(--primary-color)' : '#e2e8f0'"
-                           [style.background]="orderType === 'pickup' ? '#fff0f2' : 'transparent'">
+                           [style.background]="orderType === 'pickup' ? '#fff5ed' : 'transparent'">
                       <input type="radio" name="orderType" value="pickup" [(ngModel)]="orderType" style="display: none;">
                       <i class="fa-solid fa-person-walking-luggage" style="margin-right: 5px;" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#64748b'"></i>
                       <span [style.font-weight]="orderType === 'pickup' ? '600' : 'normal'"
@@ -155,7 +155,7 @@
                   <div class="form-group mb-2 mt-3">
                     <label>Pickup Location</label>
                     <div class="p-3 bg-light rounded" style="border: 1px solid var(--border-color); display: flex; gap: 15px; align-items: flex-start;">
-                      <div style="width: 44px; height: 44px; background: #fff0f2; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                      <div style="width: 44px; height: 44px; background: #fff5ed; color: var(--primary-color); border: 1px solid #fed7aa; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                         <i class="fa-solid fa-store"></i>
                       </div>
                       <div>

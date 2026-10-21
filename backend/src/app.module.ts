@@ -1,3 +1,8 @@
+import * as dns from 'dns';
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
+
 import { ContactModule } from "./contact/contact.module";
 import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,6 +15,7 @@ import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { SettingsModule } from './settings/settings.module';
+import { PagesModule } from './pages/pages.module';
 
 @Module({
   imports: [
@@ -64,7 +70,8 @@ import { SettingsModule } from './settings/settings.module';
     CartModule,
     OrdersModule,
     RecipesModule,
-    SettingsModule
+    SettingsModule,
+    PagesModule
   ],
 })
 export class AppModule {}

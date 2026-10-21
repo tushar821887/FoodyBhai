@@ -19,5 +19,6 @@ export const routes: Routes = [
   { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.CartComponent) },
   { path: 'admin', loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent) },
   { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
+  { path: 'page/:slug', loadComponent: () => import('./pages/dynamic-page/dynamic-page.component').then(m => m.DynamicPageComponent) },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then(m => m.NotFound) }
 ];

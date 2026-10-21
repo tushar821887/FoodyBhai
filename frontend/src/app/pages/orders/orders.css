@@ -241,6 +241,11 @@
 }
 
 @media (max-width: 768px) {
+  .orders-list {
+    padding-bottom: 2rem;
+    gap: 1.25rem;
+  }
+
   .order-summary-section {
     grid-template-columns: 1fr;
     gap: 1.5rem;

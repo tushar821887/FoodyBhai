@@ -1,44 +1,35 @@
-import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { Hero } from '../../components/hero/hero';
-import { MenuCard } from '../../components/menu-card/menu-card';
-import { RecipeService, Recipe } from '../../services/recipe.service';
+import { CmsService } from '../../services/cms.service';
+import { CmsPage, CmsSection } from '../../models/cms.model';
+import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-section-renderer/dynamic-section-renderer.component';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, Hero, RouterLink, MenuCard],
+  standalone: true,
+  imports: [CommonModule, DynamicSectionRendererComponent],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
 export class Home implements OnInit {
-  popularItems: Recipe[] = [];
-  categories: {name: string, slug: string, description: string, icon?: string, image?: string}[] = [];
-  isLoading = true;
+  homePage: CmsPage | null = null;
 
-  private recipeService = inject(RecipeService);
-  private platformId = inject(PLATFORM_ID);
+  private cmsService = inject(CmsService);
   private cdr = inject(ChangeDetectorRef);
 
-  isEmoji(str?: string): boolean {
-    if (!str) return false;
-    return !str.includes('fa-') && str.length <= 4;
+  ngOnInit() {
+    this.cmsService.getPageBySlug('').subscribe(page => {
+      if (page && page.sections && page.sections.length > 0) {
+        this.homePage = JSON.parse(JSON.stringify(page));
+        this.cdr.detectChanges();
+      }
+    });
+
+    // Proactively pull latest database CMS pages on navigation
+    this.cmsService.fetchLivePages(true).subscribe();
   }
 
-  ngOnInit() {
-    this.recipeService.getCategories().subscribe(cats => {
-      this.categories = cats;
-      this.cdr.detectChanges();
-    });
-
-    this.recipeService.getRecipes().subscribe({
-      next: items => {
-        this.popularItems = items.slice(0, 4);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => { this.isLoading = false; }
-    });
+  trackBySection(index: number, sec: CmsSection): string {
+    return `${sec.id}_${sec.title || ''}_${sec.subtitle || ''}_${sec.badge || ''}_${sec.buttonText || ''}_${sec.buttonLink || ''}_${sec.imageUrl || ''}_${sec.rawHtml || ''}_${sec.content || ''}_${sec.isEnabled !== false}_${sec.style?.backgroundColor || ''}_${sec.style?.backgroundGradient || ''}_${sec.style?.titleFontSize || ''}_${sec.style?.borderRadius || ''}_${sec.items?.length || 0}`;
   }
 }

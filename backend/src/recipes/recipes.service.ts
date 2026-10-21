@@ -19,6 +19,16 @@ export class RecipesService {
     return recipe;
   }
 
+  private normalizeArrayField(val: any): string[] {
+    if (Array.isArray(val)) {
+      return val.map((s: any) => String(s).trim()).filter((s: string) => s.length > 0);
+    }
+    if (typeof val === 'string') {
+      return val.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+    }
+    return [];
+  }
+
   async create(recipeData: any): Promise<RecipeDocument> {
     // Generate a unique numeric ID if none provided
     if (!recipeData.id) {
@@ -31,6 +41,16 @@ export class RecipesService {
       recipeData.slug = recipeData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     }
 
+    if (recipeData.ingredients !== undefined) {
+      recipeData.ingredients = this.normalizeArrayField(recipeData.ingredients);
+    }
+    if (recipeData.instructions !== undefined) {
+      recipeData.instructions = this.normalizeArrayField(recipeData.instructions);
+    }
+    if (recipeData.tips !== undefined) {
+      recipeData.tips = this.normalizeArrayField(recipeData.tips);
+    }
+
     const createdRecipe = new this.recipeModel(recipeData);
     return createdRecipe.save();
   }
@@ -39,6 +59,16 @@ export class RecipesService {
     // Allow finding by MongoDB _id or numeric id
     const filter = id.match(/^[0-9a-fA-F]{24}$/) ? { _id: id } : { id: Number(id) };
     
+    if (updateData.ingredients !== undefined) {
+      updateData.ingredients = this.normalizeArrayField(updateData.ingredients);
+    }
+    if (updateData.instructions !== undefined) {
+      updateData.instructions = this.normalizeArrayField(updateData.instructions);
+    }
+    if (updateData.tips !== undefined) {
+      updateData.tips = this.normalizeArrayField(updateData.tips);
+    }
+
     const updatedRecipe = await this.recipeModel.findOneAndUpdate(
       filter,
       updateData,

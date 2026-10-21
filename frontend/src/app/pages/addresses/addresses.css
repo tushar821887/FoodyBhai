@@ -27,9 +27,9 @@
 }
 
 .address-card:hover {
-  border-color: #ffb8c0;
+  border-color: var(--primary-border);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.1);
+  box-shadow: 0 4px 12px var(--primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .address-header {
@@ -77,7 +77,7 @@
 
 .btn-delete-addr:hover {
   color: var(--primary-color);
-  background: #fff0f1;
+  background: var(--primary-light);
 }
 
 .no-address-alert {
@@ -109,7 +109,7 @@
 }
 
 .btn-outline:hover {
-  background: #fff0f1;
+  background: var(--primary-light);
   border-style: solid;
 }
 
@@ -135,7 +135,7 @@
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.1);
+  box-shadow: 0 0 0 3px var(--primary-glow, rgba(234, 88, 12, 0.12));
 }
 
 .label-badges {

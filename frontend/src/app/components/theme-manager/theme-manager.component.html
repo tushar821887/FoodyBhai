@@ -1,0 +1,390 @@
+<div class="theme-manager-container">
+  
+  <!-- Studio Header -->
+  <div class="theme-studio-header">
+    <div class="header-left">
+      <div class="header-badge">
+        <span class="live-pulse"></span> LIVE WEBSITE COLOR STUDIO
+      </div>
+      <h2>🎨 Website Theme & Color Management</h2>
+      <p>Configure and publish live colors, gradients, and brand styles across FoodyBhai in real time. Changes take effect on the live website immediately without redeploying code.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-publish" (click)="publishTheme()" [disabled]="isSaving">
+        @if (isSaving) {
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>Publishing Live...</span>
+        } @else {
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Publish Theme Live</span>
+        }
+      </button>
+      <button type="button" class="btn-reset" (click)="resetToDefault()" [disabled]="isSaving" title="Restore Foody Bhai Logo Colors">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Reset to Default</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Notifications -->
+  @if (successMessage) {
+    <div class="alert alert-success animate-fade-in">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+  @if (errorMessage) {
+    <div class="alert alert-danger animate-fade-in">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
+
+  <div class="theme-studio-body">
+    
+    <!-- Left Column: Controls & Presets -->
+    <div class="theme-controls-column">
+      
+      <!-- Section 1: Curated Theme Presets -->
+      <div class="studio-card">
+        <div class="card-header-row">
+          <div class="card-icon-title">
+            <span class="studio-icon">✨</span>
+            <div>
+              <h3>Curated Theme Presets</h3>
+              <p>One-click professional color combinations tested for high conversion & appetizing aesthetics.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="presets-grid">
+          @for (preset of presets; track preset.id) {
+            <div class="preset-card" 
+                 [class.active]="isCurrentPreset(preset)" 
+                 (click)="selectPreset(preset)">
+              
+              <div class="preset-top">
+                <span class="preset-name">{{ preset.name }}</span>
+                @if (isCurrentPreset(preset)) {
+                  <span class="preset-active-tag">Active</span>
+                }
+              </div>
+
+              <div class="preset-gradient-strip" 
+                   [style.background]="'linear-gradient(' + preset.gradientAngle + ', ' + preset.gradientStart + ', ' + preset.gradientEnd + ')'">
+              </div>
+
+              <div class="preset-swatches">
+                <span class="swatch-circle" [style.background]="preset.primaryColor" title="Primary Color"></span>
+                <span class="swatch-circle" [style.background]="preset.secondaryColor" title="Secondary / Charcoal"></span>
+                <span class="swatch-circle" [style.background]="preset.backgroundLight" title="Background Surface" style="border: 1px solid #ddd;"></span>
+                <span class="preset-desc-mini">{{ preset.description }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Section 2: Custom Color Palette Studio -->
+      <div class="studio-card">
+        <div class="card-header-row">
+          <div class="card-icon-title">
+            <span class="studio-icon">🎯</span>
+            <div>
+              <h3>Custom Brand Color Palette</h3>
+              <p>Fine-tune individual brand colors or enter your own custom hex codes.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="color-inputs-grid">
+          <!-- Primary Color -->
+          <div class="color-field">
+            <label>
+              <span>Primary Brand Color</span>
+              <span class="field-hint">Logo orange, buttons, key icons</span>
+            </label>
+            <div class="picker-input-wrap">
+              <input type="color" [(ngModel)]="activeTheme.primaryColor" (ngModelChange)="onCustomColorChange()" class="native-picker">
+              <input type="text" [(ngModel)]="activeTheme.primaryColor" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+            </div>
+          </div>
+
+          <!-- Primary Hover / Dark -->
+          <div class="color-field">
+            <label>
+              <span>Primary Hover Shade</span>
+              <span class="field-hint">Button hover & active click state</span>
+            </label>
+            <div class="picker-input-wrap">
+              <input type="color" [(ngModel)]="activeTheme.primaryHover" (ngModelChange)="onCustomColorChange()" class="native-picker">
+              <input type="text" [(ngModel)]="activeTheme.primaryHover" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+            </div>
+          </div>
+
+          <!-- Secondary / Espresso Charcoal -->
+          <div class="color-field">
+            <label>
+              <span>Secondary (Brand Dark)</span>
+              <span class="field-hint">Heading text, footer, logo dark</span>
+            </label>
+            <div class="picker-input-wrap">
+              <input type="color" [(ngModel)]="activeTheme.secondaryColor" (ngModelChange)="onCustomColorChange()" class="native-picker">
+              <input type="text" [(ngModel)]="activeTheme.secondaryColor" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+            </div>
+          </div>
+
+          <!-- Background Surface Light -->
+          <div class="color-field">
+            <label>
+              <span>Background Cream Surface</span>
+              <span class="field-hint">Page sections, light cards background</span>
+            </label>
+            <div class="picker-input-wrap">
+              <input type="color" [(ngModel)]="activeTheme.backgroundLight" (ngModelChange)="onCustomColorChange()" class="native-picker">
+              <input type="text" [(ngModel)]="activeTheme.backgroundLight" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+            </div>
+          </div>
+
+          <!-- Body Text Dark -->
+          <div class="color-field">
+            <label>
+              <span>Body Text Dark</span>
+              <span class="field-hint">Main reading text & titles</span>
+            </label>
+            <div class="picker-input-wrap">
+              <input type="color" [(ngModel)]="activeTheme.textDark" (ngModelChange)="onCustomColorChange()" class="native-picker">
+              <input type="text" [(ngModel)]="activeTheme.textDark" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+            </div>
+          </div>
+
+          <!-- Light Tint / Pill Background -->
+          <div class="color-field">
+            <label>
+              <span>Soft Accent Pill Tint</span>
+              <span class="field-hint">Pill background for active nav & chips</span>
+            </label>
+            <div class="picker-input-wrap">
+              <input type="color" [(ngModel)]="activeTheme.primaryLight" (ngModelChange)="onCustomColorChange()" class="native-picker">
+              <input type="text" [(ngModel)]="activeTheme.primaryLight" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Gradient Studio -->
+      <div class="studio-card">
+        <div class="card-header-row">
+          <div class="card-icon-title">
+            <span class="studio-icon">🌈</span>
+            <div>
+              <h3>Primary Gradient Studio</h3>
+              <p>Customize the smooth multi-color gradients used across buttons, badges, and headers.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="gradient-designer-row">
+          <div class="gradient-controls">
+            <div class="gradient-field">
+              <label>Gradient Start Color</label>
+              <div class="picker-input-wrap">
+                <input type="color" [(ngModel)]="activeTheme.gradientStart" (ngModelChange)="onCustomColorChange()" class="native-picker">
+                <input type="text" [(ngModel)]="activeTheme.gradientStart" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+              </div>
+            </div>
+
+            <div class="gradient-field">
+              <label>Gradient End Color</label>
+              <div class="picker-input-wrap">
+                <input type="color" [(ngModel)]="activeTheme.gradientEnd" (ngModelChange)="onCustomColorChange()" class="native-picker">
+                <input type="text" [(ngModel)]="activeTheme.gradientEnd" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+              </div>
+            </div>
+
+            <div class="gradient-field">
+              <label>Direction Angle</label>
+              <select [(ngModel)]="activeTheme.gradientAngle" (ngModelChange)="onCustomColorChange()" class="select-angle">
+                <option value="135deg">Diagonal (135° - Recommended)</option>
+                <option value="90deg">Horizontal (90° - Left to Right)</option>
+                <option value="180deg">Vertical (180° - Top to Bottom)</option>
+                <option value="45deg">Upward Diagonal (45°)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Live Gradient Preview Bar -->
+          <div class="gradient-preview-box">
+            <div class="gradient-bar-demo" [style.background]="liveGradient"></div>
+            <div class="gradient-code-pill">
+              <code>background: {{ liveGradient }}</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marquee Ticker Gradient -->
+        <div class="marquee-gradient-row mt-4">
+          <h4 class="subheading"><i class="fa-solid fa-bullhorn"></i> Top Announcement Marquee Gradient</h4>
+          <div class="color-inputs-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="color-field">
+              <label>Ticker Gradient Left</label>
+              <div class="picker-input-wrap">
+                <input type="color" [(ngModel)]="activeTheme.marqueeStart" (ngModelChange)="onCustomColorChange()" class="native-picker">
+                <input type="text" [(ngModel)]="activeTheme.marqueeStart" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+              </div>
+            </div>
+            <div class="color-field">
+              <label>Ticker Gradient Right</label>
+              <div class="picker-input-wrap">
+                <input type="color" [(ngModel)]="activeTheme.marqueeEnd" (ngModelChange)="onCustomColorChange()" class="native-picker">
+                <input type="text" [(ngModel)]="activeTheme.marqueeEnd" (ngModelChange)="onCustomColorChange()" class="hex-text" maxlength="7">
+              </div>
+            </div>
+          </div>
+          <div class="marquee-demo-strip" [style.background]="liveMarqueeGradient">
+            <span>🎉 Special Offer! Get 20% OFF on all orders today! Code: FOODY20 🎉</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Right Column: Interactive Real-time Mockup Visualizer -->
+    <div class="theme-preview-column">
+      <div class="sticky-preview-wrapper">
+        <div class="preview-header">
+          <span class="preview-title"><i class="fa-solid fa-mobile-screen"></i> Live Customer View Mockup</span>
+          <span class="preview-subtitle">Updates instantly in real time</span>
+        </div>
+
+        <!-- Phone Mockup Device -->
+        <div class="phone-mockup" [style.background]="activeTheme.backgroundWhite">
+          
+          <!-- Mockup Top Marquee -->
+          <div class="mockup-marquee" [style.background]="liveMarqueeGradient">
+            <span>🎉 Special Offer! Get 20% OFF! 🎉</span>
+          </div>
+
+          <!-- Mockup Header -->
+          <div class="mockup-header" [style.background]="activeTheme.backgroundWhite">
+            <div class="mockup-logo">
+              <img src="/assets/images/logo.png" alt="Foody Bhai Logo" onerror="this.src='https://via.placeholder.com/80x30?text=FoodyBhai'">
+            </div>
+            <div class="mockup-location-pill" [style.background]="activeTheme.primaryLight" [style.border-color]="activeTheme.primaryBorder">
+              <i class="fa-solid fa-location-dot" [style.color]="activeTheme.primaryColor"></i>
+              <span class="mockup-loc-name" [style.color]="activeTheme.textDark">Meerut, Abu Lane</span>
+            </div>
+          </div>
+
+          <!-- Mockup Content Screen -->
+          <div class="mockup-screen" [style.background]="activeTheme.backgroundLight">
+            
+            <!-- Mockup Hero Slice -->
+            <div class="mockup-hero" [style.background]="activeTheme.backgroundWhite">
+              <span class="mockup-badge" [style.background]="activeTheme.primaryLight" [style.color]="activeTheme.primaryColor">
+                ⚡ Fastest Delivery in Meerut
+              </span>
+              <h3 [style.color]="activeTheme.secondaryColor">
+                Delicious food, <span [style.color]="activeTheme.primaryColor">ghar jaisa!</span>
+              </h3>
+              <button class="mockup-btn-primary" [style.background]="liveGradient">
+                <span>Order Now</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <!-- Mockup Categories 3-Col -->
+            <div class="mockup-section">
+              <div class="mockup-section-title" [style.color]="activeTheme.secondaryColor">
+                Popular Categories
+              </div>
+              <div class="mockup-cat-grid">
+                <div class="mockup-cat-card" [style.background]="activeTheme.backgroundWhite" [style.border-color]="activeTheme.primaryBorder">
+                  <div class="mockup-cat-icon" [style.background]="activeTheme.primaryLight" [style.color]="activeTheme.primaryColor">
+                    🍕
+                  </div>
+                  <span [style.color]="activeTheme.textDark">Snacks</span>
+                </div>
+                <div class="mockup-cat-card" [style.background]="activeTheme.backgroundWhite" [style.border-color]="activeTheme.primaryBorder">
+                  <div class="mockup-cat-icon" [style.background]="activeTheme.primaryLight" [style.color]="activeTheme.primaryColor">
+                    🍛
+                  </div>
+                  <span [style.color]="activeTheme.textDark">Thalis</span>
+                </div>
+                <div class="mockup-cat-card" [style.background]="activeTheme.backgroundWhite" [style.border-color]="activeTheme.primaryBorder">
+                  <div class="mockup-cat-icon" [style.background]="activeTheme.primaryLight" [style.color]="activeTheme.primaryColor">
+                    🥤
+                  </div>
+                  <span [style.color]="activeTheme.textDark">Drinks</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mockup Food Card -->
+            <div class="mockup-food-card" [style.background]="activeTheme.backgroundWhite">
+              <div class="mockup-food-info">
+                <div class="mockup-food-title" [style.color]="activeTheme.secondaryColor">Shahi Paneer Deluxe</div>
+                <div class="mockup-food-price" [style.color]="activeTheme.primaryColor">₹199</div>
+              </div>
+              <button class="mockup-add-btn" [style.background]="activeTheme.primaryLight" [style.border-color]="activeTheme.primaryBorder" [style.color]="activeTheme.primaryColor">
+                Add +
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Mockup Bottom Navigation Bar -->
+          <div class="mockup-bottom-nav" [style.background]="activeTheme.backgroundWhite">
+            <div class="mockup-nav-item active" [style.color]="activeTheme.primaryColor">
+              <div class="mockup-nav-pill" [style.background]="activeTheme.primaryLight">
+                <i class="fa-solid fa-house"></i>
+              </div>
+              <span>Home</span>
+            </div>
+            <div class="mockup-nav-item" [style.color]="activeTheme.textLight">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Menu</span>
+            </div>
+            <div class="mockup-nav-item" [style.color]="activeTheme.textLight">
+              <div class="mockup-cart-wrap">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="mockup-cart-badge" [style.background]="liveGradient">2</span>
+              </div>
+              <span>Cart</span>
+            </div>
+            <div class="mockup-nav-item" [style.color]="activeTheme.textLight">
+              <i class="fa-solid fa-user"></i>
+              <span>Account</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Summary Box -->
+        <div class="preview-summary-card">
+          <div class="summary-line">
+            <span>Active Scheme:</span>
+            <strong>{{ activeTheme.name }}</strong>
+          </div>
+          <div class="summary-line">
+            <span>Primary Color:</span>
+            <span class="hex-badge" [style.background]="activeTheme.primaryColor">{{ activeTheme.primaryColor }}</span>
+          </div>
+          <div class="summary-line">
+            <span>Gradient:</span>
+            <span class="gradient-tag" [style.background]="liveGradient">
+              {{ activeTheme.gradientStart }} → {{ activeTheme.gradientEnd }}
+            </span>
+          </div>
+          <button type="button" class="btn-publish-sidebar" (click)="publishTheme()" [disabled]="isSaving">
+            <i class="fa-solid fa-check"></i> Save & Apply Globally
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

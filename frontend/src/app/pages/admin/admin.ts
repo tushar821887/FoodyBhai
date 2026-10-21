@@ -6,15 +6,18 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 
 import { RichEditorComponent } from '../../components/rich-editor/rich-editor.component';
+import { ThemeManagerComponent } from '../../components/theme-manager/theme-manager.component';
+import { PageBuilderComponent } from '../../components/page-builder/page-builder.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RichEditorComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class AdminComponent implements OnInit {
+  activeTab: 'menu' | 'theme' | 'cms' = 'theme';
   recipeForm: FormGroup;
   recipes: any[] = [];
   categories: string[] = ['Main Course', 'Puri & Sabzi', 'Rice', 'Everyday Essentials', 'Snacks', 'Beverages', 'Thali Meals'];

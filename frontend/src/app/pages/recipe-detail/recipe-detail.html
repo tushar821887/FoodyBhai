@@ -4,9 +4,12 @@
   <div class="recipe-header">
     <div class="container text-center animate-fade-in">
       <div class="breadcrumbs">
-        <a routerLink="/">Home</a> > <a routerLink="/menu">Menu</a> > <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a> > {{recipe.title}}
+        <a routerLink="/">Home</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+        <a routerLink="/menu">Menu</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+        <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+        <span>{{recipe.title}}</span>
       </div>
-      <h1 class="page-title" style="margin-top: 1rem;">{{recipe.title}}</h1>
+      <h1 class="page-title">{{recipe.title}}</h1>
       <p class="recipe-description">{{recipe.description}}</p>
     </div>
   </div>
@@ -15,11 +18,15 @@
     <div class="container">
       <div class="recipe-hero-image animate-fade-in">
         <img [src]="recipe.image" [alt]="recipe.imageAlt || recipe.title" class="img-fluid rounded">
+        <div class="diet-tag" [class.veg]="recipe.isVeg" [class.non-veg]="!recipe.isVeg">
+          <div class="diet-dot"></div>
+          <span>{{recipe.isVeg ? 'Pure Veg' : 'Non-Veg'}}</span>
+        </div>
       </div>
 
       <div class="recipe-content-grid">
         <div class="recipe-main-content">
-          <div class="recipe-intro mb-4">
+          <div class="recipe-intro mb-4" *ngIf="recipe.introduction">
             <h2>About this Recipe</h2>
             <p>{{recipe.introduction}}</p>
           </div>
@@ -57,11 +64,11 @@
 
           <div class="recipe-ingredients mb-5">
             <div class="section-heading-wrapper mb-3">
-              <h2 style="margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.6rem;">
-                <i class="fa-solid fa-mortar-pestle" style="color: var(--primary-color);"></i>
+              <h2 class="ingredients-title">
+                <i class="fa-solid fa-mortar-pestle"></i>
                 Chef's Ingredients & Spices
               </h2>
-              <p class="ingredients-subtitle" style="color: #64748b; font-size: 0.95rem; margin-bottom: 0;">
+              <p class="ingredients-subtitle">
                 Authentic ingredients curated by our chef to prepare this signature dish.
               </p>
             </div>
@@ -77,20 +84,20 @@
           </div>
 
           <div class="recipe-instructions mb-5">
-            <h2>Step-by-Step Instructions</h2>
+            <h2 class="instructions-heading">Step-by-Step Instructions</h2>
             <ol class="instructions-list">
               @for (step of recipe.instructions; track step; let i = $index) {
                 <li>
-                  <strong>Step {{i + 1}}</strong>
-                  <p>{{step}}</p>
+                  <strong class="step-title">Step {{i + 1}}</strong>
+                  <p class="step-desc">{{step}}</p>
                 </li>
               }
             </ol>
           </div>
 
           @if (recipe.tips && recipe.tips.length > 0) {
-            <div class="recipe-tips p-4 bg-light rounded mb-5">
-              <h3><i class="fa-regular fa-lightbulb"></i> Chef's Tips</h3>
+            <div class="recipe-tips mb-5">
+              <h3><i class="fa-solid fa-lightbulb"></i> Chef's Tips</h3>
               <ul>
                 @for (tip of recipe.tips; track tip) {
                   <li>{{tip}}</li>
@@ -108,12 +115,23 @@
           <div class="sidebar-widget">
             <h3>Recipe Info</h3>
             <ul class="info-list">
-              <li><strong>Category:</strong> <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a></li>
-              <li><strong>Cuisine:</strong> {{recipe.cuisine}}</li>
-              <li><strong>Diet:</strong> {{recipe.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}}</li>
-              <li *ngIf="recipe.price"><strong>Price:</strong> ₹{{recipe.price}}</li>
+              <li>
+                <strong>Category:</strong>
+                <a [routerLink]="['/category', getCategorySlug(recipe.category)]" class="category-link">{{recipe.category}}</a>
+              </li>
+              <li><strong>Cuisine:</strong> <span>{{recipe.cuisine}}</span></li>
+              <li>
+                <strong>Diet:</strong> 
+                <span class="diet-label" [class.veg]="recipe.isVeg">
+                  <span class="mini-dot"></span> {{recipe.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}}
+                </span>
+              </li>
+              <li *ngIf="recipe.price">
+                <strong>Price:</strong> 
+                <span class="recipe-price">₹{{recipe.price}}</span>
+              </li>
             </ul>
-            <button class="btn btn-primary mt-4 w-100" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;" (click)="addToCart()">
+            <button class="btn btn-primary mt-4 w-100 recipe-cart-btn" (click)="addToCart()">
               <i class="fa-solid fa-cart-plus"></i> Add to Cart
             </button>
           </div>
@@ -138,6 +156,20 @@
       </div>
     </div>
   </section>
+
+  <!-- Mobile Floating Sticky Action Bar for quick ordering -->
+  <div class="mobile-recipe-bar" *ngIf="recipe.price">
+    <div class="mobile-recipe-bar-content">
+      <div class="mobile-bar-info">
+        <span class="mobile-bar-label">Price</span>
+        <span class="mobile-bar-price">₹{{recipe.price}}</span>
+      </div>
+      <button class="mobile-bar-add-btn" (click)="addToCart()">
+        <i class="fa-solid fa-cart-plus"></i>
+        <span>Add to Cart</span>
+      </button>
+    </div>
+  </div>
 } @else {
   <div class="container text-center section">
     <h2>Recipe Not Found</h2>
