@@ -56,14 +56,21 @@ export class NotificationService {
     }
   }
 
+  private audioUnlocked = false;
+
   private setupGlobalUnlockListener() {
     if (typeof window === 'undefined') return;
     const unlockHandler = () => {
       this.unlockAudio();
+      if (this.audioUnlocked) {
+        window.removeEventListener('click', unlockHandler);
+        window.removeEventListener('touchstart', unlockHandler);
+        window.removeEventListener('keydown', unlockHandler);
+      }
     };
-    window.addEventListener('click', unlockHandler, { passive: true });
-    window.addEventListener('touchstart', unlockHandler, { passive: true });
-    window.addEventListener('keydown', unlockHandler, { passive: true });
+    window.addEventListener('click', unlockHandler, { once: true, passive: true });
+    window.addEventListener('touchstart', unlockHandler, { once: true, passive: true });
+    window.addEventListener('keydown', unlockHandler, { once: true, passive: true });
   }
 
   private async initNativeNotifications() {
@@ -127,28 +134,37 @@ export class NotificationService {
   }
 
   public unlockAudio() {
+    if (this.audioUnlocked) return;
+
     // 1. Resume AudioContext if suspended
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       this.audioCtx.resume().catch(() => {});
     }
 
-    // 2. Unlock HTML5 Audio
+    // 2. Unlock HTML5 Audio silently
     if (this.ringAudio) {
       try {
-        this.ringAudio.volume = 0.01;
+        this.ringAudio.volume = 0;
         const p = this.ringAudio.play();
         if (p !== undefined) {
           p.then(() => {
-            setTimeout(() => {
-              if (!this.isRinging && this.ringAudio) {
-                this.ringAudio.pause();
-                this.ringAudio.volume = 1;
-                this.ringAudio.currentTime = 0;
-              }
-            }, 100);
-          }).catch(() => {});
+            if (!this.isRinging && this.ringAudio) {
+              this.ringAudio.pause();
+              this.ringAudio.volume = 1;
+              this.ringAudio.currentTime = 0;
+            }
+            this.audioUnlocked = true;
+          }).catch(() => {
+            // Autoplay blocked until genuine user gesture
+          });
+        } else {
+          this.audioUnlocked = true;
         }
-      } catch (e) {}
+      } catch (e) {
+        this.audioUnlocked = true;
+      }
+    } else {
+      this.audioUnlocked = true;
     }
   }
 
@@ -286,19 +302,46 @@ export class NotificationService {
   }
 
   /**
-   * Continuous ringing audio for pending orders (Synthesizer + Local Audio loop)
+   * Continuous ringing audio for pending orders
    */
   public startRinging() {
+    if (this.isRinging) {
+      // Already ringing! Do not restart or interrupt current ring.
+      return;
+    }
     this.isRinging = true;
 
     // Wake and bring app to front if in background
     this.bringAppToFront();
 
-    // 1. Web Audio API synthesizer loop (guaranteed to produce sound with 0 network latency)
+    // 1. Resume AudioContext if suspended
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       this.audioCtx.resume().catch(() => {});
     }
 
+    // 2. Play HTML5 ring audio loop (order_alert.wav)
+    if (this.ringAudio) {
+      try {
+        this.ringAudio.currentTime = 0;
+        this.ringAudio.volume = 1;
+        this.ringAudio.loop = true;
+        const p = this.ringAudio.play();
+        if (p !== undefined) {
+          p.catch((err) => {
+            console.warn('HTML5 Audio play prevented, activating synthesized fallback:', err);
+            this.startSynthesizerFallback();
+          });
+        }
+      } catch (e) {
+        this.startSynthesizerFallback();
+      }
+    } else {
+      this.startSynthesizerFallback();
+    }
+  }
+
+  private startSynthesizerFallback() {
+    if (!this.isRinging) return;
     if (!this.ringIntervalTimer) {
       this.playSynthesizedChime();
       this.ringIntervalTimer = setInterval(() => {
@@ -308,21 +351,7 @@ export class NotificationService {
           clearInterval(this.ringIntervalTimer);
           this.ringIntervalTimer = null;
         }
-      }, 1200);
-    }
-
-    // 2. HTML5 audio element loop
-    if (this.ringAudio) {
-      try {
-        this.ringAudio.currentTime = 0;
-        this.ringAudio.volume = 1;
-        const p = this.ringAudio.play();
-        if (p !== undefined) {
-          p.catch((err) => {
-            console.warn('HTML5 Audio play prevented:', err);
-          });
-        }
-      } catch (e) {}
+      }, 2000);
     }
   }
 

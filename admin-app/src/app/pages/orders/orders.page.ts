@@ -6,10 +6,14 @@ import { FormsModule } from '@angular/forms';
 import { ApiService, Order } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 
+import { RichEditorComponent } from '../../components/rich-editor/rich-editor.component';
+import { ThemeManagerComponent } from '../../components/theme-manager/theme-manager.component';
+import { PageBuilderComponent } from '../../components/page-builder/page-builder.component';
+
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, FilterStatusPipe],
+  imports: [CommonModule, FormsModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent],
   templateUrl: './orders.page.html',
   styleUrl: './orders.page.css'
 })
@@ -88,7 +92,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   baseOrders: Order[] = [];
   contacts: any[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
   mobileMenuOpen = false;
 
@@ -134,14 +138,17 @@ export class OrdersPage implements OnInit, OnDestroy {
   ];
   
   // Menu Item Form
-  newItem = {
+  newItem: any = {
     title: '',
     slug: '',
     price: 0,
     category: '',
     description: '',
     image: '',
-    isVeg: true
+    isVeg: true,
+    ingredientsRaw: '',
+    recipeHtml: '',
+    ingredients: []
   };
   
   // Mapping
@@ -172,6 +179,13 @@ export class OrdersPage implements OnInit, OnDestroy {
   restaurantClosedReason = 'We are currently closed. Please check back later.';
   qrImageUrl: string = '';
   selectedQrMode: 'dynamic' | 'uploaded' = 'dynamic';
+
+  // App Release Settings
+  appVersion: string = '1.0.0';
+  appDownloadUrl: string = '/downloads/foodybhai.apk';
+  appReleaseNotes: string = 'Bug fixes, performance improvements, and real-time live order tracking.';
+  isUploadingApk = false;
+  uploadedApkFileName = '';
 
   get effectiveUpiId(): string {
     return this.upiId || '8218870579@ptyes';
@@ -221,6 +235,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   private pollInterval: any;
   private ringAudio: HTMLAudioElement | null = null;
   private isRinging = false;
+  private manuallySilenced = false;
 
   notificationMessage = '';
   notificationType: 'success' | 'error' = 'success';
@@ -297,6 +312,9 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
     this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) this.upiId = res.value; });
     this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) this.qrImageUrl = res.value; });
+    this.api.getSetting('app_version').subscribe(res => { if (res && res.value) this.appVersion = res.value; });
+    this.api.getSetting('app_download_url').subscribe(res => { if (res && res.value) this.appDownloadUrl = res.value; });
+    this.api.getSetting('app_release_notes').subscribe(res => { if (res && res.value) this.appReleaseNotes = res.value; });
     this.fetchOrders();
 
     // Fast backup polling (every 4 seconds) to guarantee zero missed orders
@@ -429,7 +447,10 @@ export class OrdersPage implements OnInit, OnDestroy {
           try {
             const payload = JSON.parse(event.data);
             console.log('⚡ Instant live order event received:', payload);
-            // Instant fetch the moment customer places order!
+            if (payload && payload.type === 'new_order') {
+              this.manuallySilenced = false;
+            }
+            // Instant fetch to keep orders synced
             this.fetchOrders();
           } catch (e) {
             console.error('Failed to parse SSE live payload:', e);
@@ -472,10 +493,13 @@ export class OrdersPage implements OnInit, OnDestroy {
         const pendingCount = pendingOrders.length;
         
         if (!this.isAgent) {
-          if (pendingCount > 0 && !this.notificationService.isCurrentlyRinging()) {
+          if (pendingCount === 0) {
+            this.manuallySilenced = false;
+            if (this.notificationService.isCurrentlyRinging()) {
+              this.stopRinging();
+            }
+          } else if (pendingCount > 0 && !this.manuallySilenced && !this.notificationService.isCurrentlyRinging()) {
             this.startRinging();
-          } else if (pendingCount === 0 && this.notificationService.isCurrentlyRinging()) {
-            this.stopRinging();
           }
         }
         
@@ -499,8 +523,6 @@ export class OrdersPage implements OnInit, OnDestroy {
                  data: { orderId: o._id, ...o }
                });
                this.showNotification(`🛵 Delivery #${shortId} assigned to you!`, 'success');
-               this.startRinging();
-               setTimeout(() => this.stopRinging(), 5000);
              }
            });
 
@@ -539,10 +561,11 @@ export class OrdersPage implements OnInit, OnDestroy {
            });
         } else {
            // --- ADMIN NOTIFICATIONS ---
-           // 1. Detect New Incoming Pending Orders (Standard Android System Notification + Sound)
+           // 1. Detect New Incoming Pending Orders (Trigger once per new order; rings until accepted)
            if (!this.isFirstLoad) {
              const newPendingOrders = pendingOrders.filter(o => !this.knownOrderIds.has(o._id));
              newPendingOrders.forEach(o => {
+               this.manuallySilenced = false;
                const shortId = o._id.slice(-6).toUpperCase();
                const custName = o.deliveryDetails?.name || 'Customer';
                const amount = o.totalAmount ? `₹${o.totalAmount}` : '';
@@ -554,11 +577,13 @@ export class OrdersPage implements OnInit, OnDestroy {
                  data: { orderId: o._id, ...o }
                });
                this.showNotification(`🔔 New Order #${shortId} received (${amount})!`, 'success');
-               this.startRinging();
+               if (!this.notificationService.isCurrentlyRinging()) {
+                 this.startRinging();
+               }
              });
            }
 
-           // 2. Detect Pending Agent Reassignment Requests
+           // 2. Detect Pending Agent Reassignment Requests (Toast notification only, DO NOT trigger sound/ring)
            const pendingReassignOrders = data.filter(o => o.reassignRequest && o.reassignRequest.status === 'pending');
            pendingReassignOrders.forEach(o => {
              if (!this.notifiedReassignOrderIds.has(o._id)) {
@@ -566,13 +591,6 @@ export class OrdersPage implements OnInit, OnDestroy {
                const agentName = o.reassignRequest?.requestedByAgent?.name || o.deliveryAgent?.name || 'Agent';
                const shortId = o._id.slice(-6).toUpperCase();
                this.showNotification(`⚠️ Agent ${agentName} requested reassignment for Order #${shortId}! Reason: ${o.reassignRequest?.reason}`, 'error');
-               this.notificationService.sendNotification({
-                 title: `⚠️ Reassign Requested: Order #${shortId}`,
-                 body: `${agentName} requested reassignment: ${o.reassignRequest?.reason}`,
-                 data: { orderId: o._id, ...o }
-               });
-               this.startRinging();
-               setTimeout(() => this.stopRinging(), 5000);
              }
            });
         }
@@ -599,7 +617,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.notificationService.startRinging();
   }
 
-  stopRinging() {
+  stopRinging(silenceUserAction: boolean = false) {
+    if (silenceUserAction) {
+      this.manuallySilenced = true;
+    }
     this.isRinging = false;
     this.notificationService.stopRinging();
   }
@@ -790,7 +811,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.showOrderDetailsModal = true;
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts') {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms') {
     this.currentView = view;
     this.closeMobileMenu();
     if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
@@ -806,8 +827,9 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) this.qrImageUrl = res.value; });
       this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
       this.api.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value !== undefined) this.restaurantClosedReason = res.value; });
-      
-      
+      this.api.getSetting('app_version').subscribe(res => { if (res && res.value) this.appVersion = res.value; });
+      this.api.getSetting('app_download_url').subscribe(res => { if (res && res.value) this.appDownloadUrl = res.value; });
+      this.api.getSetting('app_release_notes').subscribe(res => { if (res && res.value) this.appReleaseNotes = res.value; });
     }
     if (view === 'agents') {
       this.fetchAgents();
@@ -1093,24 +1115,51 @@ export class OrdersPage implements OnInit, OnDestroy {
       return;
     }
     this.newItem.slug = this.newItem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (this.newItem.recipeHtml) {
+      const matches = this.newItem.recipeHtml.match(/<li[^>]*>(.*?)<\/li>/gi);
+      if (matches && matches.length > 0) {
+        this.newItem.ingredients = matches.map((m: string) => m.replace(/<[^>]+>/g, '').trim()).filter((m: string) => m.length > 0);
+      }
+    }
     this.api.addRecipe(this.newItem).subscribe(() => {
-      this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true };
+      this.newItem = { title: '', slug: '', price: 0, category: '', description: '', image: '', isVeg: true, recipeHtml: '', ingredients: [] };
       this.fetchRecipes();
       this.showNotification('Item added successfully', 'success');
     });
   }
 
   editRecipe(recipe: any) {
-    this.editingRecipe = { ...recipe };
+    let html = recipe.recipeHtml || '';
+    if (!html && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
+      html = `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin: 12px 0;">
+        <h4 style="color: #e11d48; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+          👨‍🍳 Chef's Ingredients
+        </h4>
+        <ul style="padding-left: 20px; line-height: 1.8;">
+          ${recipe.ingredients.map((ing: string) => `<li>${ing}</li>`).join('')}
+        </ul>
+      </div><p><br></p>`;
+    }
+    this.editingRecipe = {
+      ...recipe,
+      recipeHtml: html
+    };
     this.showEditRecipeModal = true;
   }
 
   saveRecipeEdit() {
     if(!this.editingRecipe) return;
+    if (this.editingRecipe.recipeHtml) {
+      const matches = this.editingRecipe.recipeHtml.match(/<li[^>]*>(.*?)<\/li>/gi);
+      if (matches && matches.length > 0) {
+        this.editingRecipe.ingredients = matches.map((m: string) => m.replace(/<[^>]+>/g, '').trim()).filter((m: string) => m.length > 0);
+      }
+    }
     this.api.updateRecipe(this.editingRecipe.id || this.editingRecipe._id, this.editingRecipe).subscribe(() => {
       this.showEditRecipeModal = false;
       this.editingRecipe = null;
       this.fetchRecipes();
+      this.showNotification('Item updated successfully', 'success');
     });
   }
 
@@ -1135,6 +1184,51 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.saveSetting('foodybhai_qr', this.qrImageUrl).subscribe(() => {
       if (showNotification) {
         this.showNotification('Settings saved successfully!', 'success');
+      }
+    });
+  }
+
+  saveAppSettings(showNotification = true) {
+    this.api.saveSetting('app_version', this.appVersion.trim() || '1.0.0').subscribe();
+    this.api.saveSetting('app_download_url', this.appDownloadUrl.trim() || '/downloads/foodybhai.apk').subscribe();
+    this.api.saveSetting('app_release_notes', this.appReleaseNotes.trim()).subscribe(() => {
+      if (showNotification) {
+        this.showNotification(`Android App release settings saved! Users will now see v${this.appVersion}`, 'success');
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  onApkFileSelected(event: any) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.apk')) {
+      this.showNotification('Please select a valid .apk file', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('apk', file);
+    if (this.appVersion) formData.append('version', this.appVersion.trim());
+    if (this.appReleaseNotes) formData.append('releaseNotes', this.appReleaseNotes.trim());
+
+    this.isUploadingApk = true;
+    this.uploadedApkFileName = file.name;
+    this.cdr.detectChanges();
+
+    this.api.uploadApk(formData).subscribe({
+      next: (res: any) => {
+        this.isUploadingApk = false;
+        this.appDownloadUrl = res.downloadUrl || '/downloads/foodybhai.apk';
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        this.showNotification(`🎉 ${file.name} (${sizeMb} MB) uploaded & published successfully!`, 'success');
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.isUploadingApk = false;
+        this.showNotification(err.error?.message || 'Failed to upload APK file. Please check size.', 'error');
+        this.cdr.detectChanges();
       }
     });
   }
@@ -1176,7 +1270,13 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   acceptOrder() {
     if (!this.selectedOrderId) return;
-    this.api.updateOrderStatus(this.selectedOrderId, 'preparing', this.prepTimeInput).subscribe(() => {
+    const currentOrderId = this.selectedOrderId;
+    const otherPending = this.orders.filter(o => o.status === 'pending' && o._id !== currentOrderId);
+    if (otherPending.length === 0) {
+      this.manuallySilenced = false;
+      this.stopRinging();
+    }
+    this.api.updateOrderStatus(currentOrderId, 'preparing', this.prepTimeInput).subscribe(() => {
       this.showPrepModal = false;
       this.fetchOrders();
       this.showNotification(`Order accepted & preparing. Customer notified!`, 'success');
@@ -1195,7 +1295,13 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   confirmAdminReject() {
     if (this.adminRejectOrderId && this.adminRejectReason.trim()) {
-      this.api.updateOrderStatus(this.adminRejectOrderId, 'rejected', undefined, undefined, this.adminRejectReason.trim()).subscribe(() => {
+      const currentOrderId = this.adminRejectOrderId;
+      const otherPending = this.orders.filter(o => o.status === 'pending' && o._id !== currentOrderId);
+      if (otherPending.length === 0) {
+        this.manuallySilenced = false;
+        this.stopRinging();
+      }
+      this.api.updateOrderStatus(currentOrderId, 'rejected', undefined, undefined, this.adminRejectReason.trim()).subscribe(() => {
         this.showAdminRejectModal = false;
         this.adminRejectOrderId = null;
         this.fetchOrders();

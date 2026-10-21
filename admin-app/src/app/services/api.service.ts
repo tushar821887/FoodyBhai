@@ -58,6 +58,33 @@ export class ApiService {
     return this.http.put<any>(`${this.apiUrl}/settings/${key}`, { value }, this.getHeaders());
   }
 
+  // Pages / CMS Table
+  getPages() {
+    return this.http.get<any>(`${this.apiUrl}/pages`);
+  }
+
+  getPageBySlug(slug: string) {
+    const s = slug ? encodeURIComponent(slug) : 'home';
+    return this.http.get<any>(`${this.apiUrl}/pages/slug/${s}`);
+  }
+
+  savePages(pages: any[]) {
+    return this.http.put<any>(`${this.apiUrl}/pages/bulk`, pages, this.getHeaders());
+  }
+
+  deletePage(slug: string) {
+    return this.http.delete<any>(`${this.apiUrl}/pages/slug/${encodeURIComponent(slug)}`, this.getHeaders());
+  }
+
+  uploadApk(formData: FormData) {
+    let token = '';
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem(this.tokenKey) || '';
+    }
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.http.post<any>(`${this.apiUrl}/settings/app/upload-apk`, formData, { headers });
+  }
+
   getCurrentUser() {
     if (typeof window !== 'undefined' && window.localStorage) {
       const user = localStorage.getItem('admin_user');
