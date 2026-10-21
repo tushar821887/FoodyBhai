@@ -164,6 +164,32 @@ export class ThemeService {
     const marqEnd = theme.marqueeEnd || gradStart;
     const marqueeGradient = `linear-gradient(90deg, ${marqStart} 0%, ${marqEnd} 50%, ${marqStart} 100%)`;
     root.style.setProperty('--marquee-gradient', marqueeGradient);
+
+    // Also inject/update dynamic style tag to guarantee overrides with highest specificity
+    try {
+      let styleTag = document.getElementById('dynamic-theme-style') as HTMLStyleElement;
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'dynamic-theme-style';
+        document.head.appendChild(styleTag);
+      }
+      styleTag.textContent = `
+        :root {
+          --primary-color: ${theme.primaryColor} !important;
+          --primary-hover: ${theme.primaryHover || theme.primaryColor} !important;
+          --primary-dark: ${theme.primaryDark || theme.primaryColor} !important;
+          --primary-light: ${theme.primaryLight || this.hexToRgba(theme.primaryColor, 0.08)} !important;
+          --primary-border: ${theme.primaryBorder || this.hexToRgba(theme.primaryColor, 0.22)} !important;
+          --primary-glow: ${theme.primaryGlow || this.hexToRgba(theme.primaryColor, 0.28)} !important;
+          --secondary-color: ${theme.secondaryColor || '#241814'} !important;
+          --secondary-light: ${theme.secondaryLight || '#3d2c25'} !important;
+          --primary-gradient: ${gradient} !important;
+          --marquee-gradient: ${marqueeGradient} !important;
+        }
+      `;
+    } catch (e) {
+      console.warn('Failed to inject dynamic theme style tag', e);
+    }
   }
 
   saveTheme(theme: WebsiteTheme): Observable<any> {

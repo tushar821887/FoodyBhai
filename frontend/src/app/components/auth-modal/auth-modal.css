@@ -48,7 +48,7 @@
 }
 
 .close-btn:hover {
-  color: var(--secondary-color);
+  color: var(--primary-color, #1e293b);
 }
 
 .auth-modal-header {
@@ -59,7 +59,7 @@
 .auth-modal-header h2 {
   font-family: var(--font-heading);
   font-size: 1.5rem;
-  color: var(--secondary-color);
+  color: var(--secondary-color, #1e293b);
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -86,7 +86,7 @@
   outline: none;
   border-color: var(--primary-color);
   background: white;
-  box-shadow: 0 0 0 3px rgba(249, 95, 0, 0.15);
+  box-shadow: 0 0 0 3px var(--primary-glow, rgba(0, 0, 0, 0.12));
 }
 
 .form-check {
@@ -129,17 +129,23 @@
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
   margin-top: 0.5rem;
+  box-shadow: 0 4px 12px var(--primary-glow, rgba(0, 0, 0, 0.15));
 }
 
 .submit-btn:hover {
-  background-color: var(--secondary-color);
+  background-color: var(--primary-hover, var(--primary-color));
+  box-shadow: 0 6px 16px var(--primary-glow, rgba(0, 0, 0, 0.2));
+  transform: translateY(-1px);
 }
 
 .submit-btn:disabled {
-  background-color: rgba(249, 95, 0, 0.45);
-  cursor: not-allowed;
+  background-color: var(--primary-color) !important;
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .auth-modal-footer {
@@ -156,7 +162,7 @@
 }
 
 .toggle-link:hover {
-  color: var(--secondary-color);
+  color: var(--primary-hover, var(--primary-color));
   text-decoration: underline;
 }
 

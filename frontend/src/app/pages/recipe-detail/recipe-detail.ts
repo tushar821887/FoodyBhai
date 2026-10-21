@@ -53,6 +53,10 @@ export class RecipeDetail implements OnInit {
 
   addToCart() {
     if (this.recipe) {
+      if (this.recipe.inStock === false) {
+        alert('This item is currently out of stock.');
+        return;
+      }
       this.cartService.addToCart(this.recipe);
     }
   }

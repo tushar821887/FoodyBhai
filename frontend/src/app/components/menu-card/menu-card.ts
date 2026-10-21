@@ -22,10 +22,12 @@ export class MenuCard implements OnInit {
   }
 
   addToCart() {
+    if (this.item.inStock === false) return;
     this.cartService.addToCart(this.item);
   }
   
   increaseQuantity() {
+    if (this.item.inStock === false) return;
     this.cartService.addToCart(this.item);
   }
 

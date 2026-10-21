@@ -1,6 +1,9 @@
-<div class="menu-card ">
-  <a [routerLink]="['/recipe', item.slug]" style="text-decoration: none; color: inherit; display: block;" class="card-img-wrapper">
+<div class="menu-card" [class.is-out-of-stock]="item.inStock === false">
+  <a [routerLink]="['/recipe', item.slug]" style="text-decoration: none; color: inherit; display: block;" class="card-img-wrapper" [class.out-of-stock]="item.inStock === false">
     <img [src]="item.image" [alt]="item.imageAlt || item.title" class="card-img">
+    <div class="out-of-stock-overlay" *ngIf="item.inStock === false">
+      <i class="fa-solid fa-ban" style="margin-right: 4px;"></i> Out of Stock
+    </div>
     <div class="veg-badge" [class.non-veg]="!item.isVeg">
       <div class="dot"></div>
     </div>
@@ -19,7 +22,11 @@
     <div class="card-footer">
       <span class="item-category">{{item.category}}</span>
       
-      @if (quantity$ | async; as qty) {
+      @if (item.inStock === false) {
+        <span class="out-of-stock-badge">
+          <i class="fa-solid fa-circle-exclamation"></i> Out of Stock
+        </span>
+      } @else if (quantity$ | async; as qty) {
         <div class="inline-quantity-controls" style="display: flex; align-items: center; background: var(--background-light); border-radius: 4px; padding: 2px;">
           <button (click)="decreaseQuantity(qty)" style="background: white; border: 1px solid #ddd; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; color: var(--secondary-color); display: flex; align-items: center; justify-content: center;">
             <i class="fa-solid fa-minus"></i>

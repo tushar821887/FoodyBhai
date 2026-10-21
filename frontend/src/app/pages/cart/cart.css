@@ -577,7 +577,7 @@
 .step.active .step-icon {
   background: #fff0f1;
   color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(249, 95, 0, 0.15);
+  box-shadow: 0 0 0 4px var(--primary-glow, rgba(0,0,0,0.12));
 }
 
 .step.completed {
@@ -749,7 +749,7 @@
 .modern-input:focus {
   background: #fff;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 4px rgba(249, 95, 0, 0.15);
+  box-shadow: 0 0 0 4px var(--primary-glow, rgba(0,0,0,0.12));
   outline: none;
 }
 
@@ -833,7 +833,7 @@
 
 .order-type-toggle input[type="radio"]:checked + span {
   border-color: var(--primary-color);
-  background: rgba(249, 95, 0, 0.06);
+  background: var(--primary-light, rgba(0,0,0,0.05));
   color: var(--primary-color);
 }
 
@@ -1217,7 +1217,7 @@
   border-color: var(--primary-color);
   background: #fff8f8;
   transform: translateY(-1px);
-  box-shadow: 0 5px 14px rgba(249, 95, 0, 0.15);
+  box-shadow: 0 5px 14px var(--primary-glow, rgba(0,0,0,0.12));
 }
 .btn-upi-selector-trigger:active {
   transform: translateY(0);
@@ -1468,7 +1468,7 @@
 .upi-app-card.selected-app {
   border-color: var(--primary-color);
   background: #fff5f5;
-  box-shadow: 0 0 0 2px rgba(249, 95, 0, 0.2);
+  box-shadow: 0 0 0 2px var(--primary-glow, rgba(0,0,0,0.2));
 }
 
 .upi-app-card-icon {

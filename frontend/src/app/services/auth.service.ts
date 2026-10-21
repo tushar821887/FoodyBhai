@@ -14,6 +14,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  role?: string;
+  needsPasswordSet?: boolean;
+  isGuestConverted?: boolean;
   addresses?: Address[];
 }
 
@@ -98,6 +102,14 @@ export class AuthService {
           }
         }),
         catchError((error) => {
+          if (error.error?.guestNeedsPassword) {
+            const errObj = new Error(error.error.message || 'Guest account needs password');
+            (errObj as any).guestNeedsPassword = true;
+            (errObj as any).email = error.error.email;
+            (errObj as any).phone = error.error.phone;
+            (errObj as any).name = error.error.name;
+            return throwError(() => errObj);
+          }
           let message = error.error?.message || 'Login failed. Please try again.';
           if (Array.isArray(message)) {
             message = message.join(' | ');
@@ -105,6 +117,69 @@ export class AuthService {
           return throwError(() => new Error(message));
         }),
       );
+  }
+
+  guestSetPassword(identifier: string, password: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/auth/guest-set-password`, { identifier, password })
+      .pipe(
+        tap((response) => {
+          if (response.success && response.accessToken) {
+            this.setAuth(response.accessToken, response.user);
+          }
+        }),
+        catchError((error) => {
+          let message = error.error?.message || 'Failed to set password. Please try again.';
+          if (Array.isArray(message)) {
+            message = message.join(' | ');
+          }
+          return throwError(() => new Error(message));
+        })
+      );
+  }
+
+  sendForgotPasswordOtp(identifier: string): Observable<{ success: boolean; message: string; maskedEmail?: string; maskedPhone?: string }> {
+    return this.http.post<{ success: boolean; message: string; maskedEmail?: string; maskedPhone?: string }>(
+      `${this.API_URL}/auth/forgot-password/send-otp`,
+      { identifier }
+    ).pipe(
+      catchError((error) => {
+        let message = error.error?.message || 'Failed to send verification OTP. Please try again.';
+        if (Array.isArray(message)) message = message.join(' | ');
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  verifyForgotPasswordOtp(identifier: string, otp: string): Observable<{ success: boolean; message: string; resetToken: string }> {
+    return this.http.post<{ success: boolean; message: string; resetToken: string }>(
+      `${this.API_URL}/auth/forgot-password/verify-otp`,
+      { identifier, otp }
+    ).pipe(
+      catchError((error) => {
+        let message = error.error?.message || 'Invalid or expired OTP code. Please check and try again.';
+        if (Array.isArray(message)) message = message.join(' | ');
+        return throwError(() => new Error(message));
+      })
+    );
+  }
+
+  resetPasswordWithToken(identifier: string, resetToken: string, newPassword: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(
+      `${this.API_URL}/auth/forgot-password/reset`,
+      { identifier, resetToken, newPassword }
+    ).pipe(
+      tap((response) => {
+        if (response.success && response.accessToken) {
+          this.setAuth(response.accessToken, response.user);
+        }
+      }),
+      catchError((error) => {
+        let message = error.error?.message || 'Failed to update password. Please try again.';
+        if (Array.isArray(message)) message = message.join(' | ');
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   logout(): void {
@@ -124,13 +199,30 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  private setAuth(token: string, user: User): void {
+  public setAuth(token: string, user: User): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
     this.currentUserSubject.next(user);
     this.isAuthenticatedSubject.next(true);
+  }
+
+  public setPassword(password: string): Observable<any> {
+    return this.http.put<any>(`${this.API_URL}/users/me/set-password`, { password }).pipe(
+      tap((updatedUser) => {
+        const current = this.getCurrentUser();
+        const merged: User = {
+          ...(current || ({} as User)),
+          ...(updatedUser || {}),
+          needsPasswordSet: false,
+        };
+        this.currentUserSubject.next(merged);
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.setItem(this.USER_KEY, JSON.stringify(merged));
+        }
+      })
+    );
   }
 
   private clearAuth(): void {

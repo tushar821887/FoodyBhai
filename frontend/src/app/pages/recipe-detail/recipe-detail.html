@@ -22,6 +22,9 @@
           <div class="diet-dot"></div>
           <span>{{recipe.isVeg ? 'Pure Veg' : 'Non-Veg'}}</span>
         </div>
+        <div *ngIf="recipe.inStock === false" class="detail-out-of-stock-badge">
+          <i class="fa-solid fa-ban"></i> Out of Stock
+        </div>
       </div>
 
       <div class="recipe-content-grid">
@@ -131,8 +134,13 @@
                 <span class="recipe-price">₹{{recipe.price}}</span>
               </li>
             </ul>
-            <button class="btn btn-primary mt-4 w-100 recipe-cart-btn" (click)="addToCart()">
-              <i class="fa-solid fa-cart-plus"></i> Add to Cart
+            <button 
+              class="btn btn-primary mt-4 w-100 recipe-cart-btn" 
+              [class.out-of-stock-btn]="recipe.inStock === false"
+              [disabled]="recipe.inStock === false"
+              (click)="addToCart()">
+              <i class="fa-solid" [class.fa-cart-plus]="recipe.inStock !== false" [class.fa-ban]="recipe.inStock === false"></i>
+              {{ recipe.inStock !== false ? 'Add to Cart' : 'Currently Out of Stock' }}
             </button>
           </div>
           
@@ -164,9 +172,13 @@
         <span class="mobile-bar-label">Price</span>
         <span class="mobile-bar-price">₹{{recipe.price}}</span>
       </div>
-      <button class="mobile-bar-add-btn" (click)="addToCart()">
-        <i class="fa-solid fa-cart-plus"></i>
-        <span>Add to Cart</span>
+      <button 
+        class="mobile-bar-add-btn" 
+        [class.out-of-stock-btn]="recipe.inStock === false"
+        [disabled]="recipe.inStock === false"
+        (click)="addToCart()">
+        <i class="fa-solid" [class.fa-cart-plus]="recipe.inStock !== false" [class.fa-ban]="recipe.inStock === false"></i>
+        <span>{{ recipe.inStock !== false ? 'Add to Cart' : 'Out of Stock' }}</span>
       </button>
     </div>
   </div>

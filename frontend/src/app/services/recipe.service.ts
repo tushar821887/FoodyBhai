@@ -30,6 +30,7 @@ export interface Recipe {
   isVeg: boolean;
   price?: number;
   recipeHtml?: string;
+  inStock?: boolean;
 }
 
 export interface Category {
@@ -140,6 +141,10 @@ export class RecipeService {
    */
   getCategories(): Observable<{name: string, slug: string, description: string, icon: string, image?: string}[]> {
     const iconMap: Record<string, string> = {
+      'navratri special': 'fa-solid fa-om',
+      'navratri': 'fa-solid fa-om',
+      'vrat special': 'fa-solid fa-om',
+      'vrat': 'fa-solid fa-om',
       'popcorn': '🍿',
       'main course': 'fa-solid fa-bowl-food',
       'puri & sabzi': 'fa-solid fa-plate-wheat',
@@ -180,6 +185,7 @@ export class RecipeService {
     const getCompatibleIcon = (name: string): string => {
       const lower = name.toLowerCase().trim();
       if (iconMap[lower]) return iconMap[lower];
+      if (lower.includes('navratri') || lower.includes('vrat')) return 'fa-solid fa-om';
       if (lower.includes('popcorn') || lower.includes('corn')) return '🍿';
       if (lower.includes('drink') || lower.includes('beverage') || lower.includes('shake') || lower.includes('juice')) return 'fa-solid fa-glass-water';
       if (lower.includes('chai') || lower.includes('tea') || lower.includes('coffee')) return 'fa-solid fa-mug-hot';

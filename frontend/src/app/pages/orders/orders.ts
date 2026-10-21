@@ -5,13 +5,13 @@ import { CommonModule } from '@angular/common';
 import { OrderService, Order } from '../../services/order.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './orders.html',
   styleUrl: './orders.css'
 })
@@ -84,11 +84,24 @@ export class OrdersComponent implements OnInit, OnDestroy {
   reviewText = '';
   showNotificationPermissionPrompt = false;
 
+  // Set Password Modal for guest orders
+  showSetPasswordModal = false;
+  newPassword = '';
+  confirmPassword = '';
+  passwordError = '';
+  isSettingPassword = false;
+
+  // Guest lookup / tracking by phone or order id
+  guestTrackInput = '';
+  isTrackingGuest = false;
+  guestTrackError = '';
+
   constructor(
     private orderService: OrderService,
     public authService: AuthService,
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private route: ActivatedRoute,
     private cartService: CartService,
     private sanitizer: DomSanitizer
   ) {}
@@ -170,48 +183,66 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.checkNotificationPermission();
     if (this.authService.isLoggedIn()) {
       this.loadOrders();
-      this.timerInterval = setInterval(() => {
-        this.cdr.detectChanges();
-        // Poll for updates every 10 seconds
-        if (new Date().getSeconds() % 10 === 0) {
-          this.orderService.getOrderHistory().subscribe({
-            next: (data) => {
-              if (data) {
-                // Check if any order changed status
-                data.forEach((newOrder: any) => {
-                  const oldOrder = this.orders.find(o => (o._id || o.id) === (newOrder._id || newOrder.id));
-                  if (oldOrder && oldOrder.status !== newOrder.status) {
-                    let msg = '';
-                    if (newOrder.status === 'preparing') msg = `Your order is accepted & preparing! Ready in ${newOrder.preparationTime || 15} mins.`;
-                    else if (newOrder.status === 'ready') msg = `Your order is ready!`;
-                    else if (newOrder.status === 'out_for_delivery') msg = `Your order is out for delivery!`;
-                    else if (newOrder.status === 'delivered') msg = `Your order has been delivered!`;
-                    else if (newOrder.status === 'rejected') msg = `Your order was rejected/cancelled.`;
-                    
-                    if (msg) {
-                      this.showNotification(msg, newOrder.status === 'rejected' ? 'error' : 'success');
-                      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                        new Notification('FoodyBhai Order Update', { body: msg });
-                      }
-                    }
-                  }
-                });
-                this.orders = data;
-                // Update selected order in modal if open
-                if (this.selectedOrderDetails) {
-                  const updated = data.find((o: any) => (o._id || o.id) === (this.selectedOrderDetails._id || this.selectedOrderDetails.id));
-                  if (updated) this.selectedOrderDetails = updated;
-                }
-              }
-              this.cdr.detectChanges();
-            }
-          });
-        }
-      }, 1000);
+      this.startPolling();
     } else {
       this.isLoading = false;
-      this.errorMessage = 'Please login to view your order history.';
+      this.errorMessage = '';
     }
+
+    // Auto-track if query param ?track= is provided
+    this.route.queryParams.subscribe(params => {
+      const trackId = params['track'];
+      if (trackId) {
+        this.guestTrackInput = trackId;
+        this.trackGuestOrder();
+      }
+    });
+  }
+
+  startPolling(): void {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => {
+      this.cdr.detectChanges();
+      if (new Date().getSeconds() % 10 === 0) {
+        if (this.authService.isLoggedIn()) {
+          this.orderService.getOrderHistory().subscribe({
+            next: (data) => this.handleOrderUpdates(data)
+          });
+        } else if (this.guestTrackInput && this.orders.length > 0) {
+          this.orderService.trackOrder(this.guestTrackInput.trim()).subscribe({
+            next: (data) => this.handleOrderUpdates(data)
+          });
+        }
+      }
+    }, 1000);
+  }
+
+  private handleOrderUpdates(data: any[]): void {
+    if (!data) return;
+    data.forEach((newOrder: any) => {
+      const oldOrder = this.orders.find(o => (o._id || o.id) === (newOrder._id || newOrder.id));
+      if (oldOrder && oldOrder.status !== newOrder.status) {
+        let msg = '';
+        if (newOrder.status === 'preparing') msg = `Your order is accepted & preparing! Ready in ${newOrder.preparationTime || 15} mins.`;
+        else if (newOrder.status === 'ready') msg = `Your order is ready!`;
+        else if (newOrder.status === 'out_for_delivery') msg = `Your order is out for delivery!`;
+        else if (newOrder.status === 'delivered') msg = `Your order has been delivered!`;
+        else if (newOrder.status === 'rejected') msg = `Your order was rejected/cancelled.`;
+        
+        if (msg) {
+          this.showNotification(msg, newOrder.status === 'rejected' ? 'error' : 'success');
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('FoodyBhai Order Update', { body: msg });
+          }
+        }
+      }
+    });
+    this.orders = data;
+    if (this.selectedOrderDetails) {
+      const updated = data.find((o: any) => (o._id || o.id) === (this.selectedOrderDetails._id || this.selectedOrderDetails.id));
+      if (updated) this.selectedOrderDetails = updated;
+    }
+    this.cdr.detectChanges();
   }
 
   ngOnDestroy(): void {
@@ -231,7 +262,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return `${minutes}m ${seconds}s`;
   }
 
-  
   downloadInvoice(orderId: string) {
     const url = `${environment.apiUrl}/orders/${orderId}/invoice`;
     window.open(url, '_blank');
@@ -266,13 +296,80 @@ export class OrdersComponent implements OnInit, OnDestroy {
     });
   }
 
+  trackGuestOrder() {
+    if (!this.guestTrackInput.trim()) {
+      this.guestTrackError = 'Please enter a Phone Number or Order ID.';
+      return;
+    }
+    this.guestTrackError = '';
+    this.isTrackingGuest = true;
+    this.orderService.trackOrder(this.guestTrackInput.trim()).subscribe({
+      next: (orders) => {
+        this.isTrackingGuest = false;
+        this.isLoading = false;
+        if (orders && orders.length > 0) {
+          this.orders = orders;
+          this.errorMessage = '';
+          this.showNotification(`Found ${orders.length} order(s)!`, 'success');
+          this.startPolling();
+        } else {
+          this.guestTrackError = 'No orders found matching this Phone Number, Email, or Order ID.';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isTrackingGuest = false;
+        this.guestTrackError = 'Could not find order. Please verify your details and try again.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  openSetPasswordModal() {
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.passwordError = '';
+    this.showSetPasswordModal = true;
+  }
+
+  closeSetPasswordModal() {
+    this.showSetPasswordModal = false;
+  }
+
+  savePassword() {
+    this.passwordError = '';
+    if (!this.newPassword || this.newPassword.length < 6) {
+      this.passwordError = 'Password must be at least 6 characters long.';
+      return;
+    }
+    if (this.newPassword !== this.confirmPassword) {
+      this.passwordError = 'Passwords do not match.';
+      return;
+    }
+
+    this.isSettingPassword = true;
+    this.authService.setPassword(this.newPassword).subscribe({
+      next: () => {
+        this.isSettingPassword = false;
+        this.showSetPasswordModal = false;
+        this.showNotification('🎉 Password set successfully! You can now log in anytime.', 'success');
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.isSettingPassword = false;
+        this.passwordError = err?.error?.message || 'Failed to set password. Please try again.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   cancelOrder(order: any) {
     if (!this.canCancel(order)) {
       this.showNotification('Cannot cancel order after 1 minute. Please contact support.', 'error');
       return;
     }
     const reason = prompt('Please enter a reason for cancelling this order (optional):');
-    if (reason === null) return; // User clicked Cancel in prompt
+    if (reason === null) return;
     
     const orderId = order._id || order.id;
     this.orderService.cancelOrder(orderId, reason).subscribe({
@@ -281,6 +378,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
         if (idx !== -1) {
           this.orders[idx] = updatedOrder;
         }
+        this.cdr.detectChanges();
         if (updatedOrder.cancelRequest?.status === 'pending') {
           this.showNotification('Cancellation requested. Waiting for admin approval.', 'info');
         } else {
@@ -330,14 +428,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.rateOrder(id!, this.ratingValue, this.reviewText).subscribe({
       next: (updatedOrder: any) => {
         this.showRateModal = false;
-        // Update locally
         const idx = this.orders.findIndex((o: any) => o._id === updatedOrder._id || o.id === updatedOrder._id);
         if (idx !== -1) {
           this.orders[idx] = updatedOrder;
         }
+        this.cdr.detectChanges();
       },
       error: (err: any) => console.error(err)
     });
   }
 }
-

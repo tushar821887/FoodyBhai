@@ -4,7 +4,7 @@
   left: 0;
   width: 100%;
   background: #fffaf6;
-  border-bottom: 1px solid rgba(249, 95, 0, 0.08);
+  border-bottom: 1px solid var(--primary-border, rgba(0,0,0,0.08));
   z-index: 1000;
   transition: all var(--transition-normal);
 }

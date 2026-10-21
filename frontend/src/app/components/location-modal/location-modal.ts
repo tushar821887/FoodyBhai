@@ -77,6 +77,7 @@ export class LocationModalComponent implements OnInit, OnDestroy {
         isApi: true
       }));
       this.searchResults = apiResults;
+      this.cdr.detectChanges();
     });
   }
 

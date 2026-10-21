@@ -168,6 +168,10 @@ export class CartService {
       alert("We are currently offline and not accepting orders.");
       return;
     }
+    if (recipe.inStock === false) {
+      alert(`"${recipe.title}" is currently out of stock.`);
+      return;
+    }
     const currentItems = [...this.itemsSubject.value];
     const existingIndex = currentItems.findIndex(i => (i.recipe.id || i.recipe._id) == (recipe.id || recipe._id));
     
@@ -206,12 +210,20 @@ export class CartService {
     const currentItems = [...this.itemsSubject.value];
     const existingIndex = currentItems.findIndex(i => i && i.recipe && (i.recipe.id || i.recipe._id) == recipeId);
     if (existingIndex >= 0) {
+      if (quantity > currentItems[existingIndex].quantity && currentItems[existingIndex].recipe?.inStock === false) {
+        alert(`"${currentItems[existingIndex].recipe.title}" is currently out of stock.`);
+        return;
+      }
       currentItems[existingIndex] = {
         ...currentItems[existingIndex],
         quantity
       };
       this.syncCart(currentItems);
     }
+  }
+
+  getItems(): CartItem[] {
+    return this.itemsSubject.value;
   }
 
   getCurrentTotal(): number {

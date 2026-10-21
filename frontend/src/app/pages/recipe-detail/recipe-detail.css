@@ -700,3 +700,33 @@
     transform: scale(0.96);
   }
 }
+
+/* Out of Stock styling */
+.detail-out-of-stock-badge {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(220, 38, 38, 0.95);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  backdrop-filter: blur(4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recipe-cart-btn.out-of-stock-btn,
+.mobile-bar-add-btn.out-of-stock-btn {
+  background: #cbd5e1 !important;
+  color: #64748b !important;
+  border-color: #94a3b8 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}

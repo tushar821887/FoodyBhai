@@ -8,6 +8,7 @@ export interface DeliveryDetails {
   name: string;
   phone: string;
   address: string;
+  email?: string;
 }
 
 export interface Order {
@@ -29,6 +30,8 @@ export interface Order {
   review?: string;
   paymentMethod?: string;
   refundStatus?: string;
+  preparationTime?: number;
+  guestAuth?: any;
   cancelRequest?: {
     requested: boolean;
     reason: string;
@@ -54,6 +57,10 @@ export class OrderService {
 
   getOrderHistory(): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.API_URL}/orders`);
+  }
+
+  trackOrder(identifier: string): Observable<Order[]> {
+    return this.http.get<Order[]>(`${this.API_URL}/orders/track/${encodeURIComponent(identifier)}`);
   }
 
   rateOrder(id: string, rating: number, review: string): Observable<Order> {

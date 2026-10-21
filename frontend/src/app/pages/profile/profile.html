@@ -77,6 +77,26 @@
           </div>
         </div>
 
+        <!-- SET PASSWORD PROMPT IF GUEST USER -->
+        <div class="modern-card shadow-sm" *ngIf="user?.needsPasswordSet" style="border-left: 4px solid #3b82f6; background: #eff6ff; margin-bottom: 20px;">
+          <div class="card-header" style="background: transparent;">
+            <h3 style="color: #1e40af;"><i class="fa-solid fa-key"></i> Set Your Account Password</h3>
+          </div>
+          <div class="card-body">
+            <p style="color: #1e3a8a; font-size: 13.5px; margin-bottom: 12px;">You placed an order as a guest. Create a password so you can sign in anytime from any device.</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <input type="password" [(ngModel)]="profilePassword" placeholder="Enter new password (min 6 chars)" style="flex: 1; min-width: 180px; padding: 10px 14px; border: 1.5px solid #93c5fd; border-radius: 8px; font-size: 13.5px; outline: none; background: white;">
+              <button (click)="saveProfilePassword()" [disabled]="isSavingPassword" style="background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                <i *ngIf="isSavingPassword" class="fa-solid fa-spinner fa-spin"></i>
+                Save Password
+              </button>
+            </div>
+            <div *ngIf="passwordMsg" style="margin-top: 10px; font-size: 13px; font-weight: 500;" [style.color]="passwordMsgIsError ? '#dc2626' : '#16a34a'">
+              {{ passwordMsg }}
+            </div>
+          </div>
+        </div>
+
         <!-- VIEW DETAILS -->
         <div class="modern-card shadow-sm" *ngIf="!isEditing">
           <div class="card-header">

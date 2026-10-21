@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -28,12 +28,17 @@ export class Header implements OnInit {
     public authService: AuthService,
     public uiService: UiService,
     public appUpdateService: AppUpdateService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit() {
     this.uiService.authModalOpen$.subscribe(isOpen => {
-      this.isAuthModalOpen = isOpen;
+      this.ngZone.run(() => {
+        this.isAuthModalOpen = isOpen;
+        this.cdr.detectChanges();
+      });
     });
 
     this.router.events.pipe(
@@ -91,11 +96,15 @@ export class Header implements OnInit {
   }
   
   openAuthModal() {
+    this.isMenuOpen = false;
+    this.closeAccountDropdown();
     this.uiService.openAuthModal();
+    this.cdr.detectChanges();
   }
 
   closeAuthModal() {
     this.uiService.closeAuthModal();
+    this.cdr.detectChanges();
   }
   
   toggleAccountDropdown(event?: Event) {

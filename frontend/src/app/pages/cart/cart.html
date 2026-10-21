@@ -46,7 +46,10 @@
                   <div class="cart-item-row">
                     <img [src]="item.recipe.image || '/assets/images/placeholder.jpg'" alt="{{item.recipe.title}}" class="cart-item-img">
                     <div class="cart-item-info">
-                      <h5 class="cart-item-title">{{item.recipe.title}}</h5>
+                      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <h5 class="cart-item-title">{{item.recipe.title}}</h5>
+                        <span *ngIf="item.recipe?.inStock === false" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; letter-spacing: 0.5px;">OUT OF STOCK</span>
+                      </div>
                       <span class="cart-item-price">₹{{item.recipe.price}}</span>
                     </div>
                     <div class="cart-item-controls">
@@ -95,6 +98,13 @@
                   </div>
                 </div>
 
+                @if (!authService.isLoggedIn()) {
+                  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #166534;">
+                    <i class="fa-solid fa-bolt" style="color: #16a34a; font-size: 16px;"></i>
+                    <span>Guest Checkout active! Your order will be live tracked and linked to your phone number.</span>
+                  </div>
+                }
+
                 <!-- Name & Phone -->
                 <div class="form-row">
                   <div class="form-group mb-3 w-100">
@@ -105,6 +115,10 @@
                     <label>Phone Number *</label>
                     <input type="tel" [(ngModel)]="customerPhone" placeholder="+91 98765 43210" class="form-control">
                   </div>
+                </div>
+                <div class="form-group mb-4 w-100">
+                  <label>Email Address <small style="color: #64748b; font-weight: normal;">(Optional - for invoice & updates)</small></label>
+                  <input type="email" [(ngModel)]="customerEmail" placeholder="e.g. rahul@example.com" class="form-control">
                 </div>
 
                 <!-- DELIVERY: show address picker -->

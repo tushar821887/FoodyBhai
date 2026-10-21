@@ -92,7 +92,7 @@
 
 .search-box .form-control:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(249, 95, 0, 0.15);
+  box-shadow: 0 0 0 3px var(--primary-glow, rgba(0,0,0,0.12));
   outline: none;
 }
 

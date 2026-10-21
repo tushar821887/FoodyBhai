@@ -29,6 +29,7 @@ export interface UpiAppInfo {
 export class CartComponent implements OnDestroy {
   customerName = '';
   customerPhone = '';
+  customerEmail = '';
   orderType: 'delivery' | 'pickup' = 'delivery';
 
   // Address properties
@@ -236,7 +237,8 @@ export class CartComponent implements OnDestroy {
     this.authSub = this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.customerName = user.name;
-        this.customerPhone = user.email;
+        this.customerPhone = user.phone || '';
+        this.customerEmail = user.email || '';
         this.savedAddresses = user.addresses || [];
         if (this.savedAddresses.length > 0 && !this.selectedAddressId) {
           this.selectedAddressId = this.savedAddresses[0].id || null;
@@ -246,6 +248,7 @@ export class CartComponent implements OnDestroy {
       } else {
         this.customerName = '';
         this.customerPhone = '';
+        this.customerEmail = '';
         this.savedAddresses = [];
         this.selectedAddressId = null;
       }
@@ -322,6 +325,13 @@ export class CartComponent implements OnDestroy {
   currentStep = 1;
 
   setStep(step: number) {
+    if (step > 1) {
+      const outOfStockItem = this.cartService.getItems().find(i => i.recipe?.inStock === false);
+      if (outOfStockItem) {
+        this.showToast(`"${outOfStockItem.recipe.title}" is currently out of stock. Please remove it from your cart to proceed.`, 'error');
+        return;
+      }
+    }
     if (step === 2 && this.cartService.getCurrentTotal() < 100) {
       this.showToast('Minimum order of ₹100 required.', 'error');
       return;
@@ -465,8 +475,14 @@ export class CartComponent implements OnDestroy {
     this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
 
     if (this.cartService.isOffline$.value) {
-      
       this.showToast("We are currently offline and not accepting orders.", 'error');
+      return;
+    }
+
+    const outOfStock = items.find(i => i.recipe?.inStock === false);
+    if (outOfStock) {
+      this.isPlacingOrder = false;
+      this.showToast(`"${outOfStock.recipe.title}" is out of stock. Please remove it from your cart.`, 'error');
       return;
     }
 
@@ -482,16 +498,22 @@ export class CartComponent implements OnDestroy {
       deliveryDetails: {
         name: this.customerName,
         phone: this.customerPhone,
-        address: finalAddress
+        address: finalAddress,
+        email: this.customerEmail || undefined
       }
     }).subscribe({
-      next: () => {
+      next: (orderRes: any) => {
+        if (orderRes?.guestAuth?.accessToken && orderRes?.guestAuth?.user) {
+          this.authService.setAuth(orderRes.guestAuth.accessToken, orderRes.guestAuth.user);
+        }
         this.isPlacingOrder = false;
         this.showPaymentModal = false;
         this.cartService.clearCart();
         this.deliveryAddress = '';
         this.showToast('🎉 Order placed successfully! We\'ll start preparing your food.', 'success');
-        setTimeout(() => this.router.navigate(['/orders']), 2000);
+        const trackId = orderRes?._id || orderRes?.id;
+        const targetUrl = trackId ? `/orders?track=${trackId}` : '/orders';
+        setTimeout(() => this.router.navigateByUrl(targetUrl), 1500);
       },
       error: (err) => {
         if (err.error && err.error.message && err.error.message.includes('offline')) {

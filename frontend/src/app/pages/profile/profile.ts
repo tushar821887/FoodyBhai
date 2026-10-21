@@ -33,6 +33,12 @@ export class Profile implements OnInit {
 
   totalSpent = 0;
 
+  // Set Password for Guest user
+  profilePassword = '';
+  isSavingPassword = false;
+  passwordMsg = '';
+  passwordMsgIsError = false;
+
   constructor(
     private authService: AuthService,
     private orderService: OrderService,
@@ -131,6 +137,32 @@ export class Profile implements OnInit {
       error: () => {
         this.message = 'Failed to update profile. Please try again.';
         this.isError = true;
+      }
+    });
+  }
+
+  saveProfilePassword() {
+    if (!this.profilePassword || this.profilePassword.length < 6) {
+      this.passwordMsg = 'Password must be at least 6 characters.';
+      this.passwordMsgIsError = true;
+      return;
+    }
+    this.isSavingPassword = true;
+    this.authService.setPassword(this.profilePassword).subscribe({
+      next: () => {
+        this.isSavingPassword = false;
+        this.passwordMsg = 'Password set successfully!';
+        this.passwordMsgIsError = false;
+        if (this.user) this.user.needsPasswordSet = false;
+        this.profilePassword = '';
+        this.cdr.detectChanges();
+        setTimeout(() => this.passwordMsg = '', 4000);
+      },
+      error: (err) => {
+        this.isSavingPassword = false;
+        this.passwordMsg = err?.error?.message || 'Failed to set password.';
+        this.passwordMsgIsError = true;
+        this.cdr.detectChanges();
       }
     });
   }
