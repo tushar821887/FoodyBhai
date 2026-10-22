@@ -15,49 +15,49 @@
       <button class="sidebar-close-btn" (click)="closeMobileMenu()" aria-label="Close menu">✕</button>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
+      <a class="nav-item" [class.active]="currentView === 'dashboard'" [routerLink]="['/dashboard']" (click)="setView('dashboard')">
         <i class="icon">📊</i>
         <span>Dashboard</span>
       </a>
-      <a class="nav-item" [class.active]="currentView === 'history'" (click)="setView('history')">
+      <a class="nav-item" [class.active]="currentView === 'history'" [routerLink]="['/history']" (click)="setView('history')">
         <i class="icon">📜</i>
         <span>Order History</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'payments'" (click)="setView('payments')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'payments'" [routerLink]="['/payments']" (click)="setView('payments')">
         <i class="icon">💳</i>
         <span>Payments</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'agents'" (click)="setView('agents')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'agents'" [routerLink]="['/agents']" (click)="setView('agents')">
         <i class="icon">🛵</i>
         <span>Delivery Agents</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'menu'" [routerLink]="['/menu']" (click)="setView('menu')">
         <i class="icon">🍽️</i>
         <span>Menu</span>
       </a>
       
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'users'" (click)="setView('users')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'users'" [routerLink]="['/users']" (click)="setView('users')">
         <i class="icon">👥</i>
         <span>Users</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'contacts'" (click)="setView('contacts')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'contacts'" [routerLink]="['/contacts']" (click)="setView('contacts')">
         <i class="icon">💬</i>
         <span>Complaints/Contacts</span>
       </a>
-  <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cancel-requests'" (click)="setView('cancel-requests')" style="position: relative;">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cancel-requests'" [routerLink]="['/cancel-requests']" (click)="setView('cancel-requests')" style="position: relative;">
         <i class="icon">🔄</i>
         <span>Refund & Requests</span>
         <span *ngIf="totalPendingRequestsCount > 0" style="background: #ef4444; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; margin-left: auto;">{{ totalPendingRequestsCount }}</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'settings'" (click)="setView('settings')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'settings'" [routerLink]="['/settings']" (click)="setView('settings')">
         <i class="icon">⚙️</i>
         <span>Settings</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'theme'" (click)="setView('theme')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'theme'" [routerLink]="['/theme']" (click)="setView('theme')">
         <i class="icon">🎨</i>
         <span>Website Theme</span>
       </a>
-      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cms'" (click)="setView('cms')">
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'cms'" [routerLink]="['/cms']" (click)="setView('cms')">
         <i class="icon">🧩</i>
         <span>Page & Section CMS</span>
       </a>
@@ -1286,14 +1286,14 @@
  
     <!-- THEME MANAGER VIEW -->
     <ng-container *ngIf="currentView === 'theme'">
-      <div class="settings-container animate-fade-in" style="max-width: 1400px; margin: 0 auto; padding: 10px 15px;">
+      <div class="studio-wrapper animate-fade-in">
         <app-theme-manager></app-theme-manager>
       </div>
     </ng-container>
 
     <!-- CMS PAGE BUILDER VIEW -->
     <ng-container *ngIf="currentView === 'cms'">
-      <div class="settings-container animate-fade-in" style="max-width: 1500px; margin: 0 auto; padding: 10px 15px;">
+      <div class="studio-wrapper animate-fade-in">
         <app-page-builder></app-page-builder>
       </div>
     </ng-container>
@@ -1485,19 +1485,19 @@
 
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav">
-      <a class="mobile-nav-item" [class.active]="currentView === 'dashboard'" (click)="setView('dashboard')">
+      <a class="mobile-nav-item" [class.active]="currentView === 'dashboard'" [routerLink]="['/dashboard']" (click)="setView('dashboard')">
         <span class="mobile-nav-icon">📊</span>
         <span class="mobile-nav-label">Orders</span>
       </a>
-      <a class="mobile-nav-item" [class.active]="currentView === 'history'" (click)="setView('history')">
+      <a class="mobile-nav-item" [class.active]="currentView === 'history'" [routerLink]="['/history']" (click)="setView('history')">
         <span class="mobile-nav-icon">📜</span>
         <span class="mobile-nav-label">History</span>
       </a>
-      <a *ngIf="!isAgent" class="mobile-nav-item" [class.active]="currentView === 'payments'" (click)="setView('payments')">
+      <a *ngIf="!isAgent" class="mobile-nav-item" [class.active]="currentView === 'payments'" [routerLink]="['/payments']" (click)="setView('payments')">
         <span class="mobile-nav-icon">💳</span>
         <span class="mobile-nav-label">Payments</span>
       </a>
-      <a *ngIf="!isAgent" class="mobile-nav-item" [class.active]="currentView === 'menu'" (click)="setView('menu')">
+      <a *ngIf="!isAgent" class="mobile-nav-item" [class.active]="currentView === 'menu'" [routerLink]="['/menu']" (click)="setView('menu')">
         <span class="mobile-nav-icon">🍽️</span>
         <span class="mobile-nav-label">Menu</span>
       </a>

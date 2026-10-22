@@ -18,6 +18,13 @@ export class ThemeManagerComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  // Mobile Tab Navigation ('controls' | 'preview')
+  mobileTab: 'controls' | 'preview' = 'controls';
+
+  setMobileTab(tab: 'controls' | 'preview') {
+    this.mobileTab = tab;
+  }
+
   private themeService = inject(ThemeService);
 
   ngOnInit() {

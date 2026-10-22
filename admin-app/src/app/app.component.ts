@@ -28,7 +28,7 @@ export class AppComponent implements OnInit {
 
   setupBackButton() {
     CapacitorApp.addListener('backButton', async ({ canGoBack }) => {
-      if (this.router.url === '/orders' || this.router.url === '/login' || !canGoBack) {
+      if (this.router.url === '/orders' || this.router.url === '/dashboard' || this.router.url === '/' || this.router.url === '/login' || !canGoBack) {
         const { value } = await Dialog.confirm({
           title: 'Confirm',
           message: 'Are you sure you want to exit the Admin App?',

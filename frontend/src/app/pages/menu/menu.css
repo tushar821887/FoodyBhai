@@ -76,6 +76,7 @@
   margin-bottom: 2rem;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
 .category-tabs::-webkit-scrollbar {

@@ -40,10 +40,28 @@
     </div>
   }
 
+  <!-- Mobile Tab Switcher Bar (Visible on mobile/tablets <= 992px) -->
+  <div class="theme-mobile-tabs-bar">
+    <button type="button" 
+            class="theme-tab-btn" 
+            [class.active]="mobileTab === 'controls'" 
+            (click)="setMobileTab('controls')">
+      <i class="fa-solid fa-palette"></i>
+      <span>Theme Controls</span>
+    </button>
+    <button type="button" 
+            class="theme-tab-btn" 
+            [class.active]="mobileTab === 'preview'" 
+            (click)="setMobileTab('preview')">
+      <i class="fa-solid fa-mobile-screen"></i>
+      <span>Live Mockup Preview</span>
+    </button>
+  </div>
+
   <div class="theme-studio-body">
     
     <!-- Left Column: Controls & Presets -->
-    <div class="theme-controls-column">
+    <div class="theme-controls-column" [class.mobile-hidden]="mobileTab !== 'controls'">
       
       <!-- Section 1: Curated Theme Presets -->
       <div class="studio-card">
@@ -225,7 +243,7 @@
         <!-- Marquee Ticker Gradient -->
         <div class="marquee-gradient-row mt-4">
           <h4 class="subheading"><i class="fa-solid fa-bullhorn"></i> Top Announcement Marquee Gradient</h4>
-          <div class="color-inputs-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="color-inputs-grid marquee-color-inputs">
             <div class="color-field">
               <label>Ticker Gradient Left</label>
               <div class="picker-input-wrap">
@@ -248,11 +266,31 @@
 
       </div>
 
+      <!-- Mobile Quick Actions -->
+      <div class="theme-mobile-action-bar">
+        <button type="button" class="btn-theme-mobile-preview" (click)="setMobileTab('preview')">
+          <i class="fa-solid fa-mobile-screen"></i> View Live Mockup
+        </button>
+        <button type="button" class="btn-theme-mobile-publish" (click)="publishTheme()" [disabled]="isSaving">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Publish Live
+        </button>
+      </div>
+
     </div>
 
     <!-- Right Column: Interactive Real-time Mockup Visualizer -->
-    <div class="theme-preview-column">
+    <div class="theme-preview-column" [class.mobile-hidden]="mobileTab !== 'preview'">
       <div class="sticky-preview-wrapper">
+        <!-- Mobile Preview Header Bar -->
+        <div class="theme-preview-mobile-bar">
+          <button type="button" class="btn-theme-mobile-back" (click)="setMobileTab('controls')">
+            <i class="fa-solid fa-arrow-left"></i> Edit Colors & Presets
+          </button>
+          <button type="button" class="btn-theme-mobile-publish" (click)="publishTheme()" [disabled]="isSaving">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Publish Live
+          </button>
+        </div>
+
         <div class="preview-header">
           <span class="preview-title"><i class="fa-solid fa-mobile-screen"></i> Live Customer View Mockup</span>
           <span class="preview-subtitle">Updates instantly in real time</span>

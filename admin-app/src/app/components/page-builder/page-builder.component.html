@@ -52,11 +52,38 @@
     </div>
   </div>
 
+  <!-- Mobile Tab Navigation Switcher (Visible on mobile/tablets <= 992px) -->
+  <div class="cms-mobile-tabs-bar" *ngIf="selectedPage">
+    <button type="button" 
+            class="cms-tab-btn" 
+            [class.active]="mobileTab === 'sections'" 
+            (click)="setMobileTab('sections')">
+      <i class="fa-solid fa-layer-group"></i>
+      <span>Sections</span>
+      <span class="tab-count-badge">{{ selectedPage.sections.length }}</span>
+    </button>
+    <button type="button" 
+            class="cms-tab-btn" 
+            [class.active]="mobileTab === 'inspector'" 
+            (click)="setMobileTab('inspector')">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Inspector</span>
+      <span *ngIf="selectedSection" class="active-indicator-dot"></span>
+    </button>
+    <button type="button" 
+            class="cms-tab-btn" 
+            [class.active]="mobileTab === 'preview'" 
+            (click)="setMobileTab('preview')">
+      <i class="fa-solid fa-eye"></i>
+      <span>Live Preview</span>
+    </button>
+  </div>
+
   <!-- Main 3-Column Studio Workspace -->
   <div class="cms-workspace-grid" *ngIf="selectedPage">
     
     <!-- Column 1: Section Navigator -->
-    <div class="cms-column-sections">
+    <div class="cms-column-sections" [class.mobile-hidden]="mobileTab !== 'sections'">
       <div class="panel-header">
         <div class="panel-title">
           <i class="fa-solid fa-layer-group"></i>
@@ -118,7 +145,7 @@
     </div>
 
     <!-- Column 2: Visual Inspector & Design Grid Properties -->
-    <div class="cms-column-inspector" *ngIf="selectedSection">
+    <div class="cms-column-inspector" *ngIf="selectedSection" [class.mobile-hidden]="mobileTab !== 'inspector'">
       
       <!-- Panel Header -->
       <div class="panel-header">
@@ -420,10 +447,43 @@
 
       </div>
 
+      <!-- Mobile Quick Navigation Footer -->
+      <div class="inspector-mobile-nav-bar">
+        <button type="button" class="btn-mobile-nav" (click)="setMobileTab('sections')">
+          <i class="fa-solid fa-arrow-left"></i> Sections List
+        </button>
+        <button type="button" class="btn-mobile-nav btn-primary-nav" (click)="setMobileTab('preview')">
+          <span>View Live Preview</span> <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Column 2: Empty Inspector Fallback (Mobile) -->
+    <div class="cms-column-inspector empty-inspector" *ngIf="!selectedSection" [class.mobile-hidden]="mobileTab !== 'inspector'">
+      <div class="empty-inspector-box">
+        <div class="empty-icon">⚙️</div>
+        <h3>No Section Selected</h3>
+        <p>Please select a section from the Sections list to customize its design, colors, and content.</p>
+        <button type="button" class="btn-mobile-nav btn-primary-nav" (click)="setMobileTab('sections')">
+          <i class="fa-solid fa-layer-group"></i> View Sections List
+        </button>
+      </div>
     </div>
 
     <!-- Column 3: Real-Time Preview Canvas -->
-    <div class="cms-column-preview">
+    <div class="cms-column-preview" [class.mobile-hidden]="mobileTab !== 'preview'">
+      <!-- Mobile Quick Navigation Header for Preview -->
+      <div class="preview-mobile-nav-bar">
+        <button type="button" class="btn-mobile-nav" (click)="setMobileTab('inspector')">
+          <i class="fa-solid fa-arrow-left"></i> Edit Section
+        </button>
+        <button type="button" class="btn-mobile-nav btn-publish-nav" (click)="publishAll()" [disabled]="isSaving">
+          <i class="fa-solid" [class.fa-circle-notch]="isSaving" [class.fa-spin]="isSaving" [class.fa-cloud-arrow-up]="!isSaving"></i>
+          <span>{{ isSaving ? 'Publishing...' : 'Publish Live' }}</span>
+        </button>
+      </div>
+
       <div class="preview-device-header">
         <span class="preview-heading"><i class="fa-solid fa-eye"></i> Real-Time Canvas Preview</span>
         <div class="device-toggles">

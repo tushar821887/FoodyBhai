@@ -51,11 +51,16 @@ export class Header implements OnInit {
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
-    this.isScrolled = window.scrollY > 20;
+    const scrolled = window.scrollY > 20;
+    if (this.isScrolled !== scrolled) {
+      this.isScrolled = scrolled;
+      this.cdr.detectChanges();
+    }
   }
   
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
+    if (!this.isAccountDropdownOpen) return;
     const target = event.target as HTMLElement;
     if (
       !target.closest('.account-dropdown-wrapper') &&
@@ -68,6 +73,7 @@ export class Header implements OnInit {
 
   @HostListener('document:touchstart', ['$event'])
   onDocumentTouch(event: TouchEvent) {
+    if (!this.isAccountDropdownOpen) return;
     const target = event.target as HTMLElement;
     if (
       !target.closest('.account-dropdown-wrapper') &&

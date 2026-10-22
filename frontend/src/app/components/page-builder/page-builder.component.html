@@ -52,19 +52,55 @@
     </div>
   </div>
 
+  <!-- Mobile Tab Navigation Switcher (Visible on mobile/tablets <= 992px) -->
+  <div class="cms-mobile-tabs-bar" *ngIf="selectedPage">
+    <button type="button" 
+            class="cms-tab-btn" 
+            [class.active]="mobileTab === 'sections'" 
+            (click)="setMobileTab('sections')">
+      <i class="fa-solid fa-layer-group"></i>
+      <span>Sections</span>
+      <span class="tab-count-badge">{{ selectedPage.sections.length }}</span>
+    </button>
+    <button type="button" 
+            class="cms-tab-btn" 
+            [class.active]="mobileTab === 'inspector'" 
+            (click)="setMobileTab('inspector')">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Inspector</span>
+      <span *ngIf="selectedSection" class="active-indicator-dot"></span>
+    </button>
+    <button type="button" 
+            class="cms-tab-btn" 
+            [class.active]="mobileTab === 'preview'" 
+            (click)="setMobileTab('preview')">
+      <i class="fa-solid fa-eye"></i>
+      <span>Live Preview</span>
+    </button>
+  </div>
+
   <!-- Main 3-Column Studio Workspace -->
   <div class="cms-workspace-grid" *ngIf="selectedPage">
     
     <!-- Column 1: Section Navigator -->
-    <div class="cms-column-sections">
+    <div class="cms-column-sections" [class.mobile-hidden]="mobileTab !== 'sections'">
       <div class="panel-header">
         <div class="panel-title">
           <i class="fa-solid fa-layer-group"></i>
-          <span>Page Sections ({{ selectedPage.sections.length || 0 }})</span>
+          <span>Sections ({{ selectedPage.sections.length || 0 }})</span>
         </div>
         <button type="button" class="btn-add-section-sm" (click)="openAddSectionModal()">
           <i class="fa-solid fa-plus"></i> Add Section
         </button>
+      </div>
+
+      <!-- Quick Search Filter -->
+      <div class="section-search-bar" *ngIf="selectedPage.sections && selectedPage.sections.length > 2">
+        <div class="search-input-wrap">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" [(ngModel)]="sectionSearch" placeholder="Filter sections..." class="search-filter-field">
+          <button *ngIf="sectionSearch" (click)="sectionSearch = ''" class="btn-clear-search">✕</button>
+        </div>
       </div>
 
       <div class="sections-list-wrap">
@@ -73,7 +109,12 @@
           <button type="button" class="btn-primary-sm" (click)="openAddSectionModal()">Add First Section</button>
         </div>
 
-        <div *ngFor="let sec of selectedPage.sections; let i = index" 
+        <div *ngIf="selectedPage.sections.length > 0 && filteredSections.length === 0" class="empty-sections-notice">
+          <p>No sections match "{{ sectionSearch }}".</p>
+          <button type="button" class="btn-clear-filter" (click)="sectionSearch = ''">Clear Filter</button>
+        </div>
+
+        <div *ngFor="let sec of filteredSections; let i = index" 
              class="section-item-card"
              [class.active]="selectedSection?.id === sec.id"
              (click)="selectSection(sec)">
@@ -81,14 +122,15 @@
           <div class="section-card-top">
             <span class="section-type-badge">{{ sec.type.toUpperCase() }}</span>
             <div class="section-order-btns">
-              <button type="button" class="order-btn" [disabled]="i === 0" (click)="$event.stopPropagation(); moveSectionUp(i)" title="Move Up">↑</button>
-              <button type="button" class="order-btn" [disabled]="i === selectedPage.sections.length - 1" (click)="$event.stopPropagation(); moveSectionDown(i)" title="Move Down">↓</button>
-              <button type="button" class="order-btn del" (click)="$event.stopPropagation(); removeSection(i)" title="Delete Section">🗑️</button>
+              <button type="button" class="order-btn clone" (click)="duplicateSection(sec, $event)" title="Duplicate / Copy Section">📋</button>
+              <button type="button" class="order-btn" [disabled]="i === 0" (click)="$event.stopPropagation(); moveSectionUp(sec)" title="Move Up">↑</button>
+              <button type="button" class="order-btn" [disabled]="i === selectedPage.sections.length - 1" (click)="$event.stopPropagation(); moveSectionDown(sec)" title="Move Down">↓</button>
+              <button type="button" class="order-btn del" (click)="$event.stopPropagation(); removeSection(sec)" title="Delete Section">🗑️</button>
             </div>
           </div>
 
           <div class="section-card-title">
-            {{ sec.title || ('Untitled ' + sec.type) }}
+            {{ cleanTitle(sec.title) || ('Untitled ' + sec.type) }}
           </div>
 
           <div class="section-card-meta">
@@ -103,15 +145,20 @@
     </div>
 
     <!-- Column 2: Visual Inspector & Design Grid Properties -->
-    <div class="cms-column-inspector" *ngIf="selectedSection">
+    <div class="cms-column-inspector" *ngIf="selectedSection" [class.mobile-hidden]="mobileTab !== 'inspector'">
       
       <!-- Panel Header -->
       <div class="panel-header">
         <div class="panel-title">
           <i class="fa-solid fa-sliders"></i>
-          <span>Design Grid & Properties Inspector</span>
+          <span>Properties Inspector</span>
         </div>
-        <span class="active-type-pill">{{ selectedSection.type }}</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" class="btn-clone-inspector" (click)="duplicateSection(selectedSection)" title="Duplicate this section">
+            <i class="fa-solid fa-copy"></i> Duplicate
+          </button>
+          <span class="active-type-pill">{{ selectedSection.type }}</span>
+        </div>
       </div>
 
       <div class="inspector-scroll-area">
@@ -126,8 +173,22 @@
           </div>
 
           <div class="form-group-cms">
-            <label>Section Heading Title</label>
-            <input type="text" [(ngModel)]="selectedSection.title" placeholder="Enter bold headline..." class="cms-input">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin: 0; font-weight: 700;">Section Heading Title</label>
+              <div class="title-action-tools">
+                <button type="button" class="btn-tool-mini highlight" (click)="highlightSelectedWord(titleInp)" title="Select word and click to highlight with theme color">
+                  ✨ Highlight Word
+                </button>
+                <button type="button" class="btn-tool-mini clean" (click)="stripTitleTags()" title="Remove HTML tags">
+                  🧹 Strip Tags
+                </button>
+              </div>
+            </div>
+            <input #titleInp type="text" [(ngModel)]="selectedSection.title" placeholder="e.g. Explore <span>Categories</span>" class="cms-input">
+            <div *ngIf="selectedSection.title" class="title-live-preview-pill">
+              <span class="preview-lbl">LIVE PREVIEW:</span>
+              <span class="preview-val" [innerHTML]="selectedSection.title"></span>
+            </div>
           </div>
 
           <div class="form-group-cms">
@@ -135,13 +196,13 @@
             <textarea [(ngModel)]="selectedSection.subtitle" rows="3" placeholder="Supporting text..." class="cms-input"></textarea>
           </div>
 
-          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'promo_cta' || selectedSection.type === 'image_text'">
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'promo_cta' || selectedSection.type === 'image_text' || selectedSection.type === 'banner' || selectedSection.type === 'categories' || selectedSection.type === 'popular_menu' || selectedSection.type === 'about_story'">
             <div class="form-group-cms">
-              <label>Primary Button Text</label>
-              <input type="text" [(ngModel)]="selectedSection.buttonText" placeholder="e.g. Order Menu" class="cms-input">
+              <label>Button Text</label>
+              <input type="text" [(ngModel)]="selectedSection.buttonText" placeholder="e.g. Browse Full Menu" class="cms-input">
             </div>
             <div class="form-group-cms">
-              <label>Primary Button URL Link</label>
+              <label>Button URL Link</label>
               <input type="text" [(ngModel)]="selectedSection.buttonLink" placeholder="/menu or https://..." class="cms-input">
             </div>
           </div>
@@ -157,12 +218,12 @@
             </div>
           </div>
 
-          <div class="form-group-cms" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'image_text'">
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'image_text' || selectedSection.type === 'about_story' || selectedSection.type === 'banner'">
             <label>Image URL</label>
             <input type="text" [(ngModel)]="selectedSection.imageUrl" placeholder="https://images.unsplash.com/..." class="cms-input">
           </div>
 
-          <div class="form-group-cms" *ngIf="selectedSection.type === 'image_text' || selectedSection.type === 'hero'">
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'image_text' || selectedSection.type === 'hero' || selectedSection.type === 'about_story'">
             <label>Image Placement</label>
             <select [(ngModel)]="selectedSection.imagePosition" class="cms-input">
               <option value="right">Right Side (Standard)</option>
@@ -170,9 +231,20 @@
             </select>
           </div>
 
-          <div class="form-group-cms" *ngIf="selectedSection.type === 'rich_text'">
-            <label>Rich Content (HTML or Markdown text)</label>
-            <textarea [(ngModel)]="selectedSection.content" rows="6" class="cms-input" placeholder="<p>Detailed formatted paragraph content...</p>"></textarea>
+          <!-- Custom Rich Text WYSIWYG Editor Integration -->
+          <div class="form-group-cms" *ngIf="selectedSection.type === 'rich_text' || selectedSection.type === 'about_story'">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="margin: 0; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-pen-fancy" style="color: var(--primary-color);"></i>
+                <span>Rich Text Content (WYSIWYG Editor)</span>
+              </label>
+              <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 700;">LIVE FORMATTER</span>
+            </div>
+            <app-rich-editor 
+              [(ngModel)]="selectedSection.content" 
+              [placeholder]="'Format headings, paragraphs, bold/italic, lists, callouts, and culinary recipes...'"
+              [minHeight]="'220px'">
+            </app-rich-editor>
           </div>
 
           <div class="form-group-cms" *ngIf="selectedSection.type === 'custom_html'">
@@ -181,10 +253,10 @@
           </div>
         </div>
 
-        <!-- Accordion 2: Card Items List (Features, FAQ, Testimonials) -->
-        <div class="inspector-box" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'faq' || selectedSection.type === 'testimonials'">
+        <!-- Accordion 2: Card Items List (Features, About Story, FAQ, Testimonials) -->
+        <div class="inspector-box" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'about_story' || selectedSection.type === 'faq' || selectedSection.type === 'testimonials'">
           <div class="box-title-row">
-            <h4 class="box-title"><i class="fa-solid fa-list-check"></i> Grid Items ({{ selectedSection.items?.length || 0 }})</h4>
+            <h4 class="box-title"><i class="fa-solid fa-list-check"></i> Grid / List Items ({{ selectedSection.items?.length || 0 }})</h4>
             <button type="button" class="btn-add-item-mini" (click)="addItemToSection()">
               <i class="fa-solid fa-plus"></i> Add Item
             </button>
@@ -197,10 +269,10 @@
                 <button type="button" class="btn-remove-item" (click)="removeItemFromSection(itemIdx)">✕</button>
               </div>
 
-              <div class="form-row-2col" *ngIf="selectedSection.type === 'features'">
-                <div class="form-group-cms" style="max-width: 80px;">
-                  <label>Icon / Emoji</label>
-                  <input type="text" [(ngModel)]="item.icon" class="cms-input text-center">
+              <div class="form-row-2col" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'about_story'">
+                <div class="form-group-cms" style="max-width: 100px;">
+                  <label>Icon / Class</label>
+                  <input type="text" [(ngModel)]="item.icon" class="cms-input text-center" placeholder="🌿 or fa-solid...">
                 </div>
                 <div class="form-group-cms" style="flex: 1;">
                   <label>Title</label>
@@ -225,7 +297,7 @@
               </div>
 
               <div class="form-group-cms">
-                <label>{{ selectedSection.type === 'faq' ? 'Answer' : 'Description / Review' }}</label>
+                <label>{{ selectedSection.type === 'faq' ? 'Answer' : 'Description / Details' }}</label>
                 <textarea [(ngModel)]="item.description" rows="2" class="cms-input"></textarea>
               </div>
             </div>
@@ -340,6 +412,26 @@
             </div>
           </div>
 
+          <!-- Quick Brand Swatches -->
+          <div class="swatches-quick-box">
+            <div class="swatch-label">Quick Brand Colors:</div>
+            <div class="swatches-row">
+              <button type="button" class="swatch-chip" style="background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1;" (click)="setBgColor('#ffffff'); setTextColor('')">White</button>
+              <button type="button" class="swatch-chip" style="background: #fff9f5; color: #ea580c; border: 1px solid #fed7aa;" (click)="setBgColor('#fff9f5'); setTextColor('')">Light Cream</button>
+              <button type="button" class="swatch-chip" style="background: #fff5ed; color: #ea580c; border: 1px solid #fed7aa;" (click)="setBgColor('#fff5ed'); setTextColor('')">Light Orange</button>
+              <button type="button" class="swatch-chip" style="background: #ea580c; color: #ffffff;" (click)="setBgColor('#ea580c'); setTextColor('#ffffff')">Brand Orange</button>
+              <button type="button" class="swatch-chip" style="background: #241814; color: #ffffff;" (click)="setBgColor('#241814'); setTextColor('#ffffff')">Deep Dark</button>
+              <button type="button" class="swatch-chip" style="background: transparent; color: #64748b; border: 1px dashed #94a3b8;" (click)="setBgColor('transparent'); setTextColor('')">Transparent</button>
+            </div>
+            <div class="swatch-label" style="margin-top: 8px;">Gradients:</div>
+            <div class="swatches-row">
+              <button type="button" class="swatch-chip" style="background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); color: #fff;" (click)="setGradient('linear-gradient(135deg, #ea580c 0%, #f97316 100%)'); setTextColor('#ffffff')">Orange Glow</button>
+              <button type="button" class="swatch-chip" style="background: linear-gradient(135deg, #241814 0%, #3d2b24 100%); color: #fff;" (click)="setGradient('linear-gradient(135deg, #241814 0%, #3d2b24 100%)'); setTextColor('#ffffff')">Dark Roast</button>
+              <button type="button" class="swatch-chip" style="background: linear-gradient(180deg, #fff9f5 0%, #ffffff 100%); color: #241814; border: 1px solid #fed7aa;" (click)="setGradient('linear-gradient(180deg, #fff9f5 0%, #ffffff 100%)'); setTextColor('')">Soft Fade</button>
+              <button type="button" class="swatch-chip" style="background: transparent; border: 1px dashed #cbd5e1; color: #64748b;" (click)="setGradient(''); setTextColor('')">None</button>
+            </div>
+          </div>
+
           <!-- Border Radius -->
           <div class="form-group-cms">
             <label>Card / Container Border Radius</label>
@@ -355,10 +447,43 @@
 
       </div>
 
+      <!-- Mobile Quick Navigation Footer -->
+      <div class="inspector-mobile-nav-bar">
+        <button type="button" class="btn-mobile-nav" (click)="setMobileTab('sections')">
+          <i class="fa-solid fa-arrow-left"></i> Sections List
+        </button>
+        <button type="button" class="btn-mobile-nav btn-primary-nav" (click)="setMobileTab('preview')">
+          <span>View Live Preview</span> <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Column 2: Empty Inspector Fallback (Mobile) -->
+    <div class="cms-column-inspector empty-inspector" *ngIf="!selectedSection" [class.mobile-hidden]="mobileTab !== 'inspector'">
+      <div class="empty-inspector-box">
+        <div class="empty-icon">⚙️</div>
+        <h3>No Section Selected</h3>
+        <p>Please select a section from the Sections list to customize its design, colors, and content.</p>
+        <button type="button" class="btn-mobile-nav btn-primary-nav" (click)="setMobileTab('sections')">
+          <i class="fa-solid fa-layer-group"></i> View Sections List
+        </button>
+      </div>
     </div>
 
     <!-- Column 3: Real-Time Preview Canvas -->
-    <div class="cms-column-preview">
+    <div class="cms-column-preview" [class.mobile-hidden]="mobileTab !== 'preview'">
+      <!-- Mobile Quick Navigation Header for Preview -->
+      <div class="preview-mobile-nav-bar">
+        <button type="button" class="btn-mobile-nav" (click)="setMobileTab('inspector')">
+          <i class="fa-solid fa-arrow-left"></i> Edit Section
+        </button>
+        <button type="button" class="btn-mobile-nav btn-publish-nav" (click)="publishAll()" [disabled]="isSaving">
+          <i class="fa-solid" [class.fa-circle-notch]="isSaving" [class.fa-spin]="isSaving" [class.fa-cloud-arrow-up]="!isSaving"></i>
+          <span>{{ isSaving ? 'Publishing...' : 'Publish Live' }}</span>
+        </button>
+      </div>
+
       <div class="preview-device-header">
         <span class="preview-heading"><i class="fa-solid fa-eye"></i> Real-Time Canvas Preview</span>
         <div class="device-toggles">
@@ -387,17 +512,58 @@
               
               <div *ngIf="sec.badge" class="preview-badge-pill">{{ sec.badge }}</div>
               
-              <h2 [style.font-size]="sec.style.titleFontSize || '32px'" style="font-weight: 800; margin-bottom: 0.5rem;">
-                {{ sec.title }}
+              <h2 [style.font-size]="sec.style.titleFontSize || '32px'" style="font-weight: 800; margin-bottom: 0.5rem;" [innerHTML]="sec.title">
               </h2>
               
               <p *ngIf="sec.subtitle" [style.font-size]="sec.style.contentFontSize || '16px'" style="opacity: 0.85; margin-bottom: 1.5rem; line-height: 1.5;">
                 {{ sec.subtitle }}
               </p>
 
+              <!-- Rich Content Preview from WYSIWYG Editor -->
+              <div *ngIf="sec.content" [innerHTML]="sec.content" style="margin: 1.25rem 0; text-align: left; line-height: 1.7; font-size: 15px; color: inherit;"></div>
+
               <!-- Hero & Banner Image -->
-              <div *ngIf="sec.imageUrl && (sec.type === 'hero' || sec.type === 'image_text')" style="margin: 1.5rem 0; border-radius: 16px; overflow: hidden; max-height: 250px;">
+              <div *ngIf="sec.imageUrl && (sec.type === 'hero' || sec.type === 'image_text' || sec.type === 'about_story' || sec.type === 'banner')" style="margin: 1.5rem 0; border-radius: 16px; overflow: hidden; max-height: 250px;">
                 <img [src]="sec.imageUrl" style="width: 100%; height: 250px; object-fit: cover;">
+              </div>
+
+              <!-- Categories Mockup Preview -->
+              <div *ngIf="sec.type === 'categories'" style="display: grid; gap: 1rem; margin: 1.5rem 0;"
+                   [style.grid-template-columns]="previewMode === 'mobile' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'">
+                <div *ngFor="let cat of [
+                  { icon: '🍿', name: 'PopCorn', desc: 'PopCorn from Foody Bhai.' },
+                  { icon: '🥤', name: 'Drinks', desc: 'Cold drinks and shakes' },
+                  { icon: '🥞', name: 'Puri & Sabzi', desc: 'Desi breakfast specials' },
+                  { icon: '🍪', name: 'Snacks', desc: 'Evening hot snacks' }
+                ]" style="background: #ffffff; border: 1px solid #ede2d8; padding: 1.25rem 0.75rem; border-radius: 14px; text-align: center; color: #241814; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                  <div style="width: 48px; height: 48px; border-radius: 50%; background: #fff5ed; margin: 0 auto 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ea580c;">{{ cat.icon }}</div>
+                  <strong style="display: block; font-size: 0.95rem; margin-bottom: 0.2rem;">{{ cat.name }}</strong>
+                  <span style="font-size: 0.75rem; color: #716661;">{{ cat.desc }}</span>
+                </div>
+              </div>
+
+              <!-- Popular Menu Mockup Preview -->
+              <div *ngIf="sec.type === 'popular_menu'" style="display: grid; gap: 1rem; margin: 1.5rem 0;"
+                   [style.grid-template-columns]="previewMode === 'mobile' ? '1fr' : 'repeat(4, 1fr)'">
+                <div *ngFor="let dish of [
+                  { title: 'South Indian Poha', price: '₹109', img: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=300&q=80' },
+                  { title: 'Dal Fry', price: '₹179', img: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=300&q=80' },
+                  { title: 'Aloo Jeera Masala', price: '₹79', img: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=300&q=80' },
+                  { title: 'Paneer Do Pyaaza', price: '₹249', img: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=300&q=80' }
+                ]" style="background: #ffffff; border: 1px solid #ede2d8; border-radius: 14px; overflow: hidden; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.05); color: #241814;">
+                  <div style="height: 110px; overflow: hidden; position: relative;">
+                    <img [src]="dish.img" style="width: 100%; height: 100%; object-fit: cover;">
+                    <span style="position: absolute; top: 8px; right: 8px; width: 14px; height: 14px; border: 1.5px solid #16a34a; background: white; display: flex; align-items: center; justify-content: center; border-radius: 3px;">
+                      <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a;"></span>
+                    </span>
+                  </div>
+                  <div style="padding: 8px 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <strong style="font-size: 0.85rem;">{{ dish.title }}</strong>
+                      <span style="font-weight: 800; color: #ea580c; font-size: 0.85rem;">{{ dish.price }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Buttons -->
@@ -406,7 +572,7 @@
                 <button *ngIf="sec.secondaryButtonText" type="button" class="btn btn-secondary">{{ sec.secondaryButtonText }}</button>
               </div>
 
-              <!-- Feature Cards Mockup -->
+              <!-- Feature / Story / Review Cards Mockup -->
               <div *ngIf="sec.items && sec.items.length > 0" 
                    style="display: grid; gap: 1rem; margin-top: 1.5rem;"
                    [style.grid-template-columns]="previewMode === 'mobile' ? '1fr' : 'repeat(' + (sec.style.gridColumns || 3) + ', 1fr)'">
@@ -465,7 +631,7 @@
 
   <!-- Modal: Add Section Component -->
   <div class="cms-modal-overlay" *ngIf="showAddSectionModal">
-    <div class="cms-modal-box" style="max-width: 650px;">
+    <div class="cms-modal-box" style="max-width: 720px;">
       <div class="cms-modal-header">
         <h3><i class="fa-solid fa-shapes"></i> Add Section Component</h3>
         <button type="button" class="btn-close-modal" (click)="showAddSectionModal = false">✕</button>
@@ -478,19 +644,31 @@
           <div class="comp-card" (click)="addSection('hero')">
             <div class="comp-icon">🎯</div>
             <strong>Hero Banner</strong>
-            <span>Headline, CTA buttons, and high-impact image slice.</span>
+            <span>Headline, CTA buttons, and high-impact culinary image.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('about_story')">
+            <div class="comp-icon">📖</div>
+            <strong>About & Story (Rich Text)</strong>
+            <span>Restaurant heritage, custom rich text editor, and highlights.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('categories')">
+            <div class="comp-icon">🍲</div>
+            <strong>Categories Showcase</strong>
+            <span>Interactive category cards linking directly to dish menus.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('popular_menu')">
+            <div class="comp-icon">⭐</div>
+            <strong>Popular Menu Grid</strong>
+            <span>Best-selling recipes showcase with full menu button.</span>
           </div>
 
           <div class="comp-card" (click)="addSection('features')">
             <div class="comp-icon">✨</div>
-            <strong>Features Grid</strong>
+            <strong>Features & Promises</strong>
             <span>2, 3, or 4-column card grid with custom icons and benefits.</span>
-          </div>
-
-          <div class="comp-card" (click)="addSection('image_text')">
-            <div class="comp-icon">🖼️</div>
-            <strong>Image + Text Split</strong>
-            <span>Side-by-side story block with responsive layout.</span>
           </div>
 
           <div class="comp-card" (click)="addSection('promo_cta')">
@@ -499,28 +677,34 @@
             <span>High-conversion coupon code banner with gradient background.</span>
           </div>
 
+          <div class="comp-card" (click)="addSection('testimonials')">
+            <div class="comp-icon">💬</div>
+            <strong>Testimonials Grid</strong>
+            <span>Customer review cards with star ratings and city badges.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('rich_text')">
+            <div class="comp-icon">📝</div>
+            <strong>Rich Text Block</strong>
+            <span>Full WYSIWYG editor for stories, recipes, and policies.</span>
+          </div>
+
+          <div class="comp-card" (click)="addSection('banner')">
+            <div class="comp-icon">📱</div>
+            <strong>App Download Banner</strong>
+            <span>App download badge with Google Play / Direct APK CTA.</span>
+          </div>
+
           <div class="comp-card" (click)="addSection('faq')">
             <div class="comp-icon">❓</div>
             <strong>FAQ Accordion</strong>
             <span>Collapsible question and answer list for customer inquiries.</span>
           </div>
 
-          <div class="comp-card" (click)="addSection('testimonials')">
-            <div class="comp-icon">💬</div>
-            <strong>Testimonials Grid</strong>
-            <span>Social proof review cards with star ratings and avatars.</span>
-          </div>
-
-          <div class="comp-card" (click)="addSection('rich_text')">
-            <div class="comp-icon">📝</div>
-            <strong>Rich Text / Article</strong>
-            <span>Standard paragraphs, announcements, and legal policies.</span>
-          </div>
-
           <div class="comp-card" (click)="addSection('custom_html')">
             <div class="comp-icon">💻</div>
             <strong>Custom HTML / Embed</strong>
-            <span>Embed Google Maps, Instagram posts, or custom widgets.</span>
+            <span>Embed Google Maps, widgets, or custom HTML snippets.</span>
           </div>
         </div>
       </div>

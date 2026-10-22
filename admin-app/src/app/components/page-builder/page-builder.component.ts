@@ -27,6 +27,13 @@ export class PageBuilderComponent implements OnInit {
   // Section search filter
   sectionSearch = '';
 
+  // Mobile Tab Navigation ('sections' | 'inspector' | 'preview')
+  mobileTab: 'sections' | 'inspector' | 'preview' = 'sections';
+
+  setMobileTab(tab: 'sections' | 'inspector' | 'preview') {
+    this.mobileTab = tab;
+  }
+
   // New Route Modal
   showNewRouteModal = false;
   newRouteSlug = '';
@@ -64,6 +71,9 @@ export class PageBuilderComponent implements OnInit {
     cloned.title = (cloned.title || '') + ' (Copy)';
     this.selectedPage.sections.splice(index + 1, 0, cloned);
     this.selectedSection = cloned;
+    if (typeof window !== 'undefined' && window.innerWidth <= 992) {
+      this.mobileTab = 'inspector';
+    }
   }
 
   highlightSelectedWord(inputEl?: HTMLInputElement) {
@@ -155,6 +165,9 @@ export class PageBuilderComponent implements OnInit {
 
   selectSection(sec: CmsSection) {
     this.selectedSection = sec;
+    if (typeof window !== 'undefined' && window.innerWidth <= 992) {
+      this.mobileTab = 'inspector';
+    }
   }
 
   openNewRouteModal() {
@@ -274,6 +287,9 @@ export class PageBuilderComponent implements OnInit {
     this.selectedPage.sections.push(newSec);
     this.selectedSection = newSec;
     this.showAddSectionModal = false;
+    if (typeof window !== 'undefined' && window.innerWidth <= 992) {
+      this.mobileTab = 'inspector';
+    }
   }
 
   moveSectionUp(sec: CmsSection) {
@@ -308,6 +324,9 @@ export class PageBuilderComponent implements OnInit {
     }
     if (this.selectedSection?.id === sec.id) {
       this.selectedSection = this.selectedPage.sections[0] || null;
+      if (!this.selectedSection && typeof window !== 'undefined' && window.innerWidth <= 992) {
+        this.mobileTab = 'sections';
+      }
     }
     this.publishAll(`Section "${title}" removed successfully.`);
   }

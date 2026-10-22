@@ -5,6 +5,8 @@ import { FilterStatusPipe } from '../../pipes/filter-status.pipe';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Order } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
+import { Router, ActivatedRoute, RouterModule, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 import { RichEditorComponent } from '../../components/rich-editor/rich-editor.component';
 import { ThemeManagerComponent } from '../../components/theme-manager/theme-manager.component';
@@ -13,7 +15,7 @@ import { PageBuilderComponent } from '../../components/page-builder/page-builder
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent],
+  imports: [CommonModule, FormsModule, RouterModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent],
   templateUrl: './orders.page.html',
   styleUrl: './orders.page.css'
 })
@@ -242,6 +244,8 @@ export class OrdersPage implements OnInit, OnDestroy {
   showPrepModal = false;
 
   private pollInterval: any;
+  isFetchingOrders = false;
+  isFetchingStats = false;
   private ringAudio: HTMLAudioElement | null = null;
   private isRinging = false;
   private manuallySilenced = false;
@@ -263,7 +267,9 @@ export class OrdersPage implements OnInit, OnDestroy {
     private api: ApiService,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   private mapUrlCache = new Map<string, any>();
@@ -301,6 +307,21 @@ export class OrdersPage implements OnInit, OnDestroy {
     // Check if notification permission is needed
     this.checkNotificationPermission();
 
+    this.syncViewFromRoute();
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.syncViewFromRoute();
+    });
+
+    this.route.queryParams.subscribe((params: any) => {
+      if (params['tab'] && (params['tab'] === 'categories' || params['tab'] === 'items' || params['tab'] === 'mapping')) {
+        this.menuTab = params['tab'];
+        this.cdr.detectChanges();
+      }
+    });
+
     // When user taps a standard Android notification, bring app to front and navigate to order
     this.notificationSub = this.notificationService.notificationAction$.subscribe((extra) => {
       console.log('App opened via notification click:', extra);
@@ -331,10 +352,21 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getSetting('smtp_from').subscribe(res => { if (res && res.value) this.smtpFrom = res.value; });
     this.api.getSetting('fast2sms_api_key').subscribe(res => { if (res && res.value) this.fast2smsKey = res.value; });
     this.fetchOrders();
+    this.fetchRestaurantStats();
 
-    // Fast backup polling (every 4 seconds) to guarantee zero missed orders
-    this.pollInterval = setInterval(() => this.fetchOrders(), 4000);
-    this.timerInterval = setInterval(() => this.cdr.detectChanges(), 1000);
+    // Background polling fallback for orders (every 20s, only when on order-relevant views)
+    this.pollInterval = setInterval(() => {
+      if (this.currentView === 'dashboard' || this.currentView === 'history' || this.currentView === 'cancel-requests') {
+        this.fetchOrders();
+      }
+    }, 20000);
+
+    // Only run preparation countdown timer change detection if viewing dashboard with active preparing orders
+    this.timerInterval = setInterval(() => {
+      if (this.currentView === 'dashboard' && this.orders && this.orders.some(o => o.status === 'preparing' && o.preparationTime)) {
+        this.cdr.detectChanges();
+      }
+    }, 1000);
   }
 
   async checkNotificationPermission() {
@@ -502,8 +534,12 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   fetchOrders() {
+    if (this.isFetchingOrders) return;
+    this.isFetchingOrders = true;
+
     this.api.getAllOrders().subscribe({
       next: (data) => {
+        this.isFetchingOrders = false;
         const pendingOrders = data.filter(o => o.status === 'pending');
         const pendingCount = pendingOrders.length;
         
@@ -614,16 +650,26 @@ export class OrdersPage implements OnInit, OnDestroy {
         data.forEach(o => this.knownOrderIds.add(o._id));
         this.isFirstLoad = false;
       },
-      error: (err) => console.error('Failed to fetch orders', err)
+      error: (err) => {
+        this.isFetchingOrders = false;
+        console.error('Failed to fetch orders', err);
+      }
     });
-    
-    // Fetch live ratings
+  }
+
+  fetchRestaurantStats() {
+    if (this.isFetchingStats) return;
+    this.isFetchingStats = true;
     this.api.getRestaurantStats().subscribe({
       next: (stats: any) => {
+        this.isFetchingStats = false;
         this.restaurantStats = stats;
         this.cdr.detectChanges();
       },
-      error: (err: any) => console.error('Failed to fetch stats', err)
+      error: (err: any) => {
+        this.isFetchingStats = false;
+        console.error('Failed to fetch stats', err);
+      }
     });
   }
 
@@ -826,16 +872,60 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.showOrderDetailsModal = true;
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms') {
+  syncViewFromRoute() {
+    let path = this.route.snapshot.routeConfig?.path;
+    if (!path) {
+      path = this.router.url.split('?')[0].replace(/^\//, '');
+    }
+    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms'> = [
+      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms'
+    ];
+    let matchedView = validViews.find(v => v === path);
+    if (!matchedView) {
+      if (path === '' || path === 'orders') {
+        matchedView = 'dashboard';
+      }
+    }
+    if (matchedView) {
+      if (matchedView !== this.currentView) {
+        this.setView(matchedView, false);
+      } else {
+        this.loadViewData(matchedView);
+      }
+    }
+  }
+
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms', updateRoute: boolean = true) {
     this.currentView = view;
     this.closeMobileMenu();
+    if (updateRoute) {
+      const targetPath = view === 'dashboard' ? '/dashboard' : '/' + view;
+      if (this.router.url.split('?')[0] !== targetPath) {
+        this.router.navigate([targetPath], { queryParamsHandling: 'preserve' });
+      }
+    }
+    this.loadViewData(view);
+    this.cdr.detectChanges();
+  }
+
+  loadViewData(view: string) {
+    if (view === 'dashboard') {
+      this.fetchOrders();
+      this.fetchRestaurantStats();
+    }
+    if (view === 'history') {
+      this.fetchOrders();
+    }
     if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
       this.fetchCategories();
       this.fetchRecipes();
     }
     if (view === 'contacts') {
-      this.api.getContacts().subscribe(res => this.contacts = res);
+      this.api.getContacts().subscribe(res => {
+        this.contacts = res;
+        this.cdr.detectChanges();
+      });
     }
     if (view === 'settings') {
       this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) this.upiId = res.value; });
