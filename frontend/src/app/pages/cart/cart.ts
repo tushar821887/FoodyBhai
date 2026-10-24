@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +26,7 @@ export interface UpiAppInfo {
   templateUrl: './cart.html',
   styleUrls: ['./cart.css']
 })
-export class CartComponent implements OnDestroy {
+export class CartComponent implements OnInit, OnDestroy {
   customerName = '';
   customerPhone = '';
   customerEmail = '';
@@ -44,6 +44,18 @@ export class CartComponent implements OnDestroy {
   couponInput = '';
   couponError = '';
   couponSuccess = '';
+  isApplyingCoupon = false;
+  availableCoupons: any[] = [];
+  isLoadingAvailableCoupons = false;
+  showOffersModal = false;
+  cartOffersConfig: any = {
+    enabled: true,
+    title: 'Available Offers',
+    subtitle: 'Tap to view coupons & deals',
+    buttonText: 'View Offers',
+    displayMode: 'popup',
+    maxOffersToShow: 5
+  };
 
   private authSub: Subscription;
   currentTotal = 0;
@@ -145,10 +157,12 @@ export class CartComponent implements OnDestroy {
 
   openUpiAppsModal() {
     this.showUpiAppsModal = true;
+    this.cdr.detectChanges();
   }
 
   closeUpiAppsModal() {
     this.showUpiAppsModal = false;
+    this.cdr.detectChanges();
   }
 
   getUpiQueryString(): string {
@@ -193,10 +207,26 @@ export class CartComponent implements OnDestroy {
     }
   }
 
-  onAppSelected(app: UpiAppInfo) {
+  onAppSelected(app: UpiAppInfo, event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     this.selectedUpiApp = app;
     this.showUpiAppsModal = false;
     this.showToast(`Opening ${app.name}... Please complete payment and tap "I've Paid".`, 'info');
+    this.cdr.detectChanges();
+
+    const link = this.getAppUpiLink(app.id);
+    if (typeof window !== 'undefined' && link) {
+      setTimeout(() => {
+        try {
+          window.location.href = link;
+        } catch (e) {
+          console.error('Failed to open UPI link', e);
+        }
+      }, 50);
+    }
   }
 
   copyUpiId() {
@@ -255,6 +285,12 @@ export class CartComponent implements OnDestroy {
     });
 
     this.cartService.finalPrice$.subscribe(total => this.currentTotal = total);
+    this.cartService.cartOffersConfig$.subscribe(cfg => {
+      if (cfg) {
+        this.cartOffersConfig = cfg;
+        this.cdr.detectChanges();
+      }
+    });
 
     // Load QR & UPI from localStorage (set by admin)
     if (isPlatformBrowser(this.platformId)) {
@@ -265,6 +301,30 @@ export class CartComponent implements OnDestroy {
       
       
     }
+  }
+
+  ngOnInit() {
+    this.loadAvailableCoupons();
+    const currentCoupon = this.cartService.getCouponCode();
+    if (currentCoupon) {
+      this.couponInput = currentCoupon;
+    }
+  }
+
+  loadAvailableCoupons() {
+    this.isLoadingAvailableCoupons = true;
+    this.cartService.getActivePublicCoupons().subscribe({
+      next: (coupons) => {
+        this.availableCoupons = coupons || [];
+        this.isLoadingAvailableCoupons = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.availableCoupons = [];
+        this.isLoadingAvailableCoupons = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -282,22 +342,74 @@ export class CartComponent implements OnDestroy {
   }
 
   // --- Coupon ---
-  applyCoupon() {
+  applyCoupon(codeToApply?: string) {
     this.couponError = '';
     this.couponSuccess = '';
-    if (this.cartService.getCurrentTotal() < 100) {
-      this.couponError = 'Minimum order of ₹100 required.';
+
+    const code = (codeToApply || this.couponInput || '').trim().toUpperCase();
+    if (!code) {
+      this.couponError = 'Please enter a coupon code.';
       return;
     }
-    if (!this.couponInput.trim()) {
-      this.couponError = 'Please enter a coupon code';
+
+    const currentTotal = this.cartService.getCurrentTotal();
+    if (currentTotal <= 0) {
+      this.couponError = 'Your cart is empty. Add items first.';
       return;
     }
-    const success = this.cartService.applyCoupon(this.couponInput);
-    if (success) {
-      this.couponSuccess = 'Coupon applied! 20% OFF';
-    } else {
-      this.couponError = 'Invalid coupon code';
+
+    this.isApplyingCoupon = true;
+    const currentUser = this.authService.getCurrentUser();
+    const userId = currentUser?.id;
+
+    this.cartService.validateAndApplyCoupon(code, currentTotal, userId).subscribe({
+      next: (res: any) => {
+        this.isApplyingCoupon = false;
+        if (res && res.valid) {
+          this.couponInput = code;
+          this.couponSuccess = res.message || `Coupon "${code}" applied successfully!`;
+          this.couponError = '';
+          this.showToast(this.couponSuccess, 'success');
+        } else {
+          this.couponError = res?.message || `Coupon "${code}" is invalid.`;
+          this.couponSuccess = '';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isApplyingCoupon = false;
+        this.couponError = err?.error?.message || 'Unable to apply coupon. Please check and try again.';
+        this.couponSuccess = '';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  selectQuickCoupon(code: string) {
+    this.couponInput = code;
+    this.applyCoupon(code);
+  }
+
+  openOffersModal() {
+    this.showOffersModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeOffersModal() {
+    this.showOffersModal = false;
+    this.cdr.detectChanges();
+  }
+
+  applyCouponFromModal(code: string) {
+    this.showOffersModal = false;
+    this.applyCoupon(code);
+  }
+
+  copyCouponCode(code: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(code);
+      this.showToast(`Coupon code "${code}" copied to clipboard!`, 'info');
     }
   }
 
@@ -306,6 +418,8 @@ export class CartComponent implements OnDestroy {
     this.couponInput = '';
     this.couponSuccess = '';
     this.couponError = '';
+    this.showToast('Coupon removed', 'info');
+    this.cdr.detectChanges();
   }
 
   // --- Cart Quantity ---
@@ -439,11 +553,13 @@ export class CartComponent implements OnDestroy {
     this.selectedQrMode = 'dynamic';
     this.codConfirmed = false;
     this.showPaymentModal = true;
+    this.cdr.detectChanges();
   }
 
   closePaymentModal() {
     this.showPaymentModal = false;
     this.showUpiAppsModal = false;
+    this.cdr.detectChanges();
   }
 
   confirmPaymentAndPlaceOrder() {
@@ -468,11 +584,14 @@ export class CartComponent implements OnDestroy {
     this.cartService.items$.subscribe(i => items = i).unsubscribe();
 
     this.isPlacingOrder = true;
-    let itemTotal = 0, discount = 0, gst = 0, platformFee = 0;
+    let itemTotal = 0, discount = 0, gst = 0, platformFee = 0, deliveryFee = 0;
     this.cartService.totalPrice$.subscribe(v => itemTotal = v).unsubscribe();
     this.cartService.discount$.subscribe(v => discount = v).unsubscribe();
     this.cartService.gst$.subscribe(v => gst = v).unsubscribe();
     this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
+    if (this.orderType === 'delivery') {
+      this.cartService.deliveryFee$.subscribe(v => deliveryFee = v).unsubscribe();
+    }
 
     if (this.cartService.isOffline$.value) {
       this.showToast("We are currently offline and not accepting orders.", 'error');
@@ -490,8 +609,12 @@ export class CartComponent implements OnDestroy {
       items,
       itemTotal,
       discount,
+      couponCode: this.cartService.getCouponCode() || undefined,
+      couponDiscount: discount,
       gst,
       platformFee,
+      deliveryFee,
+      deliveryCharge: deliveryFee,
       totalAmount: this.currentTotal,
       orderType: this.orderType,
       paymentMethod: this.paymentMethod,

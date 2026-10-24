@@ -8,6 +8,7 @@ import { Recipe, RecipeSchema } from '../recipes/schemas/recipe.schema';
 import { CartModule } from '../cart/cart.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
+import { CouponsModule } from '../coupons/coupons.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from '../auth/auth.module';
     SettingsModule,
     UsersModule,
     AuthModule,
+    CouponsModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

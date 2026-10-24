@@ -3,11 +3,12 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { Subject, Observable } from 'rxjs';
 import { SettingsService } from '../settings/settings.service';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Recipe, RecipeDocument } from '../recipes/schemas/recipe.schema';
 import { UsersService } from '../users/users.service';
 import { AuthService } from '../auth/auth.service';
+import { CouponsService } from '../coupons/coupons.service';
 
 @Injectable()
 export class OrdersService {
@@ -32,6 +33,7 @@ export class OrdersService {
     private settingsService: SettingsService,
     private usersService: UsersService,
     private authService: AuthService,
+    private couponsService: CouponsService,
   ) {}
 
   async createOrder(userId: string | undefined, orderData: any): Promise<any> {
@@ -160,6 +162,9 @@ export class OrdersService {
       ...orderData
     });
     const saved = await order.save();
+    if (orderData?.couponCode) {
+      await this.couponsService.recordUsage(orderData.couponCode);
+    }
     this.emitOrderEvent('new_order', saved);
 
     const result: any = saved.toObject();
@@ -169,8 +174,14 @@ export class OrdersService {
     return result;
   }
 
-  async getUserOrders(userId: string, phone?: string): Promise<OrderDocument[]> {
-    const orConditions: any[] = [{ userId }];
+  async getUserOrders(userId: string, phone?: string): Promise<any[]> {
+    const orConditions: any[] = [];
+    if (userId) {
+      orConditions.push({ userId });
+      if (typeof userId === 'string' && /^[0-9a-fA-F]{24}$/.test(userId)) {
+        orConditions.push({ userId: new Types.ObjectId(userId) });
+      }
+    }
     if (phone) {
       const clean = this.usersService.cleanPhone(phone);
       orConditions.push({ 'deliveryDetails.phone': phone.trim() });
@@ -183,17 +194,18 @@ export class OrdersService {
         );
       }
     }
-    return this.orderModel.find({ $or: orConditions }).sort({ createdAt: -1 }).exec();
+    if (orConditions.length === 0) return [];
+    return this.orderModel.find({ $or: orConditions }).sort({ createdAt: -1 }).lean().exec();
   }
 
-  async trackOrder(identifier: string): Promise<OrderDocument[]> {
+  async trackOrder(identifier: string): Promise<any[]> {
     if (!identifier) throw new BadRequestException('Identifier is required');
     const trimmed = identifier.trim();
     const cleanDigits = this.usersService.cleanPhone(trimmed);
 
     // 1. Try finding by order ID (if valid Mongo ObjectId)
     if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
-      const byId = await this.orderModel.findById(trimmed);
+      const byId = await this.orderModel.findById(trimmed).lean().exec();
       if (byId) return [byId];
     }
 
@@ -217,10 +229,11 @@ export class OrdersService {
       const user = await this.usersService.findByEmail(trimmed.toLowerCase());
       if (user) {
         orList.push({ userId: user._id });
+        orList.push({ userId: user._id.toString() });
       }
     }
 
-    return this.orderModel.find({ $or: orList }).sort({ createdAt: -1 }).limit(10).exec();
+    return this.orderModel.find({ $or: orList }).sort({ createdAt: -1 }).limit(20).lean().exec();
   }
 
   async cancelOrderCustomer(orderId: string, reason: string): Promise<OrderDocument> {
@@ -266,9 +279,9 @@ export class OrdersService {
   }
 
 
-  async getAllOrders(): Promise<OrderDocument[]> {
-    // Sort by newest first
-    return this.orderModel.find().populate('userId', 'name email phone').sort({ createdAt: -1 }).exec();
+  async getAllOrders(): Promise<any[]> {
+    // Sort by newest first with lean for instant serialization
+    return this.orderModel.find().populate('userId', 'name email phone').sort({ createdAt: -1 }).lean().exec();
   }
 
   async updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }, cancelReason?: string): Promise<OrderDocument> {
@@ -313,14 +326,18 @@ export class OrdersService {
   }
 
   async rateOrder(orderId: string, rating: number, review?: string): Promise<OrderDocument> {
-    const order = await this.orderModel.findByIdAndUpdate(
-      orderId,
-      { $set: { rating, review } },
-      { new: true }
-    );
+    const order = await this.orderModel.findById(orderId);
     if (!order) {
       throw new NotFoundException('Order not found');
     }
+    if (order.rating !== undefined && order.rating !== null && Number(order.rating) > 0) {
+      throw new BadRequestException('Rating has already been submitted for this order and cannot be modified.');
+    }
+    order.rating = Number(rating);
+    if (review !== undefined && review !== null) {
+      order.review = review.trim();
+    }
+    await order.save();
     return order;
   }
   async getRestaurantStats() {
@@ -400,14 +417,26 @@ export class OrdersService {
     doc.moveDown();
 
     // Summary
-    const gst = order.gst || (subtotal * 0.05);
-    const platformFee = order.platformFee || 5;
-    const finalTotal = subtotal + gst + platformFee;
+    const gst = order.gst !== undefined ? order.gst : (subtotal * 0.05);
+    const platformFee = order.platformFee !== undefined ? order.platformFee : 5;
+    const deliveryFee = order.deliveryFee || order.deliveryCharge || 0;
+    const discount = order.discount || 0;
+    const finalTotal = order.totalAmount || (subtotal + gst + platformFee + deliveryFee - discount);
 
     doc.text(`Subtotal:`, 350, doc.y, { width: 100, align: 'right' });
     doc.text(`Rs. ${subtotal.toFixed(2)}`, 450, doc.y, { width: 100, align: 'right' }).moveDown(0.5);
     
-    doc.text(`GST (5%):`, 350, doc.y, { width: 100, align: 'right' });
+    if (deliveryFee > 0) {
+      doc.text(`Delivery Fee:`, 350, doc.y, { width: 100, align: 'right' });
+      doc.text(`Rs. ${deliveryFee.toFixed(2)}`, 450, doc.y, { width: 100, align: 'right' }).moveDown(0.5);
+    }
+
+    if (discount > 0) {
+      doc.text(`Discount:`, 350, doc.y, { width: 100, align: 'right' });
+      doc.text(`-Rs. ${discount.toFixed(2)}`, 450, doc.y, { width: 100, align: 'right' }).moveDown(0.5);
+    }
+
+    doc.text(`GST:`, 350, doc.y, { width: 100, align: 'right' });
     doc.text(`Rs. ${gst.toFixed(2)}`, 450, doc.y, { width: 100, align: 'right' }).moveDown(0.5);
     
     doc.text(`Platform Fee:`, 350, doc.y, { width: 100, align: 'right' });

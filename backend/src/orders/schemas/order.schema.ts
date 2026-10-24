@@ -52,8 +52,10 @@ export class Order {
 
   @Prop({ required: true, default: 'pending', enum: ['pending', 'paid', 'failed'] })
   paymentStatus: string;
+
   @Prop({ required: true, default: 'delivery', enum: ['delivery', 'pickup'] })
   orderType: string;
+
   @Prop({ type: Object, required: false })
   deliveryAgent?: { name: string; phone: string };
 
@@ -62,12 +64,24 @@ export class Order {
   
   @Prop({ required: false })
   discount?: number;
+
+  @Prop({ required: false, uppercase: true, trim: true })
+  couponCode?: string;
+
+  @Prop({ required: false })
+  couponDiscount?: number;
   
   @Prop({ required: false })
   gst?: number;
   
   @Prop({ required: false })
   platformFee?: number;
+
+  @Prop({ required: false, default: 0 })
+  deliveryFee?: number;
+
+  @Prop({ required: false, default: 0 })
+  deliveryCharge?: number;
 
   @Prop({ required: false })
   rating?: number;
@@ -107,3 +121,11 @@ export class Order {
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
+
+OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ userId: 1, createdAt: -1 });
+OrderSchema.index({ 'deliveryDetails.phone': 1, createdAt: -1 });
+OrderSchema.index({ 'deliveryDetails.email': 1, createdAt: -1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
+OrderSchema.index({ 'deliveryAgent.phone': 1, createdAt: -1 });
+OrderSchema.index({ couponCode: 1 });

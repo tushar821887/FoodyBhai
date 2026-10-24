@@ -247,4 +247,31 @@ export class ApiService {
     }
     return null;
   }
+
+  // Coupons & Coupon Tracking
+  getCoupons(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl + '/coupons', this.getHeaders());
+  }
+
+  getCouponStats(): Observable<any> {
+    return this.http.get<any>(this.apiUrl + '/coupons/stats', this.getHeaders());
+  }
+
+  getCouponOrders(code?: string): Observable<any[]> {
+    const q = code && code !== 'all' ? '?code=' + encodeURIComponent(code) : '';
+    return this.http.get<any[]>(this.apiUrl + '/coupons/tracking/orders' + q, this.getHeaders());
+  }
+
+  createCoupon(data: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl + '/coupons', data, this.getHeaders());
+  }
+
+  updateCoupon(id: string, data: any): Observable<any> {
+    return this.http.put<any>(this.apiUrl + '/coupons/' + id, data, this.getHeaders());
+  }
+
+  deleteCoupon(id: string): Observable<any> {
+    return this.http.delete<any>(this.apiUrl + '/coupons/' + id, this.getHeaders());
+  }
+
 }

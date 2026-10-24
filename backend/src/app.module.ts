@@ -16,6 +16,7 @@ import { OrdersModule } from './orders/orders.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { SettingsModule } from './settings/settings.module';
 import { PagesModule } from './pages/pages.module';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
   imports: [
@@ -71,7 +72,8 @@ import { PagesModule } from './pages/pages.module';
     OrdersModule,
     RecipesModule,
     SettingsModule,
-    PagesModule
+    PagesModule,
+    CouponsModule
   ],
 })
 export class AppModule {}

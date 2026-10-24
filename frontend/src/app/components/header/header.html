@@ -1,12 +1,57 @@
 <header class="header" [class.scrolled]="isScrolled">
-  <div class="top-marquee">
-    <div class="marquee-content">
-      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
-      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
-      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
-      <span>🎉 Special Offer! Get <strong>20% OFF</strong> on all orders today! Use code <strong>FOODY20</strong> at checkout! 🎉</span>
+  <!-- Dynamic Promo / Marquee Banner -->
+  @if (bannerConfig && bannerConfig.enabled && !isBannerDismissed && bannerConfig.text) {
+    <div class="top-promo-banner"
+         [class.is-clickable]="bannerConfig.linkUrl"
+         (click)="onBannerClick()"
+         [style.background]="getBannerBackground()"
+         [style.color]="bannerConfig.textColor || '#ffffff'"
+         [style.height]="bannerConfig.height || '34px'"
+         [style.minHeight]="bannerConfig.height || '34px'"
+         [style.fontSize]="bannerConfig.fontSize || '13px'">
+      
+      <!-- MARQUEE MODE -->
+      @if (bannerConfig.isMarquee) {
+        <div class="marquee-track" [style.animationDuration]="getMarqueeDuration()">
+          @for (repeat of [1, 2, 3, 4]; track repeat) {
+            <div class="banner-item">
+              @if (bannerConfig.badgeText) {
+                <span class="banner-badge" 
+                      [style.background]="bannerConfig.badgeBg || '#ffffff'" 
+                      [style.color]="bannerConfig.badgeColor || '#ea580c'">
+                  {{ bannerConfig.badgeText }}
+                </span>
+              }
+              <span class="banner-text" [innerHTML]="bannerConfig.text"></span>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- STATIC BANNER MODE -->
+        <div class="static-banner-container" [style.justifyContent]="getStaticJustify()">
+          <div class="banner-item">
+            @if (bannerConfig.badgeText) {
+              <span class="banner-badge" 
+                    [style.background]="bannerConfig.badgeBg || '#ffffff'" 
+                    [style.color]="bannerConfig.badgeColor || '#ea580c'">
+                {{ bannerConfig.badgeText }}
+              </span>
+            }
+            <span class="banner-text" [innerHTML]="bannerConfig.text"></span>
+            @if (bannerConfig.linkUrl) {
+              <i class="fa-solid fa-arrow-right banner-arrow"></i>
+            }
+          </div>
+        </div>
+      }
+
+      @if (bannerConfig.closeable) {
+        <button type="button" class="banner-close-btn" (click)="dismissBanner($event)" title="Dismiss announcement">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      }
     </div>
-  </div>
+  }
 
   <div class="header-inner">
     <div class="container header-container">

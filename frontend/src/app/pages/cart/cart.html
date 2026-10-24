@@ -240,24 +240,75 @@
 
             @if (currentStep === 1) {
               <div class="cart-coupon-box animate-fade-in">
-                @if (cartService.coupon$ | async) {
+                @if (cartService.coupon$ | async; as appliedCode) {
                   <div class="applied-coupon">
-                    <div>
-                      <i class="fa-solid fa-circle-check" style="color: var(--success); margin-right: 0.5rem;"></i>
-                      <strong>'{{cartService.coupon$ | async}}' applied</strong>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i class="fa-solid fa-circle-check" style="color: var(--success); font-size: 1.15rem;"></i>
+                      <div>
+                        <strong>'{{ appliedCode }}' Applied</strong>
+                        @if ((cartService.discount$ | async)! > 0) {
+                          <span style="display: block; font-size: 0.82rem; color: #059669; font-weight: 600;">
+                            🎉 You save ₹{{ cartService.discount$ | async }}
+                          </span>
+                        }
+                      </div>
                     </div>
                     <button class="remove-coupon" (click)="removeCoupon()">Remove</button>
                   </div>
                 } @else {
                   <div class="coupon-input-group" [class.has-error]="couponError">
-                    <input type="text" [(ngModel)]="couponInput" placeholder="Enter coupon code" class="coupon-field">
-                    <button class="btn-apply" (click)="applyCoupon()">Apply</button>
+                    <input type="text" [(ngModel)]="couponInput" (keyup.enter)="applyCoupon()" placeholder="Enter coupon code (e.g. FOODY25)" class="coupon-field" style="text-transform: uppercase;">
+                    <button class="btn-apply" [disabled]="isApplyingCoupon" (click)="applyCoupon()">
+                      @if (isApplyingCoupon) {
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                      } @else {
+                        Apply
+                      }
+                    </button>
                   </div>
                   @if (couponError) {
                     <small class="text-danger mt-2 d-block"><i class="fa-solid fa-circle-exclamation"></i> {{couponError}}</small>
                   }
                   @if (couponSuccess) {
                     <small class="text-success mt-2 d-block"><i class="fa-solid fa-circle-check"></i> {{couponSuccess}}</small>
+                  }
+
+                  <!-- Available Offers Button / Banner / Chips (Configured via Admin-App) -->
+                  @if (cartOffersConfig?.enabled && availableCoupons && availableCoupons.length > 0) {
+                    <!-- Mode: Popup trigger card (Screenshot 1 style) -->
+                    @if (cartOffersConfig.displayMode === 'popup' || cartOffersConfig.displayMode === 'both') {
+                      <div class="available-offers-trigger" (click)="openOffersModal()">
+                        <div class="offers-trigger-content">
+                          <span class="offers-trigger-icon">🏷️</span>
+                          <div class="offers-trigger-text">
+                            <span class="offers-trigger-title">{{ availableCoupons.length }} {{ cartOffersConfig.title || 'Available Offers' }}</span>
+                            <span class="offers-trigger-sub">{{ cartOffersConfig.subtitle || 'Tap to view coupons & deals' }}</span>
+                          </div>
+                        </div>
+                        <button type="button" class="btn-view-offers">
+                          <span>{{ cartOffersConfig.buttonText || 'View Offers' }}</span>
+                          <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                      </div>
+                    }
+
+                    <!-- Mode: Inline quick chips (Screenshot 0 style) -->
+                    @if (cartOffersConfig.displayMode === 'chips' || cartOffersConfig.displayMode === 'both') {
+                      <div class="available-offers-chips animate-fade-in">
+                        <div class="offers-chips-header">
+                          <span>AVAILABLE OFFERS:</span>
+                          <button type="button" class="btn-chips-expand" (click)="openOffersModal()">View Details &gt;</button>
+                        </div>
+                        <div class="offers-chips-list">
+                          @for (coupon of (availableCoupons | slice:0:(cartOffersConfig.maxOffersToShow || 5)); track coupon.code) {
+                            <button type="button" class="offer-chip-btn" (click)="selectQuickCoupon(coupon.code)" [title]="coupon.description || ('Apply ' + coupon.code)">
+                              <span class="chip-code">{{ coupon.code }}</span>
+                              <span class="chip-disc">{{ coupon.discountType === 'percentage' ? coupon.discountValue + '% OFF' : '₹' + coupon.discountValue + ' OFF' }}</span>
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
                   }
                 }
               </div>
@@ -269,10 +320,32 @@
                 <span>₹{{cartService.totalPrice$ | async}}</span>
               </div>
               @if (orderType === 'delivery') {
-                <div class="total-row text-success">
-                  <span>Delivery Fee</span>
-                  <span>FREE</span>
-                </div>
+                @if ((cartService.deliveryFee$ | async) === 0) {
+                  <div class="total-row text-success">
+                    <span>Delivery Fee</span>
+                    <span>
+                      @if ((cartService.dynamicDeliveryFee$ | async)! > 0 && (cartService.freeDeliveryMinAmount$ | async)! > 0) {
+                        <span style="text-decoration: line-through; color: #94a3b8; font-size: 0.88em; margin-right: 4px;">₹{{ cartService.dynamicDeliveryFee$ | async }}</span>
+                      }
+                      FREE
+                    </span>
+                  </div>
+                  @if ((cartService.dynamicDeliveryFee$ | async)! > 0 && (cartService.freeDeliveryMinAmount$ | async)! > 0) {
+                    <small style="color: #059669; font-size: 0.78rem; display: block; text-align: right; margin-top: -6px; margin-bottom: 6px; font-weight: 600;">
+                      🎉 Free delivery unlocked (orders above ₹{{ cartService.freeDeliveryMinAmount$ | async }})
+                    </small>
+                  }
+                } @else {
+                  <div class="total-row">
+                    <span>Delivery Fee</span>
+                    <span>₹{{ cartService.deliveryFee$ | async }}</span>
+                  </div>
+                  @if ((cartService.freeDeliveryMinAmount$ | async)! > 0 && ((cartService.freeDeliveryMinAmount$ | async)! > (cartService.totalPrice$ | async)!)) {
+                    <small style="color: #ea580c; font-size: 0.78rem; display: block; text-align: right; margin-top: -6px; margin-bottom: 6px; font-weight: 600;">
+                      Add ₹{{ (cartService.freeDeliveryMinAmount$ | async)! - (cartService.totalPrice$ | async)! }} more for FREE delivery
+                    </small>
+                  }
+                }
               }
               @if ((cartService.discount$ | async)! > 0) {
                 <div class="total-row text-success">
@@ -282,7 +355,7 @@
               }
               @if ((cartService.totalPrice$ | async)! > 0) {
                 <div class="total-row">
-                  <span>GST (5%)</span>
+                  <span>GST ({{ cartService.gstPercent$ | async }}%)</span>
                   <span>₹{{cartService.gst$ | async}}</span>
                 </div>
                 <div class="total-row">
@@ -550,7 +623,7 @@
                   </button>
                 </div>
                 <a [href]="getAppUpiLink(selectedUpiApp.id)" 
-                   (click)="onAppSelected(selectedUpiApp)" 
+                   (click)="onAppSelected(selectedUpiApp, $event)" 
                    class="btn-open-chosen-app">
                   <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Open {{ selectedUpiApp.name }} (₹{{ currentTotal }})
                 </a>
@@ -639,7 +712,7 @@
         <div class="upi-apps-list">
           @for (app of upiApps; track app.id) {
             <a [href]="getAppUpiLink(app.id)"
-               (click)="onAppSelected(app)"
+               (click)="onAppSelected(app, $event)"
                class="upi-app-card"
                [class.selected-app]="selectedUpiApp?.id === app.id">
               <div class="upi-app-card-icon" [style.background]="app.bgColor">
@@ -698,6 +771,115 @@
     </div>
   </div>
 }
+
+<!-- ===================== AVAILABLE OFFERS POPUP MODAL ===================== -->
+<div class="modal-overlay offers-modal-overlay" *ngIf="showOffersModal" (click)="closeOffersModal()">
+  <div class="modal-content offers-modal-card" (click)="$event.stopPropagation()">
+    <div class="mobile-sheet-handle"></div>
+    
+    <div class="offers-modal-header">
+      <div class="offers-header-info">
+        <div class="offers-header-icon">🏷️</div>
+        <div>
+          <h3 class="offers-modal-title">{{ cartOffersConfig?.title ? (availableCoupons.length + ' ' + cartOffersConfig.title) : 'Available Offers & Coupons' }}</h3>
+          <p class="offers-modal-subtitle">{{ cartOffersConfig?.subtitle || 'Choose an offer to apply instant savings' }}</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close-round" (click)="closeOffersModal()" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Active coupon notification inside modal if one is applied -->
+    @if (cartService.coupon$ | async; as activeCoupon) {
+      <div class="active-coupon-banner">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-circle-check text-success"></i>
+          <span><strong>{{ activeCoupon }}</strong> is currently applied!</span>
+        </div>
+        <button type="button" class="btn-remove-active" (click)="removeCoupon()">Remove</button>
+      </div>
+    }
+
+    <div class="offers-modal-body">
+      @if (isLoadingAvailableCoupons) {
+        <div class="text-center py-4 text-muted">
+          <i class="fa-solid fa-circle-notch fa-spin fa-2x mb-2" style="color: var(--primary-color);"></i>
+          <p>Loading available deals...</p>
+        </div>
+      } @else if (availableCoupons.length === 0) {
+        <div class="empty-offers-box">
+          <span style="font-size: 2.2rem;">🏷️</span>
+          <p>No active coupons right now. Check back soon for exciting deals!</p>
+        </div>
+      } @else {
+        <div class="offers-cards-list">
+          @for (coupon of availableCoupons; track coupon.code) {
+            <div class="offer-card" [class.is-applied]="(cartService.coupon$ | async) === coupon.code">
+              
+              <!-- Left discount voucher pill -->
+              <div class="offer-card-left">
+                <span class="offer-badge-percent">
+                  {{ coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue }}
+                </span>
+                <span class="offer-badge-label">OFF</span>
+              </div>
+
+              <!-- Main details -->
+              <div class="offer-card-main">
+                <div class="offer-card-top">
+                  <div class="offer-code-tag" (click)="copyCouponCode(coupon.code, $event)" title="Click to copy code">
+                    <span class="code-text">{{ coupon.code }}</span>
+                    <i class="fa-regular fa-copy copy-icon"></i>
+                  </div>
+                  
+                  @if ((cartService.coupon$ | async) === coupon.code) {
+                    <span class="offer-applied-tag">
+                      <i class="fa-solid fa-check"></i> APPLIED
+                    </span>
+                  } @else {
+                    <button type="button" 
+                            class="btn-apply-offer" 
+                            [disabled]="isApplyingCoupon || (coupon.minOrderAmount && (cartService.totalPrice$ | async)! < coupon.minOrderAmount)"
+                            (click)="applyCouponFromModal(coupon.code)">
+                      {{ (coupon.minOrderAmount && (cartService.totalPrice$ | async)! < coupon.minOrderAmount) ? 'LOCKED' : 'APPLY' }}
+                    </button>
+                  }
+                </div>
+
+                <div class="offer-card-desc">
+                  {{ coupon.description || (coupon.discountType === 'percentage' ? 'Get ' + coupon.discountValue + '% off on your order' : 'Get flat ₹' + coupon.discountValue + ' off on your order') }}
+                </div>
+
+                <!-- Terms & minimum order warning -->
+                <div class="offer-card-footer">
+                  @if (coupon.minOrderAmount && coupon.minOrderAmount > 0) {
+                    @if ((cartService.totalPrice$ | async)! < coupon.minOrderAmount) {
+                      <span class="min-order-warning">
+                        ⚠️ Add ₹{{ coupon.minOrderAmount - ((cartService.totalPrice$ | async) || 0) }} more to unlock
+                      </span>
+                    } @else {
+                      <span class="min-order-success">
+                        ✓ Min order ₹{{ coupon.minOrderAmount }} satisfied
+                      </span>
+                    }
+                  }
+                  @if (coupon.validUntil) {
+                    <span class="offer-expiry">
+                      <i class="fa-regular fa-clock"></i> Expires {{ coupon.validUntil | date:'mediumDate' }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
 
 <!-- ===================== TOAST NOTIFICATION ===================== -->
 @if (toastVisible) {

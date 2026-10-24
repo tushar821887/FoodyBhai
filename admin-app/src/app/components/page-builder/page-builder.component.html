@@ -1,22 +1,52 @@
 <div class="cms-studio-container">
   
-  <!-- Top Banner -->
-  <div class="cms-studio-header">
-    <div class="header-left">
-      <div class="header-badge">
-        <span class="live-pulse"></span> HEADLESS CMS & PAGE BUILDER
+  <!-- Sleek Sticky Studio Header Bar -->
+  <div class="cms-studio-top-bar">
+    <div class="top-bar-left">
+      <div class="studio-brand">
+        <span class="live-pulse"></span>
+        <span class="studio-title">Page Studio</span>
       </div>
-      <h2>🧩 Website Pages & Sections Studio</h2>
-      <p>Create routes, manage design grid layouts, customize font sizes, colors, spacing, and build website components dynamically like Strapi or Contentful.</p>
+
+      <!-- Quick Route Pills List -->
+      <div class="routes-scroll-list">
+        <button *ngFor="let p of pages" 
+                type="button" 
+                class="route-pill-btn" 
+                [class.active]="selectedPage?.id === p.id"
+                (click)="selectPage(p)"
+                [title]="p.title + ' (/' + p.slug + ')'">
+          <span class="route-slug-icon">{{ p.slug === '' ? '🏠' : '📄' }}</span>
+          <span class="route-name">{{ p.title }}</span>
+          <span class="route-path-tag">/{{ p.slug }}</span>
+          <button *ngIf="p.isCustomRoute" type="button" class="btn-del-route" (click)="$event.stopPropagation(); deletePage(p)" title="Delete Route">×</button>
+        </button>
+        
+        <button type="button" class="btn-add-route-mini" (click)="openNewRouteModal()" title="Add New Page / Route">
+          <i class="fa-solid fa-plus"></i> New Page
+        </button>
+      </div>
     </div>
-    <div class="header-actions">
-      <button type="button" class="btn-create-route" (click)="openNewRouteModal()">
-        <i class="fa-solid fa-plus-circle"></i>
-        <span>Create New Route</span>
+
+    <!-- Actions Right -->
+    <div class="top-bar-right">
+      <div class="device-toggles-bar">
+        <button type="button" class="dev-toggle-btn" [class.active]="previewMode === 'mobile'" (click)="previewMode = 'mobile'" title="Mobile Viewport">
+          <i class="fa-solid fa-mobile-screen"></i> <span>Mobile</span>
+        </button>
+        <button type="button" class="dev-toggle-btn" [class.active]="previewMode === 'desktop'" (click)="previewMode = 'desktop'" title="Desktop Viewport">
+          <i class="fa-solid fa-desktop"></i> <span>Desktop</span>
+        </button>
+      </div>
+
+      <button type="button" class="btn-toggle-canvas" (click)="toggleCanvasVisibility()" [title]="showCanvas ? 'Hide preview to expand editor' : 'Show live preview'">
+        <i class="fa-solid" [class.fa-eye-slash]="showCanvas" [class.fa-eye]="!showCanvas"></i>
+        <span>{{ showCanvas ? 'Hide Preview' : 'Show Preview' }}</span>
       </button>
+
       <button type="button" class="btn-publish-live" (click)="publishAll()" [disabled]="isSaving">
         <i class="fa-solid" [class.fa-circle-notch]="isSaving" [class.fa-spin]="isSaving" [class.fa-cloud-arrow-up]="!isSaving"></i>
-        <span>{{ isSaving ? 'Publishing...' : 'Publish Pages Live' }}</span>
+        <span>{{ isSaving ? 'Saving...' : 'Publish Live' }}</span>
       </button>
     </div>
   </div>
@@ -29,27 +59,6 @@
   <div *ngIf="errorMessage" class="alert alert-danger animate-fade-in">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <span>{{ errorMessage }}</span>
-  </div>
-
-  <!-- Route / Page Navigation Tabs -->
-  <div class="routes-navigation-bar">
-    <div class="routes-scroll-list">
-      <button *ngFor="let p of pages" 
-              type="button" 
-              class="route-pill-btn" 
-              [class.active]="selectedPage?.id === p.id"
-              (click)="selectPage(p)">
-        <span class="route-slug-icon">{{ p.slug === '' ? '🏠' : '📄' }}</span>
-        <span class="route-name">{{ p.title }}</span>
-        <span class="route-path-tag">/{{ p.slug }}</span>
-        <span *ngIf="p.isCustomRoute" class="custom-badge">CUSTOM</span>
-        <button *ngIf="p.isCustomRoute" type="button" class="btn-del-route" (click)="$event.stopPropagation(); deletePage(p)" title="Delete Route">×</button>
-      </button>
-      
-      <button type="button" class="btn-add-route-mini" (click)="openNewRouteModal()">
-        <i class="fa-solid fa-plus"></i> Add Route
-      </button>
-    </div>
   </div>
 
   <!-- Mobile Tab Navigation Switcher (Visible on mobile/tablets <= 992px) -->
@@ -80,7 +89,7 @@
   </div>
 
   <!-- Main 3-Column Studio Workspace -->
-  <div class="cms-workspace-grid" *ngIf="selectedPage">
+  <div class="cms-workspace-grid" [class.hide-canvas]="!showCanvas" *ngIf="selectedPage">
     
     <!-- Column 1: Section Navigator -->
     <div class="cms-column-sections" [class.mobile-hidden]="mobileTab !== 'sections'">
@@ -472,7 +481,7 @@
     </div>
 
     <!-- Column 3: Real-Time Preview Canvas -->
-    <div class="cms-column-preview" [class.mobile-hidden]="mobileTab !== 'preview'">
+    <div class="cms-column-preview" *ngIf="showCanvas" [class.mobile-hidden]="mobileTab !== 'preview'">
       <!-- Mobile Quick Navigation Header for Preview -->
       <div class="preview-mobile-nav-bar">
         <button type="button" class="btn-mobile-nav" (click)="setMobileTab('inspector')">
@@ -496,7 +505,7 @@
         </div>
       </div>
 
-      <div class="preview-viewport" [class.mobile-view]="previewMode === 'mobile'">
+      <div class="preview-viewport" [class.mobile-view]="previewMode === 'mobile'" [class.desktop-view]="previewMode === 'desktop'">
         <div class="preview-page-canvas">
           
           <div *ngFor="let sec of selectedPage.sections" 

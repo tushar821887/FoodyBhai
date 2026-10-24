@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { BehaviorSubject, map, Observable, combineLatest, tap } from 'rxjs';
 import { Recipe } from './recipe.service';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
@@ -9,6 +9,15 @@ import { environment } from '../../environments/environment';
 export interface CartItem {
   recipe: Recipe;
   quantity: number;
+}
+
+export interface CartOffersConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  displayMode: 'popup' | 'chips' | 'both';
+  maxOffersToShow: number;
 }
 
 @Injectable({
@@ -20,7 +29,11 @@ export class CartService {
   public items$ = this.itemsSubject.asObservable();
 
   public totalItems$ = this.items$.pipe(
-    map(items => items.reduce((total, item) => total + item.quantity, 0))
+    map(items => (items && Array.isArray(items)) ? items.length : 0)
+  );
+
+  public totalQuantity$ = this.items$.pipe(
+    map(items => (items && Array.isArray(items)) ? items.reduce((total, item) => total + (item.quantity || 1), 0) : 0)
   );
 
   public totalPrice$ = this.items$.pipe(
@@ -36,20 +49,63 @@ export class CartService {
   private couponSubject = new BehaviorSubject<string>('');
   public coupon$ = this.couponSubject.asObservable();
 
-  public discount$ = this.totalPrice$.pipe(
-    map(total => this.couponSubject.value.toUpperCase() === 'FOODY20' ? Math.round(total * 0.2) : 0)
+  private appliedDiscountSubject = new BehaviorSubject<number>(0);
+  public appliedDiscount$ = this.appliedDiscountSubject.asObservable();
+
+  private appliedCouponDetailsSubject = new BehaviorSubject<any>(null);
+  public appliedCouponDetails$ = this.appliedCouponDetailsSubject.asObservable();
+
+  public discount$ = combineLatest([this.totalPrice$, this.appliedCouponDetailsSubject, this.appliedDiscountSubject]).pipe(
+    map(([total, details, directDiscount]) => {
+      if (!details || total === 0) return 0;
+      if (details.minOrderAmount && total < details.minOrderAmount) {
+        return 0; // Cart total doesn't satisfy coupon minimum requirement
+      }
+      if (details.discountType === 'percentage') {
+        let disc = (total * (details.discountValue || 0)) / 100;
+        if (details.maxDiscount && details.maxDiscount > 0) {
+          disc = Math.min(disc, details.maxDiscount);
+        }
+        return Math.round(disc);
+      } else {
+        return Math.min(details.discountValue || directDiscount || 0, total);
+      }
+    })
   );
 
-  public platformFee$ = this.totalPrice$.pipe(map(total => total > 0 ? 5 : 0));
-  public gst$ = this.totalPrice$.pipe(map(total => total > 0 ? Math.round(total * 0.05) : 0));
+  public gstPercent$ = new BehaviorSubject<number>(5);
+  public dynamicPlatformFee$ = new BehaviorSubject<number>(5);
+  public dynamicDeliveryFee$ = new BehaviorSubject<number>(0);
+  public freeDeliveryMinAmount$ = new BehaviorSubject<number>(0);
+  public cartOffersConfig$ = new BehaviorSubject<CartOffersConfig>({
+    enabled: true,
+    title: 'Available Offers',
+    subtitle: 'Tap to view coupons & deals',
+    buttonText: 'View Offers',
+    displayMode: 'popup',
+    maxOffersToShow: 5
+  });
 
-  public finalPrice$ = this.totalPrice$.pipe(
-    map(total => {
+  public deliveryFee$ = combineLatest([this.totalPrice$, this.dynamicDeliveryFee$, this.freeDeliveryMinAmount$]).pipe(
+    map(([total, fee, minFree]) => {
       if (total === 0) return 0;
-      const discount = this.couponSubject.value.toUpperCase() === 'FOODY20' ? Math.round(total * 0.2) : 0;
-      const platformFee = 5;
-      const gst = Math.round(total * 0.05);
-      return total - discount + platformFee + gst;
+      if (minFree > 0 && total >= minFree) return 0;
+      return fee;
+    })
+  );
+
+  public platformFee$ = combineLatest([this.totalPrice$, this.dynamicPlatformFee$]).pipe(
+    map(([total, fee]) => (total > 0 ? fee : 0))
+  );
+
+  public gst$ = combineLatest([this.totalPrice$, this.gstPercent$]).pipe(
+    map(([total, percent]) => (total > 0 ? Math.round((total * percent) / 100) : 0))
+  );
+
+  public finalPrice$ = combineLatest([this.totalPrice$, this.discount$, this.platformFee$, this.gst$, this.deliveryFee$]).pipe(
+    map(([total, discount, fee, gst, delivery]) => {
+      if (total === 0) return 0;
+      return Math.max(0, total - discount + fee + gst + (delivery || 0));
     })
   );
 
@@ -66,7 +122,9 @@ export class CartService {
   ) {
     if (isPlatformBrowser(this.platformId)) {
       this.checkOfflineStatus();
+      this.loadTaxAndFeeSettings();
       setInterval(() => this.checkOfflineStatus(), 30000);
+      setInterval(() => this.loadTaxAndFeeSettings(), 60000);
       // Listen to auth state to sync cart
       this.authService.isAuthenticated$.subscribe(isAuthenticated => {
         if (isAuthenticated) {
@@ -92,6 +150,63 @@ export class CartService {
         if (res && res.value !== undefined) {
           const isOpen = res.value === 'true' || res.value === true;
           this.isOffline$.next(!isOpen);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  public loadTaxAndFeeSettings() {
+    this.http.get<any>(`${this.API_URL}/settings/tax_gst_percent`).subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null && res.value !== '') {
+          this.gstPercent$.next(Number(res.value) || 0);
+        }
+      },
+      error: () => {}
+    });
+
+    this.http.get<any>(`${this.API_URL}/settings/platform_fee`).subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null && res.value !== '') {
+          this.dynamicPlatformFee$.next(Number(res.value) || 0);
+        }
+      },
+      error: () => {}
+    });
+
+    this.http.get<any>(`${this.API_URL}/settings/delivery_fee`).subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null && res.value !== '') {
+          this.dynamicDeliveryFee$.next(Number(res.value) || 0);
+        }
+      },
+      error: () => {}
+    });
+
+    this.http.get<any>(`${this.API_URL}/settings/free_delivery_min_amount`).subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null && res.value !== '') {
+          this.freeDeliveryMinAmount$.next(Number(res.value) || 0);
+        }
+      },
+      error: () => {}
+    });
+
+    this.http.get<any>(`${this.API_URL}/settings/cart_offers_config`).subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null) {
+          try {
+            const val = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
+            this.cartOffersConfig$.next({
+              enabled: val.enabled !== undefined ? Boolean(val.enabled) : true,
+              title: val.title || 'Available Offers',
+              subtitle: val.subtitle || 'Tap to view coupons & deals',
+              buttonText: val.buttonText || 'View Offers',
+              displayMode: val.displayMode || 'popup',
+              maxOffersToShow: Number(val.maxOffersToShow) || 5
+            });
+          } catch (e) {}
         }
       },
       error: () => {}
@@ -235,17 +350,42 @@ export class CartService {
     }, 0);
   }
 
-  applyCoupon(code: string): boolean {
-    if (code.toUpperCase() === 'FOODY20') {
-      this.couponSubject.next(code);
-      this.itemsSubject.next([...this.itemsSubject.value]); // Trigger recalculation
-      return true;
-    }
-    return false;
+  getCouponCode(): string {
+    return this.couponSubject.value;
   }
-  
+
+  validateAndApplyCoupon(code: string, orderAmount: number, userId?: string): Observable<any> {
+    return this.http.post<any>(`${this.API_URL}/coupons/validate`, {
+      code: (code || '').trim().toUpperCase(),
+      orderAmount,
+      userId
+    }).pipe(
+      tap((res) => {
+        if (res && res.valid) {
+          const couponCode = res.coupon?.code || code.trim().toUpperCase();
+          this.couponSubject.next(couponCode);
+          this.appliedDiscountSubject.next(res.discount || 0);
+          this.appliedCouponDetailsSubject.next(res.coupon || {
+            code: couponCode,
+            discountValue: res.discount || 0,
+            discountType: 'flat'
+          });
+          this.itemsSubject.next([...this.itemsSubject.value]);
+        } else {
+          this.removeCoupon();
+        }
+      })
+    );
+  }
+
+  getActivePublicCoupons(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/coupons/active`);
+  }
+
   removeCoupon() {
     this.couponSubject.next('');
+    this.appliedDiscountSubject.next(0);
+    this.appliedCouponDetailsSubject.next(null);
     this.itemsSubject.next([...this.itemsSubject.value]);
   }
 
@@ -284,15 +424,30 @@ export class CartService {
     });
     
     const coupon = this.couponSubject.value.toUpperCase();
-    const discount = coupon === 'FOODY20' ? Math.round(total * 0.2) : 0;
-    const platformFee = 5;
-    const gst = Math.round(total * 0.05);
-    const finalTotal = total - discount + platformFee + gst;
+    let discount = 0;
+    const details = this.appliedCouponDetailsSubject.value;
+    if (details && total > 0 && (!details.minOrderAmount || total >= details.minOrderAmount)) {
+      if (details.discountType === 'percentage') {
+        let d = (total * (details.discountValue || 0)) / 100;
+        if (details.maxDiscount && details.maxDiscount > 0) d = Math.min(d, details.maxDiscount);
+        discount = Math.round(d);
+      } else {
+        discount = Math.min(details.discountValue || 0, total);
+      }
+    } else {
+      discount = this.appliedDiscountSubject.value || 0;
+    }
+
+    const feeRate = this.dynamicPlatformFee$.value;
+    const gstRate = this.gstPercent$.value;
+    const platformFee = total > 0 ? feeRate : 0;
+    const gst = total > 0 ? Math.round((total * gstRate) / 100) : 0;
+    const finalTotal = Math.max(0, total - discount + platformFee + gst);
     
     text += `\nSubtotal: ₹${total}`;
-    if (discount > 0) text += `\nDiscount (FOODY20): -₹${discount}`;
-    text += `\nGST (5%): ₹${gst}`;
-    text += `\nPlatform Fee: ₹${platformFee}`;
+    if (discount > 0) text += `\nDiscount (${coupon || 'Promo'}): -₹${discount}`;
+    if (gst > 0) text += `\nGST (${gstRate}%): ₹${gst}`;
+    if (platformFee > 0) text += `\nPlatform Fee: ₹${platformFee}`;
     text += `\n*Total to Pay: ₹${finalTotal}*`;
     
     return `https://wa.me/918218870579?text=${encodeURIComponent(text)}`;

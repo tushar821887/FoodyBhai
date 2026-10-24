@@ -84,8 +84,14 @@
         </div>
       </div>
     } @else if (errorMessage) {
-      <div class="alert" style="background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; border-left: 4px solid #c62828;">
-        <i class="fa-solid fa-circle-exclamation"></i> {{ errorMessage }}
+      <div class="alert" style="background: #ffebee; color: #c62828; padding: 1.2rem; border-radius: 8px; border-left: 4px solid #c62828; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" (click)="loadOrders()" style="cursor: pointer; padding: 4px 12px; border-radius: 6px; font-weight: 600;">
+          <i class="fa-solid fa-rotate-right"></i> Try Again
+        </button>
       </div>
     } @else if (orders.length === 0) {
       <div class="text-center" style="padding: 3rem; background: #fff; border-radius: var(--border-radius); box-shadow: var(--shadow-sm);">
@@ -265,9 +271,16 @@
                   <i class="fa-solid fa-eye"></i> View Details
                 </button>
                 @if (order.status === 'delivered') {
-                  <button class="btn-action btn-rate" (click)="openRateModal(order)">
-                    <i class="fa-solid fa-star" style="color: #f59e0b;"></i> {{ order.rating ? 'Edit Review' : 'Rate Food' }}
-                  </button>
+                  @if (!order.rating) {
+                    <button class="btn-action btn-rate" (click)="openRateModal(order)">
+                      <i class="fa-solid fa-star" style="color: #f59e0b;"></i> Rate Food
+                    </button>
+                  } @else {
+                    <div class="order-rating-badge" title="You rated this order {{ order.rating }} out of 5 stars">
+                      <i class="fa-solid fa-star" style="color: #f59e0b;"></i>
+                      <span>{{ order.rating }}.0 Rated</span>
+                    </div>
+                  }
                   <button class="btn-action btn-bill" (click)="downloadInvoice(order._id || order.id)">
                     <i class="fa-solid fa-file-invoice"></i> Bill
                   </button>
@@ -290,9 +303,10 @@
 </section>
 
 <!-- Set Password Modal -->
-<div *ngIf="showSetPasswordModal" class="modal-overlay" (click)="closeSetPasswordModal()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
-  <div class="modal-container" (click)="$event.stopPropagation()" style="background: white; border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); position: relative;">
-    <button (click)="closeSetPasswordModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer;">
+<div *ngIf="showSetPasswordModal" class="modal-overlay password-modal-overlay" (click)="closeSetPasswordModal()">
+  <div class="modal-container password-modal-card" (click)="$event.stopPropagation()">
+    <div class="mobile-sheet-handle"></div>
+    <button (click)="closeSetPasswordModal()" class="modal-close-round absolute-close" aria-label="Close">
       <i class="fa-solid fa-xmark"></i>
     </button>
     
@@ -333,14 +347,15 @@
 </div>
 
 <!-- Details Modal -->
-<div class="modal-overlay" *ngIf="showDetailsModal && selectedOrderDetails" (click)="closeDetailsModal()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; justify-content: center;">
-  <div class="modal-content" (click)="$event.stopPropagation()" style="background: white; width: 100%; max-width: 500px; max-height: 85vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; animation: slideUp 0.3s ease-out;">
-    <div style="padding: 18px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+<div class="modal-overlay details-modal-overlay" *ngIf="showDetailsModal && selectedOrderDetails" (click)="closeDetailsModal()">
+  <div class="modal-content details-modal-card" (click)="$event.stopPropagation()">
+    <div class="mobile-sheet-handle"></div>
+    <div class="modal-header-top">
       <div>
-        <h4 style="margin: 0; font-size: 17px; color: #1e293b;">Order #{{ (selectedOrderDetails._id || selectedOrderDetails.id).slice(-6).toUpperCase() }}</h4>
+        <h4 style="margin: 0; font-size: 17px; color: #1e293b; font-weight: 800;">Order #{{ (selectedOrderDetails._id || selectedOrderDetails.id).slice(-6).toUpperCase() }}</h4>
         <span style="font-size: 12px; color: #64748b;">{{ selectedOrderDetails.createdAt | date:'medium' }}</span>
       </div>
-      <button (click)="closeDetailsModal()" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer; padding: 5px;">
+      <button class="modal-close-round" (click)="closeDetailsModal()" aria-label="Close modal">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
@@ -360,6 +375,26 @@
           </div>
         }
       </div>
+
+      <!-- Rating Display (Read-Only) -->
+      @if (selectedOrderDetails.rating) {
+        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <span style="font-weight: 700; color: #92400e; font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+              <span>⭐</span> Your Food Rating
+            </span>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              @for (star of [1,2,3,4,5]; track star) {
+                <i class="fa-solid fa-star" [style.color]="star <= selectedOrderDetails.rating ? '#f59e0b' : '#cbd5e1'" style="font-size: 14px;"></i>
+              }
+              <span style="font-weight: 800; font-size: 14px; color: #b45309; margin-left: 6px;">{{ selectedOrderDetails.rating }}.0</span>
+            </div>
+          </div>
+          <div *ngIf="selectedOrderDetails.review" style="font-size: 13px; color: #78350f; font-style: italic; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #fde68a;">
+            "{{ selectedOrderDetails.review }}"
+          </div>
+        </div>
+      }
 
       <!-- Delivery Details -->
       <div style="margin-bottom: 20px;">
@@ -404,20 +439,25 @@
           <span>₹{{ selectedOrderDetails.itemTotal || selectedOrderDetails.totalAmount }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #64748b; font-size: 14px;">
-          <span>Taxes & GST (5%)</span>
+          <span>Taxes & GST <small *ngIf="selectedOrderDetails.itemTotal && selectedOrderDetails.gst">({{ (selectedOrderDetails.gst / selectedOrderDetails.itemTotal * 100) | number:'1.0-0' }}%)</small></span>
           <span>₹{{ selectedOrderDetails.gst || 0 }}</span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #64748b; font-size: 14px;">
           <span>Platform Fee</span>
           <span>₹{{ selectedOrderDetails.platformFee || 0 }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #64748b; font-size: 14px;" *ngIf="selectedOrderDetails.deliveryCharge !== undefined">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #64748b; font-size: 14px;" *ngIf="selectedOrderDetails.deliveryFee !== undefined || selectedOrderDetails.deliveryCharge !== undefined">
           <span>Delivery Charge</span>
-          <span>₹{{ selectedOrderDetails.deliveryCharge || 0 }}</span>
+          <span>₹{{ selectedOrderDetails.deliveryFee ?? selectedOrderDetails.deliveryCharge ?? 0 }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #10b981; font-size: 14px;" *ngIf="selectedOrderDetails.discount">
-          <span>Discount applied</span>
-          <span>-₹{{ selectedOrderDetails.discount }}</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: #10b981; font-size: 14px;" *ngIf="selectedOrderDetails.discount">
+          <span style="display: flex; align-items: center; gap: 6px;">
+            Discount applied
+            <span *ngIf="selectedOrderDetails.couponCode" style="font-size: 11px; font-weight: 700; background: #dcfce7; color: #166534; padding: 1px 6px; border-radius: 4px;">
+              🎟️ {{ selectedOrderDetails.couponCode }}
+            </span>
+          </span>
+          <span style="font-weight: 700;">-₹{{ selectedOrderDetails.discount }}</span>
         </div>
 
         <div style="height: 1px; background: #e2e8f0; margin-bottom: 15px;"></div>
@@ -446,6 +486,74 @@
         </button>
       </div>
     }
+  </div>
+</div>
+
+<!-- Rate Food Modal -->
+<div class="modal-overlay rate-modal-overlay" *ngIf="showRateModal && orderToRate" (click)="closeRateModal()">
+  <div class="modal-container rate-modal-card" (click)="$event.stopPropagation()">
+    <div class="mobile-sheet-handle"></div>
+    <button (click)="closeRateModal()" class="modal-close-round absolute-close" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div style="width: 58px; height: 58px; border-radius: 50%; background: #fef3c7; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 14px auto; box-shadow: 0 6px 16px rgba(245, 158, 11, 0.25);">
+      <i class="fa-solid fa-utensils"></i>
+    </div>
+
+    <h3 style="margin: 0 0 6px 0; color: #1e293b; font-size: 20px; font-weight: 800;">Rate Your Food</h3>
+    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 13.5px;">
+      Order #{{ (orderToRate._id || orderToRate.id || '').slice(-6).toUpperCase() }} • How was your meal?
+    </p>
+
+    <!-- Star Rating Selector -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 12px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: center; gap: 12px; font-size: 36px; margin-bottom: 8px;">
+        @for (star of [1, 2, 3, 4, 5]; track star) {
+          <i class="fa-solid fa-star"
+             [style.color]="star <= (hoverRating || ratingValue) ? '#f59e0b' : '#cbd5e1'"
+             [style.transform]="star <= (hoverRating || ratingValue) ? 'scale(1.15)' : 'scale(1)'"
+             style="cursor: pointer; transition: transform 0.15s ease, color 0.15s ease;"
+             (mouseenter)="hoverRating = star"
+             (mouseleave)="hoverRating = 0"
+             (click)="setRating(star)">
+          </i>
+        }
+      </div>
+      <div style="font-weight: 700; font-size: 14px; color: #d97706; min-height: 20px;">
+        {{ getRatingLabel(hoverRating || ratingValue) }}
+      </div>
+    </div>
+
+    <!-- Review Textarea -->
+    <div style="margin-bottom: 22px; text-align: left;">
+      <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">
+        Your Feedback <small style="color: #94a3b8; font-weight: 400;">(Optional)</small>
+      </label>
+      <textarea [(ngModel)]="reviewText"
+                rows="3"
+                placeholder="Share your experience (taste, packaging, delivery speed)..."
+                maxlength="300"
+                style="width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: 13.5px; resize: none; outline: none; box-sizing: border-box; transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='#f59e0b'"
+                onblur="this.style.borderColor='#cbd5e1'">
+      </textarea>
+      <div style="font-size: 11px; color: #94a3b8; text-align: right; margin-top: 4px;">
+        Note: Once submitted, ratings cannot be edited.
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div style="display: flex; gap: 10px;">
+      <button type="button" (click)="closeRateModal()" style="flex: 1; padding: 12px; border: 1px solid #cbd5e1; background: white; color: #475569; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+        Cancel
+      </button>
+      <button type="button" [disabled]="isSubmittingRating || ratingValue < 1" (click)="submitRating()" style="flex: 1.6; padding: 12px; border: none; background: #f59e0b; color: white; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); transition: opacity 0.2s;">
+        <i *ngIf="isSubmittingRating" class="fa-solid fa-spinner fa-spin"></i>
+        <span>{{ isSubmittingRating ? 'Submitting...' : 'Submit Rating' }}</span>
+      </button>
+    </div>
+
   </div>
 </div>
 

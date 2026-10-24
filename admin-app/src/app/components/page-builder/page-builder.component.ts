@@ -22,7 +22,11 @@ export class PageBuilderComponent implements OnInit {
   errorMessage = '';
 
   // Device Preview Mode
-  previewMode: 'desktop' | 'mobile' = 'desktop';
+  previewMode: 'desktop' | 'mobile' = 'mobile';
+  showCanvas = true;
+  toggleCanvasVisibility() {
+    this.showCanvas = !this.showCanvas;
+  }
 
   // Section search filter
   sectionSearch = '';

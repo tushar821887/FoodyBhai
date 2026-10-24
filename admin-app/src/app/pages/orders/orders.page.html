@@ -40,6 +40,11 @@
         <i class="icon">👥</i>
         <span>Users</span>
       </a>
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'coupons'" [routerLink]="['/coupons']" (click)="setView('coupons')">
+        <i class="icon">🎟️</i>
+        <span>Coupons & Tracking</span>
+      </a>
+
       <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'contacts'" [routerLink]="['/contacts']" (click)="setView('contacts')">
         <i class="icon">💬</i>
         <span>Complaints/Contacts</span>
@@ -52,6 +57,10 @@
       <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'settings'" [routerLink]="['/settings']" (click)="setView('settings')">
         <i class="icon">⚙️</i>
         <span>Settings</span>
+      </a>
+            <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'banner'" [routerLink]="['/banner']" (click)="setView('banner')">
+        <i class="icon">📢</i>
+        <span>Header Promo Banner</span>
       </a>
       <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'theme'" [routerLink]="['/theme']" (click)="setView('theme')">
         <i class="icon">🎨</i>
@@ -90,14 +99,17 @@
         <h2>Welcome, {{ currentUser?.name || 'User' }}</h2>
         <p>Here's what's happening in your kitchen today.</p>
       </div>
-      <div class="header-actions" *ngIf="!isAgent" style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
-        <span style="font-weight: 700; font-size: 15px; color: #334155;">{{ restaurantOpen ? 'Accepting Orders' : 'Offline' }}</span>
-        <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 28px; margin: 0;">
-          <input type="checkbox" [(ngModel)]="restaurantOpen" (change)="toggleRestaurantStatus()" style="opacity: 0; width: 0; height: 0;">
-          <span class="slider round" [class.active]="restaurantOpen" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 34px;" [style.background-color]="restaurantOpen ? '#22c55e' : '#cbd5e1'">
-            <span class="knob" [style.transform]="restaurantOpen ? 'translateX(22px)' : 'translateX(0)'" style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
-          </span>
-        </label>
+      <div class="header-actions" *ngIf="!isAgent">
+        <div class="store-status-pill" [class.is-open]="restaurantOpen" [class.is-offline]="!restaurantOpen">
+          <div class="status-indicator">
+            <span class="status-pulse-dot" [class.active]="restaurantOpen"></span>
+            <span class="status-label-text">{{ restaurantOpen ? 'Accepting Orders' : 'Store Offline' }}</span>
+          </div>
+          <label class="foody-switch" title="Toggle Store Acceptance">
+            <input type="checkbox" [(ngModel)]="restaurantOpen" (change)="toggleRestaurantStatus()">
+            <span class="foody-switch-slider"></span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -792,30 +804,21 @@
           </div>
           
           <div class="settings-form-modern">
-            <div class="form-group-modern" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 8px;">
+            <div class="form-group-modern" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
               <div>
-                <strong style="display: block; font-size: 16px;">Accepting Orders</strong>
-                <span style="font-size: 13px; color: #64748b;">If turned off, checkout is disabled globally.</span>
+                <strong style="display: block; font-size: 16px; color: #1e293b;">Accepting Orders</strong>
+                <span style="font-size: 13px; color: #64748b;">If turned off, customer checkout is disabled globally.</span>
               </div>
-              <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 28px;">
-                <input type="checkbox" [(ngModel)]="restaurantOpen" (change)="saveSettings()" style="opacity: 0; width: 0; height: 0;">
-                <span class="slider round" [class.active]="restaurantOpen" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 34px;" [style.background-color]="restaurantOpen ? '#22c55e' : '#cbd5e1'">
-                  <span class="knob" [style.transform]="restaurantOpen ? 'translateX(22px)' : 'translateX(0)'" style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"></span>
-                </span>
-              </label>
+              <div class="store-status-pill" [class.is-open]="restaurantOpen" [class.is-offline]="!restaurantOpen">
+                <span class="status-label-text" style="font-size: 13px;">{{ restaurantOpen ? 'ONLINE' : 'PAUSED' }}</span>
+                <label class="foody-switch" title="Toggle Store Acceptance">
+                  <input type="checkbox" [(ngModel)]="restaurantOpen" (change)="saveSettings()">
+                  <span class="foody-switch-slider"></span>
+                </label>
+              </div>
             </div>
-            
-            <div class="form-group-modern" *ngIf="!restaurantOpen" style="margin-top: 15px; animation: fadeIn 0.3s;">
-              <label>Reason for Closing</label>
-              <select [(ngModel)]="restaurantClosedReason" (change)="saveSettings()" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px;">
-                <option value="We are currently closed. Please check back later.">Standard Closing (Out of hours)</option>
-                <option value="Too many orders! We are temporarily pausing new orders.">High volume of orders (Temporarily paused)</option>
-                <option value="We are closed due to bad weather conditions.">Bad Weather</option>
-                <option value="Closed for maintenance.">Maintenance</option>
-              </select>
-            </div>
-          </div>
         </div>
+      </div>
 
         <div class="settings-card">
             <div class="card-header-styled">
@@ -1055,6 +1058,575 @@
       </div>
     </ng-container>
 
+    <!-- COUPONS & TRACKING VIEW -->
+    <ng-container *ngIf="currentView === 'coupons'">
+      <div class="coupons-container animate-fade-in">
+        
+        <!-- Header Banner -->
+        <div class="coupons-header-banner">
+          <div class="banner-text">
+            <h2>🎟️ Coupons & Discounts</h2>
+            <p>Create promotional promo codes and track coupon-driven orders, sales revenue, and customer details.</p>
+          </div>
+          <div class="banner-actions">
+            <button class="btn-create-coupon" (click)="openCreateCouponModal()">
+              <span class="btn-icon">+</span> Create New Coupon
+            </button>
+          </div>
+        </div>
+
+        <!-- Top Metric KPI Cards -->
+        <div class="coupon-stats-grid">
+          <div class="coupon-stat-card">
+            <div class="stat-icon-wrapper icon-purple">
+              <span>🎟️</span>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Coupons</span>
+              <h3 class="stat-value">{{ couponStats?.totalCoupons || coupons.length }}</h3>
+              <span class="stat-meta text-success">{{ couponStats?.activeCoupons || 0 }} Active</span>
+            </div>
+          </div>
+
+          <div class="coupon-stat-card">
+            <div class="stat-icon-wrapper icon-blue">
+              <span>🛍️</span>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Orders Placed</span>
+              <h3 class="stat-value">{{ totalCouponOrdersCount }}</h3>
+              <span class="stat-meta">Redeemed by customers</span>
+            </div>
+          </div>
+
+          <div class="coupon-stat-card">
+            <div class="stat-icon-wrapper icon-green">
+              <span>💰</span>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Coupon Revenue</span>
+              <h3 class="stat-value">₹{{ totalCouponRevenue | number:'1.0-0' }}</h3>
+              <span class="stat-meta text-success">Total order sales generated</span>
+            </div>
+          </div>
+
+          <div class="coupon-stat-card">
+            <div class="stat-icon-wrapper icon-amber">
+              <span>🎁</span>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Discounts Given</span>
+              <h3 class="stat-value">₹{{ totalCouponDiscount | number:'1.0-0' }}</h3>
+              <span class="stat-meta text-amber">Savings passed to buyers</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="coupon-tabs-bar">
+          <button class="coupon-tab-btn" [class.active]="couponTab === 'coupons'" (click)="couponTab = 'coupons'">
+            🎟️ All Coupons ({{ filteredCoupons.length }})
+          </button>
+          <button class="coupon-tab-btn" [class.active]="couponTab === 'tracking'" (click)="couponTab = 'tracking'; loadCouponOrders(selectedCouponFilter === 'all' ? undefined : selectedCouponFilter)">
+            📈 Customer Order Tracking ({{ filteredCouponOrders.length }})
+          </button>
+          <button class="coupon-tab-btn" [class.active]="couponTab === 'website-cart'" (click)="couponTab = 'website-cart'">
+            🛒 Website Cart Offers & Bill Settings
+          </button>
+        </div>
+
+        <!-- TAB 1: ALL COUPONS LIST -->
+        <div *ngIf="couponTab === 'coupons'" class="tab-content animate-fade-in">
+          <!-- Toolbar -->
+          <div class="coupons-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" [(ngModel)]="couponSearchTerm" placeholder="Search by code or description...">
+              <button *ngIf="couponSearchTerm" (click)="couponSearchTerm = ''" class="btn-clear-search">✕</button>
+            </div>
+            <div class="filter-group">
+              <select [(ngModel)]="couponStatusFilter">
+                <option value="all">All Statuses</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive Only</option>
+              </select>
+              <button class="btn-refresh" (click)="loadCoupons(); loadCouponStats()" title="Refresh Coupons">
+                <span [class.spinning]="isLoadingCoupons">🔄</span> Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupons Grid -->
+          <div *ngIf="isLoadingCoupons" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading coupons & performance metrics...</p>
+          </div>
+
+          <div *ngIf="!isLoadingCoupons && filteredCoupons.length === 0" class="empty-state-coupons">
+            <div class="empty-icon">🎟️</div>
+            <h3>No coupons found</h3>
+            <p>{{ couponSearchTerm ? 'No coupons match your search query.' : 'Create your first discount coupon code to reward customers and boost sales.' }}</p>
+            <button class="btn-create-coupon" (click)="openCreateCouponModal()">+ Create Coupon</button>
+          </div>
+
+          <div *ngIf="!isLoadingCoupons && filteredCoupons.length > 0" class="coupons-card-grid">
+            <div *ngFor="let c of filteredCoupons" class="coupon-card" [class.inactive-card]="!c.isActive">
+              
+              <div class="coupon-card-header">
+                <div class="coupon-code-badge" (click)="copyCouponCode(c.code)" title="Click to copy coupon code">
+                  <span class="code-text">{{ c.code }}</span>
+                  <span class="copy-icon">{{ copiedCouponCode === c.code ? '✓' : '📋' }}</span>
+                </div>
+                <div class="coupon-status-toggle">
+                  <span class="public-badge" [class.is-public]="c.isPublic !== false" [class.is-private]="c.isPublic === false" (click)="toggleCouponPublic(c)" [title]="c.isPublic !== false ? 'Click to make private/secret' : 'Click to show in Available Offers'">
+                    {{ c.isPublic !== false ? '🏷️ Cart Offer' : '🔒 Secret' }}
+                  </span>
+                  <span class="status-pill" [class.status-active]="c.isActive" [class.status-inactive]="!c.isActive">
+                    {{ c.isActive ? 'Active' : 'Disabled' }}
+                  </span>
+                  <label class="switch-toggle" [title]="c.isActive ? 'Disable coupon' : 'Enable coupon'">
+                    <input type="checkbox" [checked]="c.isActive" (change)="toggleCouponStatus(c)">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="coupon-offer-strip">
+                <span class="offer-value">
+                  {{ c.discountType === 'percentage' ? c.discountValue + '% OFF' : '₹' + c.discountValue + ' FLAT OFF' }}
+                </span>
+                <span class="offer-cap" *ngIf="c.discountType === 'percentage' && c.maxDiscount">
+                  (Up to ₹{{ c.maxDiscount }})
+                </span>
+              </div>
+
+              <p class="coupon-description" *ngIf="c.description">{{ c.description }}</p>
+
+              <!-- Rules & Limits -->
+              <div class="coupon-rules-list">
+                <div class="rule-item">
+                  <span class="rule-icon">🛒</span>
+                  <span class="rule-label">Min Order:</span>
+                  <strong class="rule-val">{{ c.minOrderAmount > 0 ? '₹' + c.minOrderAmount : 'No Min.' }}</strong>
+                </div>
+                <div class="rule-item">
+                  <span class="rule-icon">⏳</span>
+                  <span class="rule-label">Expires:</span>
+                  <strong class="rule-val">{{ c.validUntil ? (c.validUntil | date:'dd MMM yyyy') : 'No Expiry' }}</strong>
+                </div>
+                <div class="rule-item">
+                  <span class="rule-icon">👥</span>
+                  <span class="rule-label">Usage:</span>
+                  <strong class="rule-val">{{ c.usedCount || 0 }} {{ c.usageLimit ? '/ ' + c.usageLimit : 'uses' }}</strong>
+                </div>
+              </div>
+
+              <!-- Tracking Performance Strip for this specific coupon -->
+              <div class="coupon-metrics-strip">
+                <div class="mini-metric">
+                  <span class="mini-label">Orders</span>
+                  <strong class="mini-value">{{ c.metrics?.ordersCount || 0 }}</strong>
+                </div>
+                <div class="mini-metric">
+                  <span class="mini-label">Revenue</span>
+                  <strong class="mini-value text-success">₹{{ c.metrics?.totalRevenue || 0 | number:'1.0-0' }}</strong>
+                </div>
+                <div class="mini-metric">
+                  <span class="mini-label">Discounts</span>
+                  <strong class="mini-value text-amber">₹{{ c.metrics?.totalDiscount || 0 | number:'1.0-0' }}</strong>
+                </div>
+                <div class="mini-metric">
+                  <span class="mini-label">Buyers</span>
+                  <strong class="mini-value">{{ c.metrics?.uniqueCustomersCount || 0 }}</strong>
+                </div>
+              </div>
+
+              <!-- Card Actions -->
+              <div class="coupon-card-footer">
+                <button class="btn-track-card" (click)="trackCouponOrders(c)" title="View all customer orders using this coupon">
+                  📈 Track Orders ({{ c.metrics?.ordersCount || 0 }})
+                </button>
+                <div class="icon-actions">
+                  <button class="btn-icon-edit" (click)="openEditCouponModal(c)" title="Edit Coupon">✏️</button>
+                  <button class="btn-icon-delete" (click)="deleteCoupon(c)" title="Delete Coupon">🗑️</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: COUPON TRACKING & CUSTOMER ORDERS -->
+        <div *ngIf="couponTab === 'tracking'" class="tab-content animate-fade-in">
+          <!-- Tracking Filter Toolbar -->
+          <div class="tracking-toolbar">
+            <div class="toolbar-left">
+              <div class="filter-select-wrapper">
+                <label>Filter Coupon:</label>
+                <select [ngModel]="selectedCouponFilter" (ngModelChange)="filterCouponOrdersByCode($event)">
+                  <option value="all">All Coupons ({{ couponOrders.length }} orders)</option>
+                  <option *ngFor="let c of coupons" [value]="c.code">
+                    {{ c.code }} ({{ c.metrics?.ordersCount || 0 }} orders)
+                  </option>
+                </select>
+              </div>
+
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" [(ngModel)]="couponTrackingSearch" placeholder="Search customer, phone, order ID...">
+                <button *ngIf="couponTrackingSearch" (click)="couponTrackingSearch = ''" class="btn-clear-search">✕</button>
+              </div>
+            </div>
+
+            <div class="toolbar-right">
+              <span class="results-count">Showing <strong>{{ filteredCouponOrders.length }}</strong> order(s)</span>
+              <button class="btn-refresh" (click)="loadCouponOrders(selectedCouponFilter === 'all' ? undefined : selectedCouponFilter)" title="Refresh Orders">
+                <span [class.spinning]="isLoadingCouponOrders">🔄</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tracking Orders List / Table -->
+          <div *ngIf="isLoadingCouponOrders" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading coupon order history & customer details...</p>
+          </div>
+
+          <div *ngIf="!isLoadingCouponOrders && filteredCouponOrders.length === 0" class="empty-state-coupons">
+            <div class="empty-icon">📦</div>
+            <h3>No orders recorded</h3>
+            <p>{{ selectedCouponFilter !== 'all' ? 'No orders have been placed with coupon ' + selectedCouponFilter + ' yet.' : 'No orders have used coupons yet.' }}</p>
+          </div>
+
+          <div *ngIf="!isLoadingCouponOrders && filteredCouponOrders.length > 0" class="tracking-table-card">
+            <div class="table-responsive">
+              <table class="tracking-table">
+                <thead>
+                  <tr>
+                    <th>Order & Date</th>
+                    <th>Customer Details</th>
+                    <th>Coupon Applied</th>
+                    <th>Order Total</th>
+                    <th>Discount Given</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let ord of filteredCouponOrders">
+                    <td class="order-id-cell">
+                      <span class="short-id">#{{ ord.shortId }}</span>
+                      <small class="order-date">{{ ord.createdAt | date:'dd MMM yyyy, hh:mm a' }}</small>
+                    </td>
+
+                    <td class="customer-cell">
+                      <div class="customer-info">
+                        <strong class="customer-name">{{ ord.customer?.name }}</strong>
+                        <span class="customer-phone">📞 {{ ord.customer?.phone }}</span>
+                        <small class="customer-email" *ngIf="ord.customer?.email && ord.customer?.email !== 'N/A'">📧 {{ ord.customer?.email }}</small>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span class="applied-coupon-pill">🎟️ {{ ord.couponCode }}</span>
+                    </td>
+
+                    <td class="amount-cell">
+                      <strong>₹{{ ord.totalAmount }}</strong>
+                      <small class="payment-method-badge" [class.online-badge]="ord.paymentMethod === 'online'">
+                        {{ ord.paymentMethod | uppercase }}
+                      </small>
+                    </td>
+
+                    <td class="discount-cell">
+                      <span class="discount-badge">-₹{{ ord.discount }}</span>
+                    </td>
+
+                    <td class="items-cell">
+                      <span class="items-badge">{{ ord.itemsCount }} item(s)</span>
+                      <small class="items-preview" [title]="ord.itemsSummary">{{ ord.itemsSummary }}</small>
+                    </td>
+
+                    <td>
+                      <span class="status-badge" [ngClass]="'status-' + ord.status">
+                        {{ ord.status | uppercase }}
+                      </span>
+                    </td>
+
+                    <td>
+                      <button class="btn-view-order-mini" (click)="openCouponOrderDetails(ord)">
+                        👁️ View
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- TAB 3: WEBSITE CART OFFERS & BILL BREAKDOWN CONFIGURATION -->
+        <div *ngIf="couponTab === 'website-cart'" class="tab-content animate-fade-in">
+          
+          <div class="cart-config-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-top: 10px;">
+            
+            <!-- Left: Settings Form Controls -->
+            <div class="cart-config-form-card" style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 28px; background: #fff7ed; padding: 8px; border-radius: 12px; color: #ea580c;">🏷️</span>
+                  <div>
+                    <h3 style="margin: 0; font-size: 18px; color: #0f172a; font-weight: 800;">Website Cart Offers Widget</h3>
+                    <p style="margin: 3px 0 0; font-size: 13px; color: #64748b;">Manage how available offers and bill charges appear on the website checkout page</p>
+                  </div>
+                </div>
+                <label class="switch-toggle" title="Toggle Available Offers Widget on Website">
+                  <input type="checkbox" [(ngModel)]="cartOffersConfig.enabled">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Main Toggle Status -->
+              <div style="padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"
+                   [style.background]="cartOffersConfig.enabled ? '#ecfdf5' : '#fef2f2'"
+                   [style.color]="cartOffersConfig.enabled ? '#065f46' : '#991b1b'"
+                   [style.border]="cartOffersConfig.enabled ? '1px solid #a7f3d0' : '1px solid #fecaca'">
+                <span style="font-size: 18px;">{{ cartOffersConfig.enabled ? '✅' : '⏸️' }}</span>
+                <span style="font-size: 13.5px; font-weight: 600;">
+                  Available Offers Section is currently <strong>{{ cartOffersConfig.enabled ? 'ENABLED' : 'DISABLED' }}</strong> on the website cart.
+                </span>
+              </div>
+
+              <!-- Text Customization -->
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                    Widget Header Title
+                  </label>
+                  <input type="text" [(ngModel)]="cartOffersConfig.title" placeholder="Available Offers"
+                         style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none;">
+                  <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">e.g. "Available Offers" or "Special Deals & Discounts"</small>
+                </div>
+
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                    Widget Subtitle Text
+                  </label>
+                  <input type="text" [(ngModel)]="cartOffersConfig.subtitle" placeholder="Tap to view coupons & deals"
+                         style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none;">
+                  <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Explains the benefit to customer before opening modal</small>
+                </div>
+
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                    Button Text
+                  </label>
+                  <input type="text" [(ngModel)]="cartOffersConfig.buttonText" placeholder="View Offers"
+                         style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none;">
+                </div>
+
+                <!-- Display Mode Selection -->
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                    Display Layout Style on Cart Page
+                  </label>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div (click)="cartOffersConfig.displayMode = 'popup'"
+                         style="border: 2px solid; border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s;"
+                         [style.borderColor]="cartOffersConfig.displayMode === 'popup' ? '#ea580c' : '#e2e8f0'"
+                         [style.background]="cartOffersConfig.displayMode === 'popup' ? '#fff7ed' : '#ffffff'">
+                      <div style="font-size: 20px; margin-bottom: 4px;">🎟️</div>
+                      <strong style="display: block; font-size: 12px; color: #0f172a;">Popup Modal</strong>
+                      <span style="font-size: 10.5px; color: #64748b;">Trigger Card</span>
+                    </div>
+
+                    <div (click)="cartOffersConfig.displayMode = 'chips'"
+                         style="border: 2px solid; border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s;"
+                         [style.borderColor]="cartOffersConfig.displayMode === 'chips' ? '#ea580c' : '#e2e8f0'"
+                         [style.background]="cartOffersConfig.displayMode === 'chips' ? '#fff7ed' : '#ffffff'">
+                      <div style="font-size: 20px; margin-bottom: 4px;">🏷️</div>
+                      <strong style="display: block; font-size: 12px; color: #0f172a;">Inline Badges</strong>
+                      <span style="font-size: 10.5px; color: #64748b;">Coupon Chips</span>
+                    </div>
+
+                    <div (click)="cartOffersConfig.displayMode = 'both'"
+                         style="border: 2px solid; border-radius: 10px; padding: 12px 10px; text-align: center; cursor: pointer; transition: all 0.2s;"
+                         [style.borderColor]="cartOffersConfig.displayMode === 'both' ? '#ea580c' : '#e2e8f0'"
+                         [style.background]="cartOffersConfig.displayMode === 'both' ? '#fff7ed' : '#ffffff'">
+                      <div style="font-size: 20px; margin-bottom: 4px;">✨</div>
+                      <strong style="display: block; font-size: 12px; color: #0f172a;">Both Styles</strong>
+                      <span style="font-size: 10.5px; color: #64748b;">Modal + Chips</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dynamic Cart Billing Charges -->
+                <div style="margin-top: 10px; padding-top: 18px; border-top: 1px solid #f1f5f9;">
+                  <h4 style="margin: 0 0 12px; font-size: 15px; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                    <span>🧾</span> Dynamic Cart Bill & Delivery Charges
+                  </h4>
+                  
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                      <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">🛵 Delivery Fee (₹)</label>
+                      <input type="number" [(ngModel)]="deliveryFee" min="0" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 700;">
+                    </div>
+                    <div>
+                      <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">🎁 Free Delivery Above (₹)</label>
+                      <input type="number" [(ngModel)]="freeDeliveryMinAmount" min="0" placeholder="0 = Never free" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 700;">
+                      <small style="font-size: 11px; color: #64748b; display: block; margin-top: 3px;">
+                        Set <strong>0</strong> to ALWAYS charge delivery fee. If set (e.g. 150), orders above this get FREE delivery.
+                      </small>
+                    </div>
+                    <div>
+                      <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">⚡ Platform Fee (₹)</label>
+                      <input type="number" [(ngModel)]="platformFee" min="0" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 700;">
+                    </div>
+                    <div>
+                      <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px;">📊 GST Tax (%)</label>
+                      <input type="number" [(ngModel)]="gstPercent" min="0" max="28" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-weight: 700;">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Save Action Button -->
+                <div style="margin-top: 15px; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+                  <button (click)="saveBillingSettings()"
+                          style="width: 100%; background: linear-gradient(135deg, #ea580c, #c2410c); color: white; border: none; padding: 13px 20px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>💾</span> Save All Website Cart & Offers Settings
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Right: Real-time Live Preview of Website Cart Summary -->
+            <div class="cart-preview-card" style="background: #f8fafc; border-radius: 16px; border: 1.5px dashed #cbd5e1; padding: 24px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <span style="font-size: 12px; font-weight: 800; color: #64748b; letter-spacing: 0.8px; text-transform: uppercase;">
+                  👁️ LIVE WEBSITE PREVIEW
+                </span>
+                <span style="background: #e2e8f0; color: #475569; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                  Cart Summary Section
+                </span>
+              </div>
+
+              <!-- Preview Cart Summary Box -->
+              <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);">
+                <h4 style="margin: 0 0 16px; font-size: 16px; font-weight: 800; color: #1e293b; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9;">
+                  Order Summary
+                </h4>
+
+                <!-- Promo Input Mock -->
+                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                  <div style="flex: 1; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #94a3b8; font-weight: 600;">
+                    Enter coupon code (e.g. FOODY25)
+                  </div>
+                  <button style="background: #ea580c; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                    Apply
+                  </button>
+                </div>
+
+                <!-- Preview: Available Offers Widget -->
+                <div *ngIf="cartOffersConfig.enabled">
+                  
+                  <!-- Popup Mode / Both -->
+                  <div *ngIf="cartOffersConfig.displayMode === 'popup' || cartOffersConfig.displayMode === 'both'"
+                       style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1.5px dashed #f59e0b; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span style="font-size: 22px; background: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(245, 158, 11, 0.2);">🏷️</span>
+                      <div>
+                        <strong style="display: block; font-size: 13.5px; color: #92400e; font-weight: 800;">
+                          {{ (coupons.length || 3) }} {{ cartOffersConfig.title || 'Available Offers' }}
+                        </strong>
+                        <span style="font-size: 11.5px; color: #b45309;">
+                          {{ cartOffersConfig.subtitle || 'Tap to view coupons & deals' }}
+                        </span>
+                      </div>
+                    </div>
+                    <button style="background: #f59e0b; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                      <span>{{ cartOffersConfig.buttonText || 'View Offers' }}</span> &gt;
+                    </button>
+                  </div>
+
+                  <!-- Chips Mode / Both -->
+                  <div *ngIf="cartOffersConfig.displayMode === 'chips' || cartOffersConfig.displayMode === 'both'"
+                       style="background: #fffbeb; border: 1.5px dashed #f59e0b; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <span style="font-size: 10.5px; font-weight: 800; color: #92400e; letter-spacing: 0.8px;">AVAILABLE OFFERS:</span>
+                      <span style="font-size: 11px; color: #d97706; font-weight: 700;">View Details &gt;</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                      <span *ngFor="let c of (coupons.slice(0, 4))"
+                            style="background: white; border: 1px solid #fed7aa; color: #92400e; padding: 4px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                        <span>{{ c.code }}</span>
+                        <span style="background: #fef3c7; color: #d97706; font-size: 10px; padding: 1px 4px; border-radius: 3px;">
+                          {{ c.discountType === 'percentage' ? c.discountValue + '% OFF' : '₹' + c.discountValue + ' OFF' }}
+                        </span>
+                      </span>
+                      <span *ngIf="coupons.length === 0" style="font-size: 12px; color: #b45309;">FOODY30 &bull; FOODY25 &bull; FOODY20</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div *ngIf="!cartOffersConfig.enabled"
+                     style="padding: 12px; border: 1px dashed #cbd5e1; border-radius: 10px; text-align: center; color: #94a3b8; font-size: 12.5px; margin-bottom: 14px;">
+                  🚫 Available Offers widget is currently hidden on checkout
+                </div>
+
+                <!-- Bill Totals Breakdown -->
+                <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: #475569;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>Item Total</span>
+                    <strong style="color: #0f172a;">₹250.00</strong>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between;" [style.color]="(deliveryFee === 0 || (freeDeliveryMinAmount > 0 && 250 >= freeDeliveryMinAmount)) ? '#10b981' : '#475569'">
+                    <span>Delivery Fee</span>
+                    <strong>
+                      <span *ngIf="deliveryFee > 0 && freeDeliveryMinAmount > 0 && 250 >= freeDeliveryMinAmount" style="text-decoration: line-through; color: #94a3b8; font-size: 0.88em; margin-right: 4px;">₹{{ deliveryFee }}</span>
+                      {{ (deliveryFee === 0 || (freeDeliveryMinAmount > 0 && 250 >= freeDeliveryMinAmount)) ? 'FREE' : '₹' + deliveryFee }}
+                    </strong>
+                  </div>
+                  <small *ngIf="deliveryFee > 0 && freeDeliveryMinAmount > 0 && 250 >= freeDeliveryMinAmount" style="color: #059669; font-size: 11px; text-align: right; display: block; margin-top: -4px;">
+                    🎉 Free delivery unlocked (orders above ₹{{ freeDeliveryMinAmount }})
+                  </small>
+
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>GST ({{ gstPercent }}%)</span>
+                    <strong>₹{{ ((250 * gstPercent) / 100) | number:'1.0-0' }}</strong>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>Platform Fee</span>
+                    <strong>₹{{ platformFee }}</strong>
+                  </div>
+
+                  <div style="margin-top: 8px; padding-top: 10px; border-top: 1.5px dashed #cbd5e1; display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: #0f172a;">
+                    <span>To Pay</span>
+                    <span style="color: #ea580c;">₹{{ (250 + ((freeDeliveryMinAmount > 0 && 250 >= freeDeliveryMinAmount) ? 0 : deliveryFee) + ((250 * gstPercent) / 100) + platformFee) | number:'1.0-0' }}</span>
+                  </div>
+                </div>
+
+                <!-- Checkout Button Mock -->
+                <div style="margin-top: 16px;">
+                  <button style="width: 100%; background: #0f172a; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: default;">
+                    Proceed to Details &rarr;
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </ng-container>
+
     <!-- SETTINGS VIEW -->
     <ng-container *ngIf="currentView === 'settings'">
       <div class="settings-container animate-fade-in">
@@ -1108,6 +1680,79 @@
             <div class="settings-footer">
               <button class="btn-save-modern" (click)="saveSettings()">
                 <span class="save-icon">💾</span> Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Taxes & Billing Configuration Card -->
+        <div class="settings-card" style="margin-top: 25px;">
+          <div class="card-header-styled">
+            <div class="icon-circle" style="background: #eff6ff; color: #2563eb;">🧾</div>
+            <div>
+              <h3>Taxes, Platform Fee & Delivery Charges</h3>
+              <p>Set dynamic GST rate, convenience platform fee, and delivery fee charged at customer checkout.</p>
+            </div>
+          </div>
+          
+          <div class="settings-form-modern" style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px;">
+              <div class="form-group-modern" style="margin: 0;">
+                <label style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                  <span>📊</span> GST Tax Percentage (%)
+                </label>
+                <div class="input-with-icon">
+                  <span class="input-icon">%</span>
+                  <input type="number" [(ngModel)]="gstPercent" min="0" max="28" step="0.5" placeholder="5" style="font-weight: 600;">
+                </div>
+                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                  Applied on food item subtotal (e.g. 5 for 5% GST, 18 for 18% GST). Set 0 to disable tax.
+                </small>
+              </div>
+
+              <div class="form-group-modern" style="margin: 0;">
+                <label style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                  <span>⚡</span> Platform Fee (₹)
+                </label>
+                <div class="input-with-icon">
+                  <span class="input-icon">₹</span>
+                  <input type="number" [(ngModel)]="platformFee" min="0" step="1" placeholder="5" style="font-weight: 600;">
+                </div>
+                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                  Convenience platform fee charged per placed order (e.g. ₹5). Set 0 to make platform fee free.
+                </small>
+              </div>
+
+              <div class="form-group-modern" style="margin: 0;">
+                <label style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                  <span>🛵</span> Standard Delivery Fee (₹)
+                </label>
+                <div class="input-with-icon">
+                  <span class="input-icon">₹</span>
+                  <input type="number" [(ngModel)]="deliveryFee" min="0" step="1" placeholder="0" style="font-weight: 600;">
+                </div>
+                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                  Delivery charge per delivery order (e.g. ₹30). Set 0 for FREE delivery across all orders.
+                </small>
+              </div>
+
+              <div class="form-group-modern" style="margin: 0;">
+                <label style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                  <span>🎁</span> Free Delivery on Orders Above (₹)
+                </label>
+                <div class="input-with-icon">
+                  <span class="input-icon">₹</span>
+                  <input type="number" [(ngModel)]="freeDeliveryMinAmount" min="0" step="50" placeholder="0 = Never free" style="font-weight: 600;">
+                </div>
+                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                  Set to <strong>0</strong> to ALWAYS charge delivery fee on every order. If set (e.g. 150), orders above this amount get FREE delivery.
+                </small>
+              </div>
+            </div>
+
+            <div class="settings-footer" style="padding-top: 15px; border-top: 1px solid #e2e8f0;">
+              <button class="btn-save-modern" (click)="saveBillingSettings()">
+                <span class="save-icon">💾</span> Save Billing & Delivery Settings
               </button>
             </div>
           </div>
@@ -1501,7 +2146,7 @@
         <span class="mobile-nav-icon">🍽️</span>
         <span class="mobile-nav-label">Menu</span>
       </a>
-      <a class="mobile-nav-item" [class.active]="mobileMenuOpen || ['agents', 'users', 'cancel-requests', 'contacts', 'settings'].includes(currentView)" (click)="toggleMobileMenu()" style="position: relative;">
+      <a class="mobile-nav-item" [class.active]="mobileMenuOpen || ['agents', 'users', 'coupons', 'cancel-requests', 'contacts', 'settings'].includes(currentView)" (click)="toggleMobileMenu()" style="position: relative;">
         <span class="mobile-nav-icon">☰</span>
         <span class="mobile-nav-label">More</span>
         <span *ngIf="!isAgent && totalPendingRequestsCount > 0" style="position: absolute; top: 6px; right: calc(50% - 15px); width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1.5px solid white;"></span>
@@ -1552,6 +2197,139 @@
       </div>
     </div>
   </div>
+
+  <!-- Create / Edit Coupon Modal -->
+  <div class="modal-overlay" *ngIf="showCreateCouponModal">
+    <div class="modal-content coupon-modal" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-icon-wrapper" style="background: #fdf2f8; color: #ec4899;">
+          <span class="modal-icon">🎟️</span>
+        </div>
+        <h3>{{ isEditingCoupon ? 'Edit Coupon' : 'Create New Coupon' }}</h3>
+        <p class="modal-subtitle">Configure discount rules, order thresholds, and validity</p>
+      </div>
+
+      <div class="modal-body coupon-form-body">
+        
+        <div *ngIf="couponErrorMessage" class="form-error-banner">
+          ⚠️ {{ couponErrorMessage }}
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Coupon Code <span class="required">*</span></label>
+            <input 
+              type="text" 
+              [(ngModel)]="couponForm.code" 
+              placeholder="e.g. FOODY50" 
+              style="text-transform: uppercase;"
+              [disabled]="isEditingCoupon"
+            >
+            <small class="hint">Customer enters this at checkout</small>
+          </div>
+
+          <div class="form-group">
+            <label>Discount Type <span class="required">*</span></label>
+            <select [(ngModel)]="couponForm.discountType">
+              <option value="percentage">Percentage Discount (%)</option>
+              <option value="fixed">Flat Fixed Amount (₹)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>{{ couponForm.discountType === 'percentage' ? 'Discount Percentage (%)' : 'Discount Amount (₹)' }} <span class="required">*</span></label>
+            <input type="number" [(ngModel)]="couponForm.discountValue" placeholder="e.g. 20" min="1">
+          </div>
+
+          <div class="form-group" *ngIf="couponForm.discountType === 'percentage'">
+            <label>Max Discount Cap (₹)</label>
+            <input type="number" [(ngModel)]="couponForm.maxDiscount" placeholder="e.g. 150 (0 for no cap)" min="0">
+            <small class="hint">Maximum saving allowed per order</small>
+          </div>
+          
+          <div class="form-group" *ngIf="couponForm.discountType !== 'percentage'">
+            <label>Minimum Order Amount (₹)</label>
+            <input type="number" [(ngModel)]="couponForm.minOrderAmount" placeholder="e.g. 299 (0 for none)" min="0">
+          </div>
+        </div>
+
+        <div class="form-row-2" *ngIf="couponForm.discountType === 'percentage'">
+          <div class="form-group">
+            <label>Minimum Order Amount (₹)</label>
+            <input type="number" [(ngModel)]="couponForm.minOrderAmount" placeholder="e.g. 199 (0 for none)" min="0">
+            <small class="hint">Cart subtotal required to apply</small>
+          </div>
+
+          <div class="form-group">
+            <label>Total Usage Limit</label>
+            <input type="number" [(ngModel)]="couponForm.usageLimit" placeholder="0 = unlimited" min="0">
+            <small class="hint">Overall redemption cap across all users</small>
+          </div>
+        </div>
+
+        <div class="form-row-2" *ngIf="couponForm.discountType !== 'percentage'">
+          <div class="form-group">
+            <label>Total Usage Limit</label>
+            <input type="number" [(ngModel)]="couponForm.usageLimit" placeholder="0 = unlimited" min="0">
+            <small class="hint">Overall redemption cap across all users</small>
+          </div>
+
+          <div class="form-group">
+            <label>Limit Per Customer</label>
+            <input type="number" [(ngModel)]="couponForm.perUserLimit" placeholder="1 = once per user" min="0">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Valid Until (Expiry Date)</label>
+            <input type="date" [(ngModel)]="couponForm.validUntil">
+            <small class="hint">Leave blank for no expiration</small>
+          </div>
+
+          <div class="form-group" *ngIf="couponForm.discountType === 'percentage'">
+            <label>Limit Per Customer</label>
+            <input type="number" [(ngModel)]="couponForm.perUserLimit" placeholder="1 = once per user" min="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description / Display Note</label>
+          <input type="text" [(ngModel)]="couponForm.description" placeholder="e.g. 20% off on all North Indian specialties">
+        </div>
+
+        <div class="form-group-checkbox">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="couponForm.isActive">
+            <span class="checkmark"></span>
+            <strong>Active & Available Immediately</strong>
+          </label>
+        </div>
+
+        <div class="form-group-checkbox" style="margin-top: 10px;">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="couponForm.isPublic">
+            <span class="checkmark"></span>
+            <strong>Show in "Available Offers" on Website Checkout</strong>
+          </label>
+          <small class="hint" style="margin-left: 28px; display: block; color: #64748b; font-size: 12px;">
+            When checked, customers see this offer in the Available Offers card & modal on the cart page. Uncheck for secret/private promo codes.
+          </small>
+        </div>
+
+      </div>
+
+      <div class="modal-actions full-width">
+        <button class="btn-cancel-modal" (click)="showCreateCouponModal = false" [disabled]="isSavingCoupon">Cancel</button>
+        <button class="btn-dispatch-modal" style="background: #ec4899; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);" (click)="saveCoupon()" [disabled]="isSavingCoupon">
+          {{ isSavingCoupon ? 'Saving...' : (isEditingCoupon ? 'Update Coupon' : 'Create Coupon') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
 <!-- Assign Agent Modal -->
 <div class="modal-overlay" *ngIf="showAssignModal">
   <div class="modal-content assign-modal">
@@ -2153,9 +2931,9 @@
           <span>Subtotal</span>
           <span>₹{{ (selectedHistoryOrder?.totalAmount || 0) - (selectedHistoryOrder?.gst || 0) - (selectedHistoryOrder?.platformFee || 0) + (selectedHistoryOrder?.discount || 0) - (selectedHistoryOrder?.deliveryCharge || 0) }}</span>
         </div>
-        <div *ngIf="selectedHistoryOrder?.deliveryCharge" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #475569;">
+        <div *ngIf="selectedHistoryOrder?.deliveryCharge || selectedHistoryOrder?.deliveryFee" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #475569;">
           <span>Delivery Charges</span>
-          <span>₹{{ selectedHistoryOrder?.deliveryCharge }}</span>
+          <span>₹{{ selectedHistoryOrder?.deliveryFee ?? selectedHistoryOrder?.deliveryCharge ?? 0 }}</span>
         </div>
         <div *ngIf="selectedHistoryOrder?.discount" style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #10b981;">
           <span>Discount Applied</span>

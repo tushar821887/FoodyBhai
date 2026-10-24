@@ -6,8 +6,28 @@ import { CartService } from '../../services/cart.service';
 import { LocationService } from '../../services/location.service';
 import { AuthService } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
+import { OrderService } from '../../services/order.service';
 import { AuthModalComponent } from '../auth-modal/auth-modal';
 import { AppUpdateService } from '../../services/app-update.service';
+
+export interface PromoBannerConfig {
+  enabled: boolean;
+  text: string;
+  badgeText?: string;
+  badgeBg?: string;
+  badgeColor?: string;
+  bgColor?: string;
+  bgGradientEnd?: string;
+  isGradient?: boolean;
+  textColor?: string;
+  height?: string;
+  fontSize?: string;
+  alignment?: 'center' | 'left' | 'right';
+  isMarquee?: boolean;
+  marqueeSpeed?: 'slow' | 'normal' | 'fast';
+  linkUrl?: string;
+  closeable?: boolean;
+}
 
 @Component({
   selector: 'app-header',
@@ -22,18 +42,41 @@ export class Header implements OnInit {
   isAuthModalOpen = false;
   isAccountDropdownOpen = false;
 
+  bannerConfig: PromoBannerConfig = {
+    enabled: true,
+    text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉',
+    badgeText: 'SPECIAL OFFER',
+    badgeBg: '#ffffff',
+    badgeColor: '#ea580c',
+    bgColor: '#ea580c',
+    bgGradientEnd: '#f97316',
+    isGradient: true,
+    textColor: '#ffffff',
+    height: '34px',
+    fontSize: '13px',
+    alignment: 'center',
+    isMarquee: true,
+    marqueeSpeed: 'normal',
+    linkUrl: '/menu',
+    closeable: false
+  };
+  isBannerDismissed = false;
+
   constructor(
     public cartService: CartService, 
     public locationService: LocationService,
     public authService: AuthService,
     public uiService: UiService,
     public appUpdateService: AppUpdateService,
+    private orderService: OrderService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
   ) {}
 
   ngOnInit() {
+    this.loadBannerConfig();
+
     this.uiService.authModalOpen$.subscribe(isOpen => {
       this.ngZone.run(() => {
         this.isAuthModalOpen = isOpen;
@@ -47,6 +90,65 @@ export class Header implements OnInit {
       this.closeAccountDropdown();
       this.closeMenu();
     });
+  }
+
+  loadBannerConfig() {
+    this.orderService.getSetting('promo_banner').subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null) {
+          try {
+            const parsed = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
+            if (parsed && typeof parsed === 'object') {
+              this.bannerConfig = { ...this.bannerConfig, ...parsed };
+            }
+          } catch {
+            if (typeof res.value === 'object') {
+              this.bannerConfig = { ...this.bannerConfig, ...res.value };
+            }
+          }
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  getBannerBackground(): string {
+    if (!this.bannerConfig) return '#ea580c';
+    if (this.bannerConfig.isGradient !== false && this.bannerConfig.bgGradientEnd) {
+      return `linear-gradient(90deg, ${this.bannerConfig.bgColor || '#ea580c'} 0%, ${this.bannerConfig.bgGradientEnd} 100%)`;
+    }
+    return this.bannerConfig.bgColor || '#ea580c';
+  }
+
+  getMarqueeDuration(): string {
+    if (!this.bannerConfig) return '24s';
+    if (this.bannerConfig.marqueeSpeed === 'slow') return '36s';
+    if (this.bannerConfig.marqueeSpeed === 'fast') return '15s';
+    return '24s';
+  }
+
+  getStaticJustify(): string {
+    if (!this.bannerConfig || !this.bannerConfig.alignment) return 'center';
+    if (this.bannerConfig.alignment === 'left') return 'flex-start';
+    if (this.bannerConfig.alignment === 'right') return 'flex-end';
+    return 'center';
+  }
+
+  onBannerClick() {
+    if (this.bannerConfig?.linkUrl) {
+      if (this.bannerConfig.linkUrl.startsWith('http')) {
+        window.open(this.bannerConfig.linkUrl, '_blank');
+      } else {
+        this.router.navigateByUrl(this.bannerConfig.linkUrl);
+      }
+    }
+  }
+
+  dismissBanner(event: MouseEvent) {
+    event.stopPropagation();
+    this.isBannerDismissed = true;
+    this.cdr.detectChanges();
   }
 
   @HostListener('window:scroll', [])

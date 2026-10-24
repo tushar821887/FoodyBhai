@@ -1,3 +1,23 @@
+
+export interface PromoBannerConfig {
+  enabled: boolean;
+  text: string;
+  badgeText?: string;
+  badgeBg?: string;
+  badgeColor?: string;
+  bgColor?: string;
+  bgGradientEnd?: string;
+  isGradient?: boolean;
+  textColor?: string;
+  height?: string;
+  fontSize?: string;
+  alignment?: 'center' | 'left' | 'right';
+  isMarquee?: boolean;
+  marqueeSpeed?: 'slow' | 'normal' | 'fast';
+  linkUrl?: string;
+  closeable?: boolean;
+}
+
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
@@ -94,8 +114,29 @@ export class OrdersPage implements OnInit, OnDestroy {
   baseOrders: Order[] = [];
   contacts: any[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
+
+  promoBanner: PromoBannerConfig = {
+    enabled: true,
+    text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉',
+    badgeText: 'SPECIAL OFFER',
+    badgeBg: '#ffffff',
+    badgeColor: '#ea580c',
+    bgColor: '#ea580c',
+    bgGradientEnd: '#f97316',
+    isGradient: true,
+    textColor: '#ffffff',
+    height: '34px',
+    fontSize: '13px',
+    alignment: 'center',
+    isMarquee: true,
+    marqueeSpeed: 'normal',
+    linkUrl: '/menu',
+    closeable: false
+  };
+  isSavingBanner = false;
+
   mobileMenuOpen = false;
 
   toggleMobileMenu() {
@@ -182,6 +223,29 @@ export class OrdersPage implements OnInit, OnDestroy {
   restaurantClosedReason = 'We are currently closed. Please check back later.';
   qrImageUrl: string = '';
   selectedQrMode: 'dynamic' | 'uploaded' = 'dynamic';
+
+  // Taxes, Platform Fee & Delivery Fee Settings
+  gstPercent: number = 5;
+  platformFee: number = 5;
+  deliveryFee: number = 0;
+  freeDeliveryMinAmount: number = 0;
+
+  // Website Cart Offers Widget Configuration
+  cartOffersConfig: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    displayMode: 'popup' | 'chips' | 'both';
+    maxOffersToShow: number;
+  } = {
+    enabled: true,
+    title: 'Available Offers',
+    subtitle: 'Tap to view coupons & deals',
+    buttonText: 'View Offers',
+    displayMode: 'popup',
+    maxOffersToShow: 5
+  };
 
   // App Release Settings
   appVersion: string = '1.0.0';
@@ -351,6 +415,25 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.getSetting('smtp_pass').subscribe(res => { if (res && res.value) this.smtpPass = res.value; });
     this.api.getSetting('smtp_from').subscribe(res => { if (res && res.value) this.smtpFrom = res.value; });
     this.api.getSetting('fast2sms_api_key').subscribe(res => { if (res && res.value) this.fast2smsKey = res.value; });
+    this.api.getSetting('tax_gst_percent').subscribe(res => { if (res && res.value !== undefined) this.gstPercent = Number(res.value) || 0; });
+    this.api.getSetting('platform_fee').subscribe(res => { if (res && res.value !== undefined) this.platformFee = Number(res.value) || 0; });
+    this.api.getSetting('delivery_fee').subscribe(res => { if (res && res.value !== undefined) this.deliveryFee = Number(res.value) || 0; });
+    this.api.getSetting('free_delivery_min_amount').subscribe(res => { if (res && res.value !== undefined) this.freeDeliveryMinAmount = Number(res.value) || 0; });
+    this.api.getSetting('cart_offers_config').subscribe(res => {
+      if (res && res.value !== undefined && res.value !== null) {
+        try {
+          const val = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
+          this.cartOffersConfig = {
+            enabled: val.enabled !== undefined ? Boolean(val.enabled) : true,
+            title: val.title || 'Available Offers',
+            subtitle: val.subtitle || 'Tap to view coupons & deals',
+            buttonText: val.buttonText || 'View Offers',
+            displayMode: val.displayMode || 'popup',
+            maxOffersToShow: Number(val.maxOffersToShow) || 5
+          };
+        } catch (e) {}
+      }
+    });
     this.fetchOrders();
     this.fetchRestaurantStats();
 
@@ -533,8 +616,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     return `${minutes}m ${seconds}s`;
   }
 
-  fetchOrders() {
-    if (this.isFetchingOrders) return;
+  fetchOrders(force = false) {
+    if (this.isFetchingOrders && !force) return;
     this.isFetchingOrders = true;
 
     this.api.getAllOrders().subscribe({
@@ -649,10 +732,12 @@ export class OrdersPage implements OnInit, OnDestroy {
         // Track all known orders
         data.forEach(o => this.knownOrderIds.add(o._id));
         this.isFirstLoad = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isFetchingOrders = false;
         console.error('Failed to fetch orders', err);
+        this.cdr.detectChanges();
       }
     });
   }
@@ -867,18 +952,43 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
 
+  
+  openCouponOrderDetails(couponOrder: any) {
+    const found = this.baseOrders.find(o => o._id === couponOrder.orderId || o._id === couponOrder._id);
+    if (found) {
+      this.selectedHistoryOrder = found;
+    } else {
+      this.selectedHistoryOrder = {
+        _id: couponOrder.orderId || couponOrder._id,
+        items: couponOrder.items || [],
+        totalAmount: couponOrder.totalAmount,
+        discount: couponOrder.discount,
+        couponCode: couponOrder.couponCode,
+        deliveryDetails: couponOrder.customer,
+        status: couponOrder.status,
+        orderType: couponOrder.orderType,
+        paymentMethod: couponOrder.paymentMethod,
+        paymentStatus: couponOrder.paymentStatus,
+        createdAt: couponOrder.createdAt
+      };
+    }
+    this.showOrderDetailsModal = true;
+    this.cdr.detectChanges();
+  }
+
   openHistoryDetails(order: any) {
     this.selectedHistoryOrder = order;
     this.showOrderDetailsModal = true;
   }
 
   syncViewFromRoute() {
-    let path = this.route.snapshot.routeConfig?.path;
+    const dataView = this.route.snapshot.data?.['view'];
+    let path = dataView || this.route.snapshot.routeConfig?.path;
     if (!path) {
       path = this.router.url.split('?')[0].replace(/^\//, '');
     }
-    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms'> = [
-      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms'
+    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner'> = [
+      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms', 'coupons', 'banner'
     ];
     let matchedView = validViews.find(v => v === path);
     if (!matchedView) {
@@ -895,7 +1005,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms', updateRoute: boolean = true) {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner', updateRoute: boolean = true) {
     this.currentView = view;
     this.closeMobileMenu();
     if (updateRoute) {
@@ -909,12 +1019,20 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   loadViewData(view: string) {
+    if (view === 'banner' || view === 'settings') {
+      this.loadPromoBannerSettings();
+    }
+    if (view === 'coupons') {
+      this.loadCoupons();
+      this.loadCouponStats();
+      this.loadCouponOrders(this.selectedCouponFilter === 'all' ? undefined : this.selectedCouponFilter);
+    }
     if (view === 'dashboard') {
       this.fetchOrders();
       this.fetchRestaurantStats();
     }
     if (view === 'history') {
-      this.fetchOrders();
+      this.fetchOrders(true);
     }
     if ((view === 'history' || view === 'payments') && this.agents.length === 0) { this.fetchAgents(); }
     if (view === 'menu') {
@@ -935,12 +1053,33 @@ export class OrdersPage implements OnInit, OnDestroy {
       this.api.getSetting('app_version').subscribe(res => { if (res && res.value) this.appVersion = res.value; });
       this.api.getSetting('app_download_url').subscribe(res => { if (res && res.value) this.appDownloadUrl = res.value; });
       this.api.getSetting('app_release_notes').subscribe(res => { if (res && res.value) this.appReleaseNotes = res.value; });
+      this.api.getSetting('tax_gst_percent').subscribe(res => { if (res && res.value !== undefined) this.gstPercent = Number(res.value) || 0; });
+      this.api.getSetting('platform_fee').subscribe(res => { if (res && res.value !== undefined) this.platformFee = Number(res.value) || 0; });
       this.api.getSetting('smtp_host').subscribe(res => { if (res && res.value) this.smtpHost = res.value; });
       this.api.getSetting('smtp_port').subscribe(res => { if (res && res.value) this.smtpPort = res.value; });
       this.api.getSetting('smtp_user').subscribe(res => { if (res && res.value) this.smtpUser = res.value; });
       this.api.getSetting('smtp_pass').subscribe(res => { if (res && res.value) this.smtpPass = res.value; });
       this.api.getSetting('smtp_from').subscribe(res => { if (res && res.value) this.smtpFrom = res.value; });
       this.api.getSetting('fast2sms_api_key').subscribe(res => { if (res && res.value) this.fast2smsKey = res.value; });
+    this.api.getSetting('tax_gst_percent').subscribe(res => { if (res && res.value !== undefined) this.gstPercent = Number(res.value) || 0; });
+    this.api.getSetting('platform_fee').subscribe(res => { if (res && res.value !== undefined) this.platformFee = Number(res.value) || 0; });
+    this.api.getSetting('delivery_fee').subscribe(res => { if (res && res.value !== undefined) this.deliveryFee = Number(res.value) || 0; });
+    this.api.getSetting('free_delivery_min_amount').subscribe(res => { if (res && res.value !== undefined) this.freeDeliveryMinAmount = Number(res.value) || 0; });
+    this.api.getSetting('cart_offers_config').subscribe(res => {
+      if (res && res.value !== undefined && res.value !== null) {
+        try {
+          const val = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
+          this.cartOffersConfig = {
+            enabled: val.enabled !== undefined ? Boolean(val.enabled) : true,
+            title: val.title || 'Available Offers',
+            subtitle: val.subtitle || 'Tap to view coupons & deals',
+            buttonText: val.buttonText || 'View Offers',
+            displayMode: val.displayMode || 'popup',
+            maxOffersToShow: Number(val.maxOffersToShow) || 5
+          };
+        } catch (e) {}
+      }
+    });
     }
     if (view === 'agents') {
       this.fetchAgents();
@@ -1339,6 +1478,161 @@ export class OrdersPage implements OnInit, OnDestroy {
     });
   }
 
+  
+  loadPromoBannerSettings() {
+    this.api.getSetting('promo_banner').subscribe({
+      next: (res) => {
+        if (res && res.value !== undefined && res.value !== null) {
+          try {
+            const parsed = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
+            if (parsed && typeof parsed === 'object') {
+              this.promoBanner = { ...this.promoBanner, ...parsed };
+            }
+          } catch {
+            if (typeof res.value === 'object') {
+              this.promoBanner = { ...this.promoBanner, ...res.value };
+            }
+          }
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  savePromoBannerSettings() {
+    this.isSavingBanner = true;
+    this.api.saveSetting('promo_banner', this.promoBanner).subscribe({
+      next: () => {
+        this.isSavingBanner = false;
+        this.showNotification('🎉 Header Promo Banner settings saved successfully!', 'success');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isSavingBanner = false;
+        this.showNotification('Failed to save banner settings: ' + (err?.error?.message || 'Error'), 'error');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  resetPromoBannerSettings() {
+    this.promoBanner = {
+      enabled: true,
+      text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉',
+      badgeText: 'SPECIAL OFFER',
+      badgeBg: '#ffffff',
+      badgeColor: '#ea580c',
+      bgColor: '#ea580c',
+      bgGradientEnd: '#f97316',
+      isGradient: true,
+      textColor: '#ffffff',
+      height: '34px',
+      fontSize: '13px',
+      alignment: 'center',
+      isMarquee: true,
+      marqueeSpeed: 'normal',
+      linkUrl: '/menu',
+      closeable: false
+    };
+    this.showNotification('Reset banner to defaults. Click "Save Banner Settings" to apply.', 'success');
+    this.cdr.detectChanges();
+  }
+
+  applyBannerPreset(preset: string) {
+    switch (preset) {
+      case 'orange':
+        this.promoBanner.bgColor = '#ea580c';
+        this.promoBanner.bgGradientEnd = '#f97316';
+        this.promoBanner.isGradient = true;
+        this.promoBanner.textColor = '#ffffff';
+        this.promoBanner.badgeBg = '#ffffff';
+        this.promoBanner.badgeColor = '#ea580c';
+        break;
+      case 'red':
+        this.promoBanner.bgColor = '#b91c1c';
+        this.promoBanner.bgGradientEnd = '#ef4444';
+        this.promoBanner.isGradient = true;
+        this.promoBanner.textColor = '#ffffff';
+        this.promoBanner.badgeBg = '#fef2f2';
+        this.promoBanner.badgeColor = '#dc2626';
+        break;
+      case 'dark':
+        this.promoBanner.bgColor = '#0f172a';
+        this.promoBanner.bgGradientEnd = '#1e293b';
+        this.promoBanner.isGradient = true;
+        this.promoBanner.textColor = '#fbbf24';
+        this.promoBanner.badgeBg = '#fbbf24';
+        this.promoBanner.badgeColor = '#0f172a';
+        break;
+      case 'emerald':
+        this.promoBanner.bgColor = '#047857';
+        this.promoBanner.bgGradientEnd = '#10b981';
+        this.promoBanner.isGradient = true;
+        this.promoBanner.textColor = '#ffffff';
+        this.promoBanner.badgeBg = '#ffffff';
+        this.promoBanner.badgeColor = '#059669';
+        break;
+      case 'purple':
+        this.promoBanner.bgColor = '#6d28d9';
+        this.promoBanner.bgGradientEnd = '#9333ea';
+        this.promoBanner.isGradient = true;
+        this.promoBanner.textColor = '#ffffff';
+        this.promoBanner.badgeBg = '#fae8ff';
+        this.promoBanner.badgeColor = '#7e22ce';
+        break;
+      case 'saffron':
+        this.promoBanner.bgColor = '#c2410c';
+        this.promoBanner.bgGradientEnd = '#f97316';
+        this.promoBanner.isGradient = true;
+        this.promoBanner.textColor = '#ffffff';
+        this.promoBanner.badgeBg = '#ffffff';
+        this.promoBanner.badgeColor = '#c2410c';
+        break;
+    }
+    this.cdr.detectChanges();
+  }
+
+  insertBannerEmoji(emoji: string) {
+    this.promoBanner.text = (this.promoBanner.text || '').trim() + ' ' + emoji + ' ';
+    this.cdr.detectChanges();
+  }
+
+  getBannerPreviewBackground(): string {
+    if (this.promoBanner.isGradient && this.promoBanner.bgGradientEnd) {
+      return `linear-gradient(90deg, ${this.promoBanner.bgColor || '#ea580c'} 0%, ${this.promoBanner.bgGradientEnd} 100%)`;
+    }
+    return this.promoBanner.bgColor || '#ea580c';
+  }
+
+  getBannerPreviewDuration(): string {
+    if (this.promoBanner.marqueeSpeed === 'slow') return '36s';
+    if (this.promoBanner.marqueeSpeed === 'fast') return '15s';
+    return '24s';
+  }
+
+  saveBillingSettings(showNotification = true) {
+    const gstVal = Math.max(0, Number(this.gstPercent) || 0);
+    const feeVal = Math.max(0, Number(this.platformFee) || 0);
+    const deliveryVal = Math.max(0, Number(this.deliveryFee) || 0);
+    const minFreeVal = Math.max(0, Number(this.freeDeliveryMinAmount) || 0);
+
+    this.api.saveSetting('tax_gst_percent', String(gstVal)).subscribe();
+    this.api.saveSetting('platform_fee', String(feeVal)).subscribe();
+    this.api.saveSetting('delivery_fee', String(deliveryVal)).subscribe();
+    this.api.saveSetting('free_delivery_min_amount', String(minFreeVal)).subscribe();
+    this.api.saveSetting('cart_offers_config', this.cartOffersConfig).subscribe(() => {
+      if (showNotification) {
+        this.showNotification(`Billing & Website Cart Offers settings saved successfully!`, 'success');
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  saveCartOffersConfig() {
+    this.saveBillingSettings(true);
+  }
+
   onApkFileSelected(event: any) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
@@ -1657,6 +1951,270 @@ export class OrdersPage implements OnInit, OnDestroy {
       if (aNeedsAction !== bNeedsAction) return bNeedsAction - aNeedsAction;
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
+  }
+
+
+  // --- Coupons & Coupon Tracking State & Methods ---
+  coupons: any[] = [];
+  couponStats: any = null;
+  couponOrders: any[] = [];
+  isLoadingCoupons = false;
+  isLoadingCouponOrders = false;
+  couponTab: 'coupons' | 'tracking' | 'website-cart' = 'coupons';
+  selectedCouponFilter: string = 'all';
+  couponSearchTerm: string = '';
+  couponStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  couponTrackingSearch: string = '';
+  showCreateCouponModal = false;
+  isEditingCoupon = false;
+  editingCouponId: string | null = null;
+  couponForm: any = {
+    code: '',
+    description: '',
+    discountType: 'percentage',
+    discountValue: 20,
+    minOrderAmount: 100,
+    maxDiscount: 150,
+    usageLimit: 0,
+    perUserLimit: 1,
+    validUntil: '',
+    isActive: true,
+    isPublic: true
+  };
+  isSavingCoupon = false;
+  couponErrorMessage = '';
+  copiedCouponCode: string | null = null;
+
+  loadCoupons() {
+    this.isLoadingCoupons = true;
+    this.api.getCoupons().subscribe({
+      next: (data) => {
+        this.coupons = data || [];
+        this.isLoadingCoupons = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load coupons:', err);
+        this.isLoadingCoupons = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadCouponStats() {
+    this.api.getCouponStats().subscribe({
+      next: (stats) => {
+        this.couponStats = stats;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Failed to load coupon stats:', err)
+    });
+  }
+
+  loadCouponOrders(code?: string) {
+    this.isLoadingCouponOrders = true;
+    this.api.getCouponOrders(code).subscribe({
+      next: (orders) => {
+        this.couponOrders = orders || [];
+        this.isLoadingCouponOrders = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load coupon orders:', err);
+        this.isLoadingCouponOrders = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  get filteredCoupons() {
+    return (this.coupons || []).filter(c => {
+      const q = (this.couponSearchTerm || '').trim().toLowerCase();
+      const matchesSearch = !q ||
+        (c.code && c.code.toLowerCase().includes(q)) ||
+        (c.description && c.description.toLowerCase().includes(q));
+      const matchesStatus = this.couponStatusFilter === 'all' ||
+        (this.couponStatusFilter === 'active' ? c.isActive : !c.isActive);
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  get filteredCouponOrders() {
+    return (this.couponOrders || []).filter(o => {
+      const matchesCode = this.selectedCouponFilter === 'all' ||
+        (o.couponCode && o.couponCode.toUpperCase() === this.selectedCouponFilter.toUpperCase());
+      const q = (this.couponTrackingSearch || '').trim().toLowerCase();
+      const matchesSearch = !q ||
+        (o.shortId && o.shortId.toLowerCase().includes(q)) ||
+        (o.customer?.name && o.customer.name.toLowerCase().includes(q)) ||
+        (o.customer?.phone && o.customer.phone.includes(q)) ||
+        (o.customer?.email && o.customer.email.toLowerCase().includes(q)) ||
+        (o.couponCode && o.couponCode.toLowerCase().includes(q));
+      return matchesCode && matchesSearch;
+    });
+  }
+
+  get totalCouponOrdersCount() {
+    return this.couponStats?.totalOrdersWithCoupons || 0;
+  }
+
+  get totalCouponRevenue() {
+    return this.couponStats?.totalCouponRevenue || 0;
+  }
+
+  get totalCouponDiscount() {
+    return this.couponStats?.totalDiscountGranted || 0;
+  }
+
+  openCreateCouponModal() {
+    this.isEditingCoupon = false;
+    this.editingCouponId = null;
+    this.couponErrorMessage = '';
+    this.couponForm = {
+      code: '',
+      description: '',
+      discountType: 'percentage',
+      discountValue: 20,
+      minOrderAmount: 100,
+      maxDiscount: 150,
+      usageLimit: 0,
+      perUserLimit: 1,
+      validUntil: '',
+      isActive: true,
+      isPublic: true
+    };
+    this.showCreateCouponModal = true;
+  }
+
+  openEditCouponModal(coupon: any) {
+    this.isEditingCoupon = true;
+    this.editingCouponId = coupon._id;
+    this.couponErrorMessage = '';
+    this.couponForm = {
+      code: coupon.code,
+      description: coupon.description || '',
+      discountType: coupon.discountType || 'percentage',
+      discountValue: coupon.discountValue || 0,
+      minOrderAmount: coupon.minOrderAmount || 0,
+      maxDiscount: coupon.maxDiscount || 0,
+      usageLimit: coupon.usageLimit || 0,
+      perUserLimit: coupon.perUserLimit || 1,
+      validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().split('T')[0] : '',
+      isActive: coupon.isActive !== undefined ? coupon.isActive : true,
+      isPublic: coupon.isPublic !== undefined ? Boolean(coupon.isPublic) : true
+    };
+    this.showCreateCouponModal = true;
+  }
+
+  saveCoupon() {
+    if (!this.couponForm.code || !this.couponForm.code.trim()) {
+      this.couponErrorMessage = 'Coupon code is required.';
+      return;
+    }
+    if (!this.couponForm.discountValue || Number(this.couponForm.discountValue) <= 0) {
+      this.couponErrorMessage = 'Please enter a valid discount amount or percentage.';
+      return;
+    }
+    this.isSavingCoupon = true;
+    this.couponErrorMessage = '';
+
+    const payload = {
+      ...this.couponForm,
+      code: this.couponForm.code.trim().toUpperCase(),
+      discountValue: Number(this.couponForm.discountValue),
+      minOrderAmount: Number(this.couponForm.minOrderAmount) || 0,
+      maxDiscount: Number(this.couponForm.maxDiscount) || 0,
+      usageLimit: Number(this.couponForm.usageLimit) || 0,
+      perUserLimit: Number(this.couponForm.perUserLimit) || 1,
+      validUntil: this.couponForm.validUntil ? new Date(this.couponForm.validUntil) : null,
+      isActive: Boolean(this.couponForm.isActive),
+      isPublic: Boolean(this.couponForm.isPublic)
+    };
+
+    const req$ = this.isEditingCoupon && this.editingCouponId
+      ? this.api.updateCoupon(this.editingCouponId, payload)
+      : this.api.createCoupon(payload);
+
+    req$.subscribe({
+      next: () => {
+        this.isSavingCoupon = false;
+        this.showCreateCouponModal = false;
+        this.showNotification('Coupon "' + payload.code + '" ' + (this.isEditingCoupon ? 'updated' : 'created') + ' successfully!', 'success');
+        this.loadCoupons();
+        this.loadCouponStats();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isSavingCoupon = false;
+        this.couponErrorMessage = err?.error?.message || 'Failed to save coupon.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleCouponPublic(coupon: any) {
+    const newStatus = coupon.isPublic === false ? true : false;
+    this.api.updateCoupon(coupon._id, { isPublic: newStatus }).subscribe({
+      next: () => {
+        coupon.isPublic = newStatus;
+        this.showNotification(`Coupon "${coupon.code}" is now ${newStatus ? 'shown in Available Offers on Cart' : 'a Secret Promo Code'}!`, 'success');
+        this.cdr.detectChanges();
+      },
+      error: () => this.showNotification('Failed to update coupon visibility', 'error')
+    });
+  }
+
+  toggleCouponStatus(coupon: any) {
+    const newStatus = !coupon.isActive;
+    this.api.updateCoupon(coupon._id, { isActive: newStatus }).subscribe({
+      next: () => {
+        coupon.isActive = newStatus;
+        this.showNotification('Coupon "' + coupon.code + '" ' + (newStatus ? 'activated' : 'deactivated') + '.', 'success');
+        this.loadCouponStats();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to toggle coupon status:', err);
+        this.showNotification('Failed to update status', 'error');
+      }
+    });
+  }
+
+  async deleteCoupon(coupon: any) {
+    if (await this.showConfirm('Delete Coupon', 'Are you sure you want to permanently delete coupon "' + coupon.code + '"?', '🗑️')) {
+      this.api.deleteCoupon(coupon._id).subscribe({
+        next: () => {
+          this.showNotification('Coupon "' + coupon.code + '" deleted.', 'success');
+          this.loadCoupons();
+          this.loadCouponStats();
+        },
+        error: (err) => this.showNotification(err?.error?.message || 'Failed to delete coupon.', 'error')
+      });
+    }
+  }
+
+  trackCouponOrders(coupon: any) {
+    this.selectedCouponFilter = coupon.code;
+    this.couponTab = 'tracking';
+    this.loadCouponOrders(coupon.code);
+    this.cdr.detectChanges();
+  }
+
+  filterCouponOrdersByCode(code: string) {
+    this.selectedCouponFilter = code;
+    this.loadCouponOrders(code === 'all' ? undefined : code);
+  }
+
+  copyCouponCode(code: string) {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(code);
+      this.copiedCouponCode = code;
+      this.showNotification('Copied code "' + code + '" to clipboard!', 'success');
+      setTimeout(() => {
+        if (this.copiedCouponCode === code) this.copiedCouponCode = null;
+        this.cdr.detectChanges();
+      }, 2000);
+    }
   }
 
 }

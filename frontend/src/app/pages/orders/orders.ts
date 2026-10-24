@@ -81,7 +81,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
   selectedOrderDetails: any = null;
   orderToRate: any = null;
   ratingValue = 5;
+  hoverRating = 0;
   reviewText = '';
+  isSubmittingRating = false;
   showNotificationPermissionPrompt = false;
 
   // Set Password Modal for guest orders
@@ -178,6 +180,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   timerInterval: any;
+  pollInterval: any;
 
   ngOnInit(): void {
     this.checkNotificationPermission();
@@ -185,8 +188,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
       this.loadOrders();
       this.startPolling();
     } else {
-      this.isLoading = false;
-      this.errorMessage = '';
+      // Check if user info is stored locally
+      const storedUser = this.authService.getCurrentUser();
+      if (storedUser && storedUser.phone) {
+        this.guestTrackInput = storedUser.phone;
+        this.trackGuestOrder();
+      } else {
+        this.isLoading = false;
+        this.errorMessage = '';
+      }
     }
 
     // Auto-track if query param ?track= is provided
@@ -201,20 +211,29 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   startPolling(): void {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.pollInterval) clearInterval(this.pollInterval);
+
+    // 1-second countdown clock for active preparing items
     this.timerInterval = setInterval(() => {
-      this.cdr.detectChanges();
-      if (new Date().getSeconds() % 10 === 0) {
-        if (this.authService.isLoggedIn()) {
-          this.orderService.getOrderHistory().subscribe({
-            next: (data) => this.handleOrderUpdates(data)
-          });
-        } else if (this.guestTrackInput && this.orders.length > 0) {
-          this.orderService.trackOrder(this.guestTrackInput.trim()).subscribe({
-            next: (data) => this.handleOrderUpdates(data)
-          });
-        }
+      if (this.orders && this.orders.some(o => o.status === 'preparing' && o.preparationTime)) {
+        this.cdr.detectChanges();
       }
     }, 1000);
+
+    // 10-second background sync for order status updates
+    this.pollInterval = setInterval(() => {
+      if (this.authService.isLoggedIn()) {
+        this.orderService.getOrderHistory().subscribe({
+          next: (data) => this.handleOrderUpdates(data),
+          error: () => {}
+        });
+      } else if (this.guestTrackInput && this.orders.length > 0) {
+        this.orderService.trackOrder(this.guestTrackInput.trim()).subscribe({
+          next: (data) => this.handleOrderUpdates(data),
+          error: () => {}
+        });
+      }
+    }, 10000);
   }
 
   private handleOrderUpdates(data: any[]): void {
@@ -247,6 +266,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.pollInterval) clearInterval(this.pollInterval);
   }
 
   getPreparationTimeRemaining(order: any): string {
@@ -281,6 +301,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   loadOrders() {
+    this.isLoading = true;
+    this.errorMessage = '';
     this.orderService.getOrderHistory().subscribe({
       next: (data) => {
         this.orders = data || [];
@@ -288,10 +310,27 @@ export class OrdersComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.errorMessage = 'Failed to load order history.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        console.error(err);
+        console.warn('Direct order history failed, trying fallback...', err);
+        const user = this.authService.getCurrentUser();
+        if (user && user.phone) {
+          this.orderService.trackOrder(user.phone).subscribe({
+            next: (fallbackData) => {
+              this.orders = fallbackData || [];
+              this.isLoading = false;
+              this.errorMessage = '';
+              this.cdr.detectChanges();
+            },
+            error: () => {
+              this.errorMessage = 'Failed to load order history. Please tap Try Again.';
+              this.isLoading = false;
+              this.cdr.detectChanges();
+            }
+          });
+        } else {
+          this.errorMessage = 'Failed to load order history. Please tap Try Again.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       }
     });
   }
@@ -412,29 +451,90 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   openRateModal(order: any) {
+    if (order.rating !== undefined && order.rating !== null && Number(order.rating) > 0) {
+      this.showNotification('This order has already been rated and cannot be edited.', 'error');
+      return;
+    }
     this.orderToRate = order;
-    this.ratingValue = order.rating || 5;
-    this.reviewText = order.review || '';
+    this.ratingValue = 5;
+    this.hoverRating = 0;
+    this.reviewText = '';
+    this.isSubmittingRating = false;
     this.showRateModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeRateModal() {
+    this.showRateModal = false;
+    this.orderToRate = null;
+    this.hoverRating = 0;
+    this.cdr.detectChanges();
   }
   
   setRating(val: number) {
     this.ratingValue = val;
   }
+
+  getRatingLabel(val: number): string {
+    switch (val) {
+      case 1: return 'Needs Improvement 😕';
+      case 2: return 'Fair / Could Be Better 😐';
+      case 3: return 'Good & Tasty 🙂';
+      case 4: return 'Very Good! Delicious 😋';
+      case 5: return 'Excellent! Loved It! ⭐';
+      default: return '';
+    }
+  }
   
   submitRating() {
     if (!this.orderToRate || (!this.orderToRate._id && !this.orderToRate.id)) return;
+    if (this.orderToRate.rating !== undefined && this.orderToRate.rating !== null && Number(this.orderToRate.rating) > 0) {
+      this.showNotification('Rating already submitted for this order.', 'error');
+      this.showRateModal = false;
+      return;
+    }
+
     const id = this.orderToRate._id || this.orderToRate.id;
+    this.isSubmittingRating = true;
+
     this.orderService.rateOrder(id!, this.ratingValue, this.reviewText).subscribe({
       next: (updatedOrder: any) => {
+        this.isSubmittingRating = false;
         this.showRateModal = false;
-        const idx = this.orders.findIndex((o: any) => o._id === updatedOrder._id || o.id === updatedOrder._id);
-        if (idx !== -1) {
-          this.orders[idx] = updatedOrder;
+        
+        // Update local object
+        const finalRating = this.ratingValue;
+        const finalReview = this.reviewText;
+
+        if (this.orderToRate) {
+          this.orderToRate.rating = finalRating;
+          this.orderToRate.review = finalReview;
         }
+
+        const idx = this.orders.findIndex((o: any) => (o._id || o.id) === id);
+        if (idx !== -1) {
+          this.orders[idx] = {
+            ...this.orders[idx],
+            ...(updatedOrder || {}),
+            rating: finalRating,
+            review: finalReview
+          };
+        }
+
+        if (this.selectedOrderDetails && (this.selectedOrderDetails._id || this.selectedOrderDetails.id) === id) {
+          this.selectedOrderDetails.rating = finalRating;
+          this.selectedOrderDetails.review = finalReview;
+        }
+
+        this.showNotification('⭐ Thank you! Your rating has been recorded.', 'success');
         this.cdr.detectChanges();
       },
-      error: (err: any) => console.error(err)
+      error: (err: any) => {
+        this.isSubmittingRating = false;
+        const msg = err?.error?.message || 'Failed to submit rating';
+        this.showNotification(msg, 'error');
+        this.cdr.detectChanges();
+      }
     });
   }
 }

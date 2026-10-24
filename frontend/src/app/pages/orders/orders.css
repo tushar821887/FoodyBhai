@@ -288,6 +288,26 @@
   background: #fff7ed;
 }
 
+.order-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.08);
+  user-select: none;
+  cursor: default;
+}
+.order-rating-badge i {
+  color: #f59e0b;
+  font-size: 13.5px;
+}
+
 .btn-bill {
   background: white;
   border-color: #cbd5e1;
@@ -361,5 +381,167 @@
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Responsive Order Modals: Web Center Dialog vs Mobile Bottom Sheet
+   ========================================================================== */
+
+/* Universal Overlays */
+.details-modal-overlay,
+.rate-modal-overlay,
+.password-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: opacity 0.2s ease;
+}
+
+/* Web / Desktop Modal Cards (Centered) */
+.details-modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: modalCenterPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.rate-modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  position: relative;
+  animation: modalCenterPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.password-modal-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 430px;
+  border-radius: 18px;
+  padding: 28px 24px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  position: relative;
+  animation: modalCenterPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header-top {
+  padding: 18px 22px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.modal-close-round {
+  background: #f1f5f9;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 15px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-round:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modal-close-round.absolute-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.mobile-sheet-handle {
+  display: none;
+}
+
+@keyframes modalCenterPop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalSheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Devices: Convert Modals into Native Touch Bottom Sheets */
+@media (max-width: 768px) {
+  .details-modal-overlay,
+  .rate-modal-overlay,
+  .password-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .details-modal-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 86vh !important;
+    border-radius: 22px 22px 0 0 !important;
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.28) !important;
+    animation: modalSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .rate-modal-card,
+  .password-modal-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 22px 22px 0 0 !important;
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.28) !important;
+    animation: modalSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 10px)) !important;
+  }
+
+  .mobile-sheet-handle {
+    display: block !important;
+    width: 44px;
+    height: 4.5px;
+    background: #cbd5e1;
+    border-radius: 999px;
+    margin: 10px auto 4px auto;
+    flex-shrink: 0;
+  }
+
+  .modal-header-top {
+    padding: 14px 20px;
   }
 }
