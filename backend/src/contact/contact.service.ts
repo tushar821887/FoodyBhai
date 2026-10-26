@@ -17,8 +17,8 @@ export class ContactService {
     const newContact = new this.contactModel(contactData);
     const saved = await newContact.save();
 
-    // Trigger email notification asynchronously
-    this.sendNotificationEmails(contactData).catch((err) => {
+    // Trigger email notifications (Admin alert + Customer in-progress confirmation)
+    this.sendNotificationEmails(contactData, saved._id.toString()).catch((err) => {
       this.logger.error('Failed to send contact inquiry notification emails:', err);
     });
 
@@ -29,7 +29,7 @@ export class ContactService {
     return this.contactModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  private async sendNotificationEmails(contactData: any): Promise<void> {
+  private async sendNotificationEmails(contactData: any, contactId: string): Promise<void> {
     const smtpHost = process.env.SMTP_HOST || (await this.settingsService.getSetting('smtp_host'));
     const smtpUser = process.env.SMTP_USER || (await this.settingsService.getSetting('smtp_user'));
     const smtpPass = process.env.SMTP_PASS || (await this.settingsService.getSetting('smtp_pass'));
@@ -60,55 +60,59 @@ export class ContactService {
       },
     });
 
+    const shortRef = contactId ? contactId.slice(-6).toUpperCase() : Math.random().toString(36).substring(2, 8).toUpperCase();
     const customerName = contactData.name || 'Website Visitor';
-    const customerEmail = contactData.email || 'Not provided';
-    const customerPhone = contactData.phone || 'Not provided';
+    const customerEmail = contactData.email && contactData.email !== 'Not provided' ? contactData.email.trim() : null;
+    const customerPhone = contactData.phone && contactData.phone !== 'Not provided' ? contactData.phone.trim() : 'Not provided';
     const customerMessage = contactData.message || '';
     const dateFormatted = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
     // 1. Email notification to Admin (sent to smtpUser e.g. tushar@foodybhai.in)
     const adminHtml = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
         <div style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding: 24px 28px; color: #ffffff;">
-          <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">Foody Bhai</h1>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">Foody Bhai</h1>
+            <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">#FB-${shortRef}</span>
+          </div>
           <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.95;">New Customer Contact Inquiry Received</p>
         </div>
 
         <div style="padding: 28px;">
           <div style="margin-bottom: 20px;">
-            <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Inquiry Details</span>
-            <div style="margin-top: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Details</span>
+            <div style="margin-top: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px;">
               <p style="margin: 0 0 8px 0; font-size: 14px; color: #1e293b;">
-                <strong style="color: #475569;">Customer Name:</strong> ${customerName}
+                <strong style="color: #475569;">Name:</strong> ${customerName}
               </p>
               <p style="margin: 0 0 8px 0; font-size: 14px; color: #1e293b;">
                 <strong style="color: #475569;">Email:</strong> 
-                ${customerEmail !== 'Not provided' ? `<a href="mailto:${customerEmail}" style="color: #0284c7; text-decoration: none; font-weight: 600;">${customerEmail}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                ${customerEmail ? `<a href="mailto:${customerEmail}" style="color: #0284c7; text-decoration: none; font-weight: 600;">${customerEmail}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
               </p>
               <p style="margin: 0 0 8px 0; font-size: 14px; color: #1e293b;">
                 <strong style="color: #475569;">Phone Number:</strong> 
                 ${customerPhone !== 'Not provided' ? `<a href="tel:${customerPhone}" style="color: #0284c7; text-decoration: none; font-weight: 600;">${customerPhone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
               </p>
               <p style="margin: 0; font-size: 14px; color: #64748b;">
-                <strong style="color: #475569;">Date & Time:</strong> ${dateFormatted}
+                <strong style="color: #475569;">Received At:</strong> ${dateFormatted}
               </p>
             </div>
           </div>
 
           <div style="margin-bottom: 24px;">
-            <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Message</span>
-            <div style="margin-top: 8px; background: #fffbeb; border: 1px solid #fef08a; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.6; color: #78350f; white-space: pre-wrap;">${customerMessage}</div>
+            <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Inquiry / Message</span>
+            <div style="margin-top: 8px; background: #fffbeb; border: 1px solid #fef08a; border-radius: 10px; padding: 18px; font-size: 14px; line-height: 1.6; color: #78350f; white-space: pre-wrap;">${customerMessage}</div>
           </div>
 
-          ${customerEmail !== 'Not provided' ? `
+          ${customerEmail ? `
             <div style="text-align: center; margin: 25px 0 10px 0;">
-              <a href="mailto:${customerEmail}?subject=Re: Your Foody Bhai Inquiry" style="display: inline-block; background: #ea580c; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px;">Reply to ${customerName}</a>
+              <a href="mailto:${customerEmail}?subject=Re: Your Foody Bhai Inquiry (#FB-${shortRef})" style="display: inline-block; background: #ea580c; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px;">Reply Directly to ${customerName}</a>
             </div>
           ` : ''}
         </div>
 
         <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 28px; text-align: center; font-size: 12px; color: #94a3b8;">
-          This is an automated notification from your Foody Bhai website portal.
+          Foody Bhai Admin Notification • Meerut, Uttar Pradesh
         </div>
       </div>
     `;
@@ -117,8 +121,8 @@ export class ContactService {
       await transporter.sendMail({
         from: smtpFrom,
         to: smtpUser,
-        replyTo: customerEmail !== 'Not provided' ? customerEmail : undefined,
-        subject: `📩 New Contact Inquiry from ${customerName} - Foody Bhai`,
+        replyTo: customerEmail || undefined,
+        subject: `📩 New Contact Inquiry from ${customerName} (#FB-${shortRef}) - Foody Bhai`,
         html: adminHtml,
       });
       this.logger.log(`Admin contact inquiry notification email sent to ${smtpUser}`);
@@ -126,31 +130,57 @@ export class ContactService {
       this.logger.error('Failed to send admin notification email:', err);
     }
 
-    // 2. Confirmation email to the customer (if they provided their email)
-    if (customerEmail && customerEmail !== 'Not provided' && customerEmail.includes('@')) {
+    // 2. Confirmation email to the customer: "Request successfully submitted and is in progress"
+    if (customerEmail && customerEmail.includes('@')) {
       const customerHtml = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
-          <div style="background: #ea580c; padding: 22px 26px; color: #ffffff;">
-            <h1 style="margin: 0; font-size: 20px; font-weight: 800;">Foody Bhai</h1>
-            <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.95;">Thank you for contacting us!</p>
-          </div>
-
-          <div style="padding: 26px;">
-            <p style="margin: 0 0 12px 0; font-size: 15px; color: #1e293b;">Hi <strong>${customerName}</strong>,</p>
-            <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-              Thank you for reaching out to Foody Bhai. We have received your inquiry and our team will get back to you as soon as possible.
-            </p>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; font-size: 13px; color: #64748b; line-height: 1.5;">
-              <strong style="color: #334155;">Your Message:</strong><br>
-              ${customerMessage}
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+          <div style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); padding: 26px 30px; color: #ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h1 style="margin: 0; font-size: 22px; font-weight: 800;">Foody Bhai</h1>
+              <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">Reference #FB-${shortRef}</span>
             </div>
-            <p style="margin: 20px 0 0 0; font-size: 13px; color: #64748b;">
-              Have an urgent food order query? You can also reach us directly via WhatsApp or call at our helpline.
-            </p>
+            <p style="margin: 8px 0 0 0; font-size: 15px; opacity: 0.95;">Your Request is Received & In Progress</p>
           </div>
 
-          <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 26px; text-align: center; font-size: 12px; color: #94a3b8;">
-            Foody Bhai - Fresh & Authentic Taste | Meerut, India
+          <div style="padding: 30px;">
+            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 22px; line-height: 1;">⏳</span>
+              <div>
+                <strong style="color: #065f46; font-size: 14px; display: block;">Status: Request In Progress</strong>
+                <span style="color: #047857; font-size: 13px;">Our support and kitchen team has received your message and is actively reviewing it.</span>
+              </div>
+            </div>
+
+            <p style="margin: 0 0 14px 0; font-size: 15px; color: #1e293b;">
+              Hi <strong>${customerName}</strong>,
+            </p>
+            <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+              Thank you for reaching out to <strong>Foody Bhai</strong>. We have successfully logged your inquiry under ticket reference <strong>#FB-${shortRef}</strong>. We usually respond within <strong>2 to 4 business hours</strong>.
+            </p>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 22px;">
+              <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">Summary of Your Submission</span>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><strong>Name:</strong> ${customerName}</p>
+              <p style="margin: 0 0 6px 0; font-size: 13px; color: #334155;"><strong>Contact Phone:</strong> ${customerPhone}</p>
+              <p style="margin: 0 0 10px 0; font-size: 13px; color: #334155;"><strong>Submitted At:</strong> ${dateFormatted}</p>
+              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1; font-size: 13px; color: #475569; line-height: 1.5;">
+                <strong style="color: #1e293b;">Your Message:</strong><br>
+                ${customerMessage}
+              </div>
+            </div>
+
+            <div style="background: #fffbeb; border: 1px solid #fef08a; border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #854d0e; line-height: 1.5; margin-bottom: 25px;">
+              <strong>Need Immediate Assistance with an Ongoing Food Order?</strong><br>
+              Call us directly at <a href="tel:8218870579" style="color: #ea580c; font-weight: 700; text-decoration: none;">+91 8218870579</a> or visit us at Bagh Wali Gali, Meerut.
+            </div>
+
+            <div style="text-align: center;">
+              <a href="https://foodybhai.in/menu" style="display: inline-block; background: #ea580c; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px;">Explore Our Fresh Menu 🍕</a>
+            </div>
+          </div>
+
+          <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 28px; text-align: center; font-size: 12px; color: #94a3b8;">
+            Foody Bhai - Fresh & Authentic Taste • Meerut, Uttar Pradesh • <a href="https://foodybhai.in" style="color: #64748b; text-decoration: none;">foodybhai.in</a>
           </div>
         </div>
       `;
@@ -159,10 +189,10 @@ export class ContactService {
         await transporter.sendMail({
           from: smtpFrom,
           to: customerEmail,
-          subject: 'We received your message! - Foody Bhai',
+          subject: `✅ Request Successfully Submitted & In Progress (#FB-${shortRef}) - Foody Bhai`,
           html: customerHtml,
         });
-        this.logger.log(`Customer confirmation email sent to ${customerEmail}`);
+        this.logger.log(`Customer 'in-progress' confirmation email sent to ${customerEmail}`);
       } catch (err) {
         this.logger.warn(`Failed to send customer confirmation email to ${customerEmail}:`, err.message);
       }
