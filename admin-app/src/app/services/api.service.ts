@@ -58,6 +58,10 @@ export class ApiService {
     return this.http.put<any>(`${this.apiUrl}/settings/${key}`, { value }, this.getHeaders());
   }
 
+  testSmtp(data: any) {
+    return this.http.post<any>(`${this.apiUrl}/settings/test-smtp`, data, this.getHeaders());
+  }
+
   // Pages / CMS Table
   getPages() {
     return this.http.get<any>(`${this.apiUrl}/pages`);

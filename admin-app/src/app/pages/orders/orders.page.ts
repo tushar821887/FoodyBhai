@@ -256,6 +256,9 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   // Email (SMTP) & SMS Settings
   smtpHost: string = '';
+  showSmtpPassword = false;
+  isTestingSmtp = false;
+  smtpTestResult: { success?: boolean; message?: string } | null = null;
   smtpPort: string = '587';
   smtpUser: string = '';
   smtpPass: string = '';
@@ -981,6 +984,36 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.showOrderDetailsModal = true;
   }
 
+  getCustomerPhone(order: any): string | null {
+    if (!order) return null;
+    const rawDelPhone = order.deliveryDetails?.phone || order.customer?.phone;
+    if (rawDelPhone && typeof rawDelPhone === 'string' && !rawDelPhone.includes('@') && rawDelPhone.trim() !== '') {
+      return rawDelPhone.trim();
+    }
+    const rawUserPhone = order.userId?.phone;
+    if (rawUserPhone && typeof rawUserPhone === 'string' && !rawUserPhone.includes('@') && rawUserPhone.trim() !== '') {
+      return rawUserPhone.trim();
+    }
+    return null;
+  }
+
+  getCustomerEmail(order: any): string | null {
+    if (!order) return null;
+    const email = order.deliveryDetails?.email || order.customer?.email;
+    if (email && typeof email === 'string' && email.includes('@') && email.trim() !== '' && email !== 'N/A') {
+      return email.trim();
+    }
+    const rawDelPhone = order.deliveryDetails?.phone || order.customer?.phone;
+    if (rawDelPhone && typeof rawDelPhone === 'string' && rawDelPhone.includes('@') && rawDelPhone.trim() !== '') {
+      return rawDelPhone.trim();
+    }
+    const userEmail = order.userId?.email;
+    if (userEmail && typeof userEmail === 'string' && userEmail.includes('@') && userEmail.trim() !== '' && userEmail !== 'N/A') {
+      return userEmail.trim();
+    }
+    return null;
+  }
+
   syncViewFromRoute() {
     const dataView = this.route.snapshot.data?.['view'];
     let path = dataView || this.route.snapshot.routeConfig?.path;
@@ -1454,16 +1487,80 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   saveEmailSettings(showNotification = true) {
-    this.api.saveSetting('smtp_host', this.smtpHost.trim()).subscribe();
-    this.api.saveSetting('smtp_port', this.smtpPort.trim() || '587').subscribe();
-    this.api.saveSetting('smtp_user', this.smtpUser.trim()).subscribe();
-    this.api.saveSetting('smtp_pass', this.smtpPass.trim()).subscribe();
-    this.api.saveSetting('smtp_from', this.smtpFrom.trim() || this.smtpUser.trim()).subscribe();
-    this.api.saveSetting('fast2sms_api_key', this.fast2smsKey.trim()).subscribe(() => {
+    const host = (this.smtpHost || '').trim();
+    const port = (this.smtpPort || '').trim() || '465';
+    const user = (this.smtpUser || '').trim();
+    const pass = (this.smtpPass || '').trim();
+    let from = (this.smtpFrom || '').trim();
+
+    if (!from && user) {
+      from = `Foody Bhai <${user}>`;
+      this.smtpFrom = from;
+    }
+
+    this.api.saveSetting('smtp_host', host).subscribe();
+    this.api.saveSetting('smtp_port', port).subscribe();
+    this.api.saveSetting('smtp_user', user).subscribe();
+    this.api.saveSetting('smtp_pass', pass).subscribe();
+    this.api.saveSetting('smtp_from', from).subscribe();
+    this.api.saveSetting('fast2sms_api_key', (this.fast2smsKey || '').trim()).subscribe(() => {
       if (showNotification) {
-        this.showNotification('Email & SMS Gateway settings saved successfully!', 'success');
+        this.showNotification('✅ Email (SMTP) & SMS Gateway settings saved successfully!', 'success');
       }
       this.cdr.detectChanges();
+    });
+  }
+
+  testSmtpConnection() {
+    this.isTestingSmtp = true;
+    this.smtpTestResult = null;
+    this.cdr.detectChanges();
+
+    const host = (this.smtpHost || '').trim();
+    const port = (this.smtpPort || '').trim() || '465';
+    const user = (this.smtpUser || '').trim();
+    const pass = (this.smtpPass || '').trim();
+    let from = (this.smtpFrom || '').trim();
+
+    if (!from && user) {
+      from = `Foody Bhai <${user}>`;
+    }
+
+    this.api.testSmtp({
+      smtpHost: host,
+      smtpPort: port,
+      smtpUser: user,
+      smtpPass: pass,
+      smtpFrom: from,
+      targetEmail: user || 'tushar@foodybhai.in'
+    }).subscribe({
+      next: (res: any) => {
+        this.isTestingSmtp = false;
+        if (res && res.success) {
+          this.smtpTestResult = {
+            success: true,
+            message: res.message || 'SMTP connected and test email delivered successfully!'
+          };
+          this.showNotification('✅ SMTP connection verified! Test email delivered.', 'success');
+        } else {
+          this.smtpTestResult = {
+            success: false,
+            message: res.error || 'Failed to authenticate or send email.'
+          };
+          this.showNotification('❌ SMTP Test Failed: ' + (res.error || 'Connection error'), 'error');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.isTestingSmtp = false;
+        const msg = err.error?.error || err.error?.message || err.message || 'Network error';
+        this.smtpTestResult = {
+          success: false,
+          message: msg
+        };
+        this.showNotification('❌ SMTP Test Error: ' + msg, 'error');
+        this.cdr.detectChanges();
+      }
     });
   }
 

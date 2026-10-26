@@ -93,6 +93,76 @@ export class SettingsController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('test-smtp')
+  async testSmtpConnection(@Body() body: any) {
+    const smtpHost = body?.smtpHost || process.env.SMTP_HOST || (await this.settingsService.getSetting('smtp_host'));
+    const smtpPort = Number(body?.smtpPort || process.env.SMTP_PORT || (await this.settingsService.getSetting('smtp_port'))) || 465;
+    const smtpUser = body?.smtpUser || process.env.SMTP_USER || (await this.settingsService.getSetting('smtp_user'));
+    const smtpPass = body?.smtpPass || process.env.SMTP_PASS || (await this.settingsService.getSetting('smtp_pass'));
+    let smtpFrom = body?.smtpFrom || process.env.SMTP_FROM || (await this.settingsService.getSetting('smtp_from'));
+    const targetEmail = body?.targetEmail || smtpUser;
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      throw new BadRequestException('SMTP Host, Username, and Password are all required.');
+    }
+
+    if (!smtpFrom || !smtpFrom.includes(smtpUser)) {
+      smtpFrom = `"Foody Bhai" <${smtpUser}>`;
+    }
+
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    try {
+      await transporter.verify();
+      const info = await transporter.sendMail({
+        from: smtpFrom,
+        to: targetEmail,
+        subject: '🧪 Foody Bhai - SMTP Connection Verified Successfully!',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #10b981; border-radius: 12px; background: #ffffff;">
+            <h2 style="color: #059669; margin: 0 0 10px 0;">✅ SMTP Connected Successfully!</h2>
+            <p style="color: #334155; font-size: 14px; line-height: 1.5;">
+              Congratulations! Your Hostinger / SMTP email server is working properly.
+            </p>
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin: 15px 0; font-size: 13px; color: #166534;">
+              <strong>Host:</strong> ${smtpHost}:${smtpPort}<br>
+              <strong>User:</strong> ${smtpUser}<br>
+              <strong>Sender:</strong> ${smtpFrom}<br>
+              <strong>Delivered to:</strong> ${targetEmail}
+            </div>
+            <p style="color: #64748b; font-size: 12px; margin: 0;">
+              Timestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+            </p>
+          </div>
+        `,
+      });
+
+      return {
+        success: true,
+        message: `SMTP verified! Test email successfully delivered to ${targetEmail}`,
+        messageId: info.messageId,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.message || 'Failed to authenticate or send email through SMTP',
+      };
+    }
+  }
+
   @Get(':key')
   async getSetting(@Param('key') key: string) {
     const value = await this.settingsService.getSetting(key);
