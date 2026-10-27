@@ -1,157 +1,248 @@
-<!-- Floating AI Voice Assistant Button -->
+<!-- Floating AI Copilot Trigger Button -->
 <button 
   type="button" 
-  class="ai-voice-floating-btn animate-fade-in"
-  [class.is-active]="(isListening$ | async)"
+  class="ai-copilot-trigger animate-fade-in"
+  [class.is-listening]="isListening$ | async"
   (click)="toggleAssistant()"
-  title="Order with AI Voice Assistant">
-  <div class="ai-btn-icon-wrapper">
-    <div class="ai-pulse-ring" *ngIf="!(isOpen$ | async)"></div>
-    <span>{{ (isListening$ | async) ? '🔴' : '🎙️' }}</span>
+  title="Foody AI Copilot — Order by Voice or Text">
+  <div class="ai-trigger-orb">
+    <div class="ai-trigger-pulse" *ngIf="!(isOpen$ | async)"></div>
+    <span>{{ (isListening$ | async) ? '🔴' : '✨' }}</span>
   </div>
-  <div class="ai-btn-text-content">
-    <span class="ai-btn-title">Foody Voice AI</span>
-    <span class="ai-btn-subtitle">Order by Voice</span>
+  <div class="ai-trigger-text">
+    <span class="ai-trigger-title">
+      Foody AI <span class="sparkle">★</span>
+    </span>
+    <span class="ai-trigger-sub">Voice & Text Copilot</span>
   </div>
 </button>
 
-<!-- Full Interactive AI Voice Assistant Modal / Sheet -->
-<div class="ai-modal-backdrop" *ngIf="isOpen$ | async" (click)="onBackdropClick($event)">
-  <div class="ai-assistant-card" (click)="$event.stopPropagation()">
+<!-- Full Interactive AI Copilot Modal / Window -->
+<div class="ai-copilot-backdrop" *ngIf="isOpen$ | async" (click)="onBackdropClick($event)">
+  <div class="ai-copilot-window" [class.is-fullscreen]="isFullscreen" (click)="$event.stopPropagation()">
     
-    <!-- Modal Header -->
-    <div class="ai-card-header">
-      <div class="ai-header-brand">
+    <!-- Window Header -->
+    <div class="ai-window-header">
+      <div class="ai-header-left">
         <div class="ai-header-avatar">✨</div>
-        <div class="ai-header-titles">
-          <h3>Foody AI Assistant</h3>
-          <span>Voice Food Ordering</span>
+        <div class="ai-header-meta">
+          <h4>
+            Foody AI Copilot
+            <span class="ai-status-pill">Online</span>
+          </h4>
+          <p>Order anything with voice or text</p>
         </div>
       </div>
 
-      <div class="ai-header-controls">
+      <div class="ai-header-actions">
         <!-- Language Switcher -->
         <button 
           type="button" 
-          class="ai-lang-pill" 
+          class="ai-pill-btn" 
           [class.active]="(language$ | async) === 'en-IN'"
           (click)="setLanguage('en-IN')">
           🇮🇳 EN
         </button>
         <button 
           type="button" 
-          class="ai-lang-pill" 
+          class="ai-pill-btn" 
           [class.active]="(language$ | async) === 'hi-IN'"
           (click)="setLanguage('hi-IN')">
           🇮🇳 हिंदी
         </button>
 
-        <!-- Mute/Unmute Voice Response -->
+        <!-- Mute/Unmute Spoken Output -->
         <button 
           type="button" 
-          class="ai-icon-btn" 
+          class="ai-icon-action" 
           (click)="toggleMute()" 
-          [title]="(isMuted$ | async) ? 'Unmute voice feedback' : 'Mute voice feedback'">
+          [title]="(isMuted$ | async) ? 'Unmute AI voice' : 'Mute AI voice'">
           {{ (isMuted$ | async) ? '🔇' : '🔊' }}
+        </button>
+
+        <!-- Toggle Fullscreen / Expand -->
+        <button 
+          type="button" 
+          class="ai-icon-action" 
+          (click)="toggleFullscreen()" 
+          title="Toggle window size">
+          {{ isFullscreen ? '🗗' : '🗖' }}
+        </button>
+
+        <!-- Clear Chat History -->
+        <button 
+          type="button" 
+          class="ai-icon-action" 
+          (click)="clearMessages()" 
+          title="Clear chat history">
+          🗑️
         </button>
 
         <!-- Close Dialog -->
         <button 
           type="button" 
-          class="ai-icon-btn" 
+          class="ai-icon-action" 
           (click)="closeAssistant()" 
-          title="Close voice assistant">
+          title="Close Copilot">
           ✕
         </button>
       </div>
     </div>
 
-    <!-- Modal Body -->
-    <div class="ai-card-body">
-      
-      <!-- Central Big Mic & Waveform Section -->
-      <div class="ai-mic-section">
-        <button 
-          type="button" 
-          class="ai-big-mic-btn"
-          [class.is-listening]="isListening$ | async"
-          (click)="toggleListening()"
-          [title]="(isListening$ | async) ? 'Tap to stop listening' : 'Tap to start speaking'">
-          <span>{{ (isListening$ | async) ? '⏹️' : '🎙️' }}</span>
-        </button>
+    <!-- Scrollable Chat Messages Stream -->
+    <div class="ai-chat-thread" #chatScrollContainer>
+      @for (msg of (messages$ | async); track msg.id) {
+        <div class="ai-msg-row" [class.user]="msg.sender === 'user'" [class.assistant]="msg.sender === 'assistant'">
+          <div class="ai-msg-avatar">
+            {{ msg.sender === 'user' ? '👤' : '✨' }}
+          </div>
+          
+          <div class="ai-msg-bubble">
+            <div class="ai-msg-text" [innerHTML]="formatMessage(msg.text)"></div>
 
-        <!-- Waveform visualizer active when listening -->
-        <div class="ai-waveform-container" *ngIf="isListening$ | async">
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
-          <div class="waveform-bar"></div>
+            <!-- Rich Embedded Card: Item Added / In Cart -->
+            @if (msg.action?.type === 'ADD' && msg.action?.recipe) {
+              <div class="ai-rich-card">
+                <div class="ai-dish-preview">
+                  <img [src]="msg.action.recipe.image || 'https://via.placeholder.com/60'" [alt]="msg.action.recipe.title" class="ai-dish-img">
+                  <div class="ai-dish-meta">
+                    <div class="ai-dish-title">{{ msg.action.recipe.title }}</div>
+                    <div class="ai-dish-price">₹{{ msg.action.recipe.price }}</div>
+                  </div>
+                </div>
+
+                <div class="ai-stepper-controls">
+                  <button type="button" class="ai-stepper-btn" (click)="decreaseQuantity(msg.action.recipe)" title="Decrease quantity">−</button>
+                  <span class="ai-stepper-qty">{{ getItemQuantity(msg.action.recipe) }}</span>
+                  <button type="button" class="ai-stepper-btn" (click)="increaseQuantity(msg.action.recipe)" title="Increase quantity">+</button>
+                  
+                  <button type="button" class="ai-action-btn-primary" (click)="goToCheckout()">
+                    <span>Cart (₹{{ cartService.totalPrice$ | async }})</span>
+                    <span>➔</span>
+                  </button>
+                </div>
+              </div>
+            }
+
+            <!-- Rich Embedded Card: Recommendations -->
+            @if (msg.action?.type === 'RECOMMEND' && msg.action?.recipes && msg.action.recipes.length > 0) {
+              <div class="ai-recommend-grid">
+                @for (rec of msg.action.recipes; track rec.id || rec._id) {
+                  <div class="ai-rec-card">
+                    <div>
+                      <div class="ai-rec-title">{{ rec.title }}</div>
+                      <div class="ai-rec-price">₹{{ rec.price }}</div>
+                    </div>
+                    <button type="button" class="ai-action-btn-primary" (click)="quickAddRecipe(rec)">
+                      + Add
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Rich Embedded Card: Cart Summary -->
+            @if (msg.action?.type === 'SHOW_CART' && (msg.action?.total || 0) > 0) {
+              <div style="margin-top: 10px;">
+                <button type="button" class="ai-action-btn-primary" style="width: 100%; justify-content: center; padding: 10px;" (click)="goToCheckout()">
+                  <span>Proceed to Checkout (₹{{ msg.action.total }})</span>
+                  <span>➔</span>
+                </button>
+              </div>
+            }
+
+            <span class="ai-msg-time">{{ msg.timestamp | date:'shortTime' }}</span>
+          </div>
         </div>
+      }
 
-        <div class="ai-mic-status-label">
-          {{ (isListening$ | async) ? 'Listening... Speak your order now' : 'Tap the microphone to speak' }}
+      <!-- Thinking Animation -->
+      @if (isThinking$ | async) {
+        <div class="ai-msg-row assistant">
+          <div class="ai-msg-avatar">✨</div>
+          <div class="ai-thinking-row">
+            <div class="ai-thinking-dots">
+              <span class="ai-dot"></span>
+              <span class="ai-dot"></span>
+              <span class="ai-dot"></span>
+            </div>
+            <span class="ai-thinking-label">Foody AI is thinking & finding dishes...</span>
+          </div>
         </div>
-      </div>
-
-      <!-- Real-time Spoken Transcript Box -->
-      <div class="ai-transcript-box" [class.is-empty]="!(transcript$ | async)">
-        <span class="label">You:</span>
-        <span class="text">
-          {{ (transcript$ | async) || 'Say something like "Add 2 Dal Fry" or "Show cart"...' }}
-        </span>
-      </div>
-
-      <!-- Assistant AI Message Bubble -->
-      <div class="ai-response-bubble">
-        <span class="ai-response-avatar">🤖</span>
-        <div class="ai-response-text">
-          {{ assistantMessage$ | async }}
-          <span class="speaking-indicator" *ngIf="isSpeaking$ | async" title="Assistant is speaking">
-            <span class="speaking-dot"></span>
-            <span class="speaking-dot"></span>
-            <span class="speaking-dot"></span>
-          </span>
-        </div>
-      </div>
-
-      <!-- Suggested Quick Voice Commands -->
-      <div class="ai-suggestions-section">
-        <span class="ai-suggestions-label">Try saying or tap to order:</span>
-        <div class="ai-chips-grid">
-          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Add 2 South Indian Poha')">
-            🥣 Add 2 Poha
-          </button>
-          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Add 1 Dal Fry')">
-            🍲 Order Dal Fry
-          </button>
-          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Add Paneer Butter Masala')">
-            🧀 Paneer Masala
-          </button>
-          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Show my cart')">
-            🛒 Show Cart
-          </button>
-          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Apply coupon FOODY20')">
-            🎟️ Apply FOODY20
-          </button>
-          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Checkout')">
-            ⚡ Checkout
-          </button>
-        </div>
-      </div>
-
+      }
     </div>
 
-    <!-- Live Cart Snapshot & Direct Order Action -->
-    <div class="ai-cart-snapshot" *ngIf="(cartService.totalItems$ | async)! > 0">
-      <div class="ai-cart-info">
-        <span class="ai-cart-count">{{ cartService.totalItems$ | async }} item(s) in cart</span>
-        <span class="ai-cart-total">₹{{ cartService.totalPrice$ | async }}</span>
+    <!-- Live Audio Waveform Banner (Active while listening) -->
+    <div class="ai-live-audio-banner" *ngIf="isListening$ | async">
+      <div class="ai-waveform-bars">
+        <span class="ai-bar"></span>
+        <span class="ai-bar"></span>
+        <span class="ai-bar"></span>
+        <span class="ai-bar"></span>
+        <span class="ai-bar"></span>
+      </div>
+      <span class="ai-live-speech-text">
+        {{ (interimTranscript$ | async) || 'Listening... Speak your order' }}
+      </span>
+      <button type="button" (click)="stopListening()" style="background: #991b1b; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+        Stop
+      </button>
+    </div>
+
+    <!-- Contextual Quick Action Suggestions Chips -->
+    <div class="ai-quick-chips-bar">
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Add 2 South Indian Poha')">
+        🥣 Add 2 Poha
+      </button>
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Order 1 Dal Fry')">
+        🍲 Order Dal Fry
+      </button>
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Add Paneer Butter Masala')">
+        🧀 Paneer Masala
+      </button>
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Dishes under ₹150')">
+        💰 Under ₹150
+      </button>
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Show my cart')">
+        🛒 Show Cart
+      </button>
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Apply coupon FOODY20')">
+        🎟️ Apply FOODY20
+      </button>
+      <button type="button" class="ai-quick-chip" (click)="triggerQuickCommand('Checkout')">
+        ⚡ Checkout
+      </button>
+    </div>
+
+    <!-- Dual Input Dock (Text Typing & Voice Speaking) -->
+    <div class="ai-input-dock">
+      <div class="ai-text-input-wrap">
+        <input 
+          #textInputField
+          type="text" 
+          class="ai-text-input" 
+          [(ngModel)]="inputText" 
+          (keydown.enter)="onSendText()"
+          placeholder="Type or talk: '2 Dal Fry', 'Dishes under ₹150'...">
+        
+        <button 
+          type="button" 
+          class="ai-send-btn" 
+          [disabled]="!inputText.trim()" 
+          (click)="onSendText()" 
+          title="Send message">
+          ➔
+        </button>
       </div>
 
-      <button type="button" class="ai-btn-checkout" (click)="goToCheckout()">
-        <span>View Cart & Checkout</span>
-        <span>➔</span>
+      <!-- Voice Microphone Toggle -->
+      <button 
+        type="button" 
+        class="ai-dock-mic-btn"
+        [class.is-listening]="isListening$ | async"
+        (click)="toggleListening()"
+        [title]="(isListening$ | async) ? 'Stop listening' : 'Tap to speak your order'">
+        <span>{{ (isListening$ | async) ? '⏹️' : '🎙️' }}</span>
       </button>
     </div>
 
