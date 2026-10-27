@@ -96,25 +96,48 @@ export class PagesService implements OnModuleInit {
             {
               id: 'sec-home-hero',
               type: 'hero',
-              title: 'Experience Premium Food at Home',
-              subtitle: 'Meerut\'s finest culinary kitchen bringing you freshly prepared, hygienic, and mouth-watering delicacies right to your doorstep.',
-              badge: '⚡ Fastest Delivery in Meerut',
-              buttonText: 'Order Food Now',
+              title: 'Experience <span>Premium</span> Food at Home.',
+              subtitle: 'Meerut\'s finest premium kitchen bringing you freshly prepared, hygienic, and mouth-watering delicacies right to your doorstep.',
+              badge: 'Takeaway & Delivery',
+              badge2: 'Delivering in Meerut Area Only',
+              buttonText: 'Order Here',
               buttonLink: '/menu',
-              secondaryButtonText: 'Explore Special Offers',
+              secondaryButtonText: 'Special Offers',
               secondaryButtonLink: '/page/offers',
+              zomatoLink: 'https://www.zomato.com/meerut/foody-bhai-mohan-puri/order',
+              swiggyLink: 'https://www.swiggy.com/city/meerut/foody-bhai-meerut-cantt-rest1404714',
+              ratingValue: '4.3/5',
+              ratingLabel: 'Foody Bhai Rating',
               imageUrl: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80',
               imagePosition: 'right',
+              items: [
+                {
+                  id: 'stat-1',
+                  title: '30+',
+                  description: 'Minutes Prep Time'
+                },
+                {
+                  id: 'stat-2',
+                  title: '100%',
+                  description: 'Fresh Ingredients'
+                },
+                {
+                  id: 'stat-3',
+                  icon: 'fa-solid fa-star',
+                  title: '4.3 ★',
+                  description: 'Based on 200+ ratings'
+                }
+              ],
               style: {
-                paddingTop: '60px',
-                paddingBottom: '60px',
+                paddingTop: '48px',
+                paddingBottom: '64px',
                 maxWidth: '1200px',
                 minHeight: '480px',
                 backgroundColor: 'transparent',
                 textAlign: 'left',
-                titleFontSize: '48px',
+                titleFontSize: '52px',
                 contentFontSize: '18px',
-                borderRadius: '0px'
+                borderRadius: '30px'
               },
               isEnabled: true
             },

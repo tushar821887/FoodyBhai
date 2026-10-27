@@ -30,10 +30,10 @@ import { CmsSection } from '../../../models/cms.model';
               {{ section.badge }}
             </div>
 
-            <h2 class="section-title"
+            <h2 *ngIf="section.title" class="section-title"
                 [style.color]="section.style.textColor || 'var(--secondary-color, #241814)'"
                 [style.font-size]="section.style.titleFontSize || '2.5rem'"
-                [innerHTML]="section.title || 'Welcome to <span>FoodyBhai</span>'"></h2>
+                [innerHTML]="section.title"></h2>
 
             <p *ngIf="section.subtitle" class="section-subtitle"
                [style.color]="section.style.textColor ? (section.style.textColor === '#ffffff' ? 'rgba(255,255,255,0.85)' : section.style.textColor) : 'var(--text-light, #716661)'"

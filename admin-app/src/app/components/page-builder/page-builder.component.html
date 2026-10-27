@@ -176,7 +176,18 @@
         <div class="inspector-box">
           <h4 class="box-title"><i class="fa-solid fa-pen-nib"></i> Section Content</h4>
           
-          <div class="form-group-cms">
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero'">
+            <div class="form-group-cms">
+              <label>Primary Badge</label>
+              <input type="text" [(ngModel)]="selectedSection.badge" placeholder="e.g. Takeaway & Delivery" class="cms-input">
+            </div>
+            <div class="form-group-cms">
+              <label>Secondary / Area Badge</label>
+              <input type="text" [(ngModel)]="selectedSection.badge2" placeholder="e.g. Delivering in Meerut Area Only" class="cms-input">
+            </div>
+          </div>
+
+          <div class="form-group-cms" *ngIf="selectedSection.type !== 'hero'">
             <label>Badge / Highlight Tag</label>
             <input type="text" [(ngModel)]="selectedSection.badge" placeholder="e.g. ⚡ FASTEST DELIVERY, HOT DEAL" class="cms-input">
           </div>
@@ -227,6 +238,28 @@
             </div>
           </div>
 
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero'">
+            <div class="form-group-cms">
+              <label>Zomato Store Link (Optional)</label>
+              <input type="text" [(ngModel)]="selectedSection.zomatoLink" placeholder="https://www.zomato.com/..." class="cms-input">
+            </div>
+            <div class="form-group-cms">
+              <label>Swiggy Store Link (Optional)</label>
+              <input type="text" [(ngModel)]="selectedSection.swiggyLink" placeholder="https://www.swiggy.com/..." class="cms-input">
+            </div>
+          </div>
+
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero'">
+            <div class="form-group-cms">
+              <label>Floating Rating (Optional)</label>
+              <input type="text" [(ngModel)]="selectedSection.ratingValue" placeholder="e.g. 4.3/5" class="cms-input">
+            </div>
+            <div class="form-group-cms">
+              <label>Rating Label (Optional)</label>
+              <input type="text" [(ngModel)]="selectedSection.ratingLabel" placeholder="e.g. Foody Bhai Rating" class="cms-input">
+            </div>
+          </div>
+
           <div class="form-group-cms" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'image_text' || selectedSection.type === 'about_story' || selectedSection.type === 'banner'">
             <label>Image URL</label>
             <input type="text" [(ngModel)]="selectedSection.imageUrl" placeholder="https://images.unsplash.com/..." class="cms-input">
@@ -262,10 +295,13 @@
           </div>
         </div>
 
-        <!-- Accordion 2: Card Items List (Features, About Story, FAQ, Testimonials) -->
-        <div class="inspector-box" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'about_story' || selectedSection.type === 'faq' || selectedSection.type === 'testimonials'">
+        <!-- Accordion 2: Card Items List (Hero Quick Stats, Features, About Story, FAQ, Testimonials) -->
+        <div class="inspector-box" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'features' || selectedSection.type === 'about_story' || selectedSection.type === 'faq' || selectedSection.type === 'testimonials'">
           <div class="box-title-row">
-            <h4 class="box-title"><i class="fa-solid fa-list-check"></i> Grid / List Items ({{ selectedSection.items?.length || 0 }})</h4>
+            <h4 class="box-title">
+              <i class="fa-solid fa-list-check"></i> 
+              {{ selectedSection.type === 'hero' ? 'Hero Quick Stats' : 'Grid / List Items' }} ({{ selectedSection.items?.length || 0 }})
+            </h4>
             <button type="button" class="btn-add-item-mini" (click)="addItemToSection()">
               <i class="fa-solid fa-plus"></i> Add Item
             </button>
@@ -278,13 +314,13 @@
                 <button type="button" class="btn-remove-item" (click)="removeItemFromSection(itemIdx)">✕</button>
               </div>
 
-              <div class="form-row-2col" *ngIf="selectedSection.type === 'features' || selectedSection.type === 'about_story'">
+              <div class="form-row-2col" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'features' || selectedSection.type === 'about_story'">
                 <div class="form-group-cms" style="max-width: 100px;">
                   <label>Icon / Class</label>
-                  <input type="text" [(ngModel)]="item.icon" class="cms-input text-center" placeholder="🌿 or fa-solid...">
+                  <input type="text" [(ngModel)]="item.icon" class="cms-input text-center" placeholder="⭐ or fa-solid...">
                 </div>
                 <div class="form-group-cms" style="flex: 1;">
-                  <label>Title</label>
+                  <label>{{ selectedSection.type === 'hero' ? 'Stat Value (e.g. 30+, 100%)' : 'Title' }}</label>
                   <input type="text" [(ngModel)]="item.title" class="cms-input">
                 </div>
               </div>
@@ -306,7 +342,7 @@
               </div>
 
               <div class="form-group-cms">
-                <label>{{ selectedSection.type === 'faq' ? 'Answer' : 'Description / Details' }}</label>
+                <label>{{ selectedSection.type === 'hero' ? 'Stat Label (e.g. Minutes Prep Time)' : (selectedSection.type === 'faq' ? 'Answer' : 'Description / Details') }}</label>
                 <textarea [(ngModel)]="item.description" rows="2" class="cms-input"></textarea>
               </div>
             </div>

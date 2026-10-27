@@ -14,20 +14,36 @@ import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-se
 export class Home implements OnInit {
   homePage: CmsPage | null = null;
   isLoading = true;
+  isServerOffline = false;
 
   private cmsService = inject(CmsService);
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
+    this.cmsService.isBackendOffline$.subscribe(offline => {
+      this.isServerOffline = offline;
+      this.cdr.detectChanges();
+    });
+
     this.cmsService.getPageBySlug('').subscribe(page => {
       if (page && page.sections && page.sections.length > 0) {
         this.homePage = JSON.parse(JSON.stringify(page));
         this.isLoading = false;
         this.cdr.detectChanges();
+      } else {
+        if (this.isServerOffline) {
+          this.homePage = null;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       }
     });
 
-    // Proactively pull latest database CMS pages on navigation
+    this.refreshPages();
+  }
+
+  refreshPages() {
+    this.isLoading = true;
     this.cmsService.fetchLivePages(true).subscribe({
       next: () => {
         this.isLoading = false;
@@ -35,9 +51,14 @@ export class Home implements OnInit {
       },
       error: () => {
         this.isLoading = false;
+        this.isServerOffline = true;
         this.cdr.detectChanges();
       }
     });
+  }
+
+  retryLoad() {
+    this.refreshPages();
   }
 
   trackBySection(index: number, sec: CmsSection): string {

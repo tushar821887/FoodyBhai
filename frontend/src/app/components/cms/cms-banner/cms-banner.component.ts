@@ -40,7 +40,7 @@ import { CmsSection } from '../../../models/cms.model';
 
           <div *ngIf="section.imageUrl" class="cms-banner-image">
             <div class="image-box" [style.border-radius]="section.style.borderRadius || '16px'">
-              <img [src]="section.imageUrl" [alt]="section.title || 'Banner'" onerror="this.src='https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80'">
+              <img [src]="section.imageUrl" [alt]="section.title || ''">
             </div>
           </div>
 

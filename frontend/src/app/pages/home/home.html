@@ -1,7 +1,22 @@
 @if (isLoading && (!homePage || !homePage.sections || homePage.sections.length === 0)) {
   <div class="global-loading-container">
     <i class="fa-solid fa-spinner fa-spin global-loading-spinner"></i>
-    <p style="color: var(--text-light); font-weight: 500;">Loading Foody Bhai kitchen...</p>
+    <p style="color: var(--text-light); font-weight: 500;">Connecting to Foody Bhai kitchen...</p>
+  </div>
+} @else if (isServerOffline && (!homePage || !homePage.sections || homePage.sections.length === 0)) {
+  <div class="container text-center" style="padding: 6rem 1.5rem; max-width: 650px; margin: 0 auto;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔌</div>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--secondary-color, #241814); margin-bottom: 0.75rem;">
+      Backend Server Stopped / Offline
+    </h2>
+    <p style="color: var(--text-light, #716661); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
+      All page sections, hero texts, menu recipes, and features are strictly powered live by the backend database and Admin CMS. No hardcoded website fallbacks are used.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <button class="btn btn-primary" (click)="retryLoad()" style="padding: 0.75rem 2rem; border-radius: 50px;">
+        <i class="fa-solid fa-rotate-right" style="margin-right: 6px;"></i> Reconnect
+      </button>
+    </div>
   </div>
 } @else {
   <div class="home-cms-canvas">

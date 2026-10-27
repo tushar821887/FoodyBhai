@@ -18,74 +18,69 @@ import { CmsSection } from '../../../models/cms.model';
       <div class="container hero-container" [style.max-width]="section.style.maxWidth || '1200px'">
         <div class="hero-content animate-fade-in">
           
-          <!-- Badges -->
-          <div class="hero-badges">
-            <div class="badge delivery-badge">
-              <i class="fa-solid fa-motorcycle"></i> {{ section.badge || 'Takeaway & Delivery' }}
+          <!-- Badges (strictly from CMS) -->
+          <div class="hero-badges" *ngIf="section.badge || section.badge2">
+            <div class="badge delivery-badge" *ngIf="section.badge">
+              <i class="fa-solid fa-motorcycle"></i> {{ section.badge }}
             </div>
-            <div class="badge delivery-badge area-badge">
-              <i class="fa-solid fa-location-dot"></i> Delivering in Meerut Area Only
+            <div class="badge delivery-badge area-badge" *ngIf="section.badge2">
+              <i class="fa-solid fa-location-dot"></i> {{ section.badge2 }}
             </div>
           </div>
 
-          <!-- Dynamic Title with Highlight Spans -->
-          <h1 class="hero-title"
+          <!-- Dynamic Title (strictly from CMS) -->
+          <h1 *ngIf="section.title"
+              class="hero-title"
               [style.color]="section.style.textColor || 'var(--secondary-color, #241814)'"
               [style.font-size]="section.style.titleFontSize || '3.5rem'"
-              [innerHTML]="section.title || 'Experience <span>Premium</span> Food at Home.'"></h1>
+              [innerHTML]="section.title"></h1>
 
-          <!-- Dynamic Subtitle -->
-          <p class="hero-subtitle"
+          <!-- Dynamic Subtitle (strictly from CMS) -->
+          <p *ngIf="section.subtitle"
+             class="hero-subtitle"
              [style.color]="section.style.textColor ? (section.style.textColor === '#ffffff' ? 'rgba(255,255,255,0.85)' : section.style.textColor) : 'var(--text-light, #716661)'"
              [style.font-size]="section.style.contentFontSize || '1.1rem'">
-            {{ section.subtitle || 'Meerut\\'s finest premium kitchen bringing you freshly prepared, hygienic, and mouth-watering delicacies right to your doorstep.' }}
+            {{ section.subtitle }}
           </p>
 
-          <!-- Action Buttons -->
-          <div class="hero-actions" style="flex-wrap: wrap; gap: 1rem;">
-            <a [routerLink]="section.buttonLink || '/menu'" class="btn btn-primary btn-lg">
-              {{ section.buttonText || 'Order Here' }} <i class="fa-solid fa-arrow-right"></i>
+          <!-- Action Buttons (strictly from CMS) -->
+          <div class="hero-actions" *ngIf="section.buttonText || section.secondaryButtonText || section.zomatoLink || section.swiggyLink" style="flex-wrap: wrap; gap: 1rem;">
+            <a *ngIf="section.buttonText" [routerLink]="section.buttonLink || '/menu'" class="btn btn-primary btn-lg">
+              {{ section.buttonText }} <i class="fa-solid fa-arrow-right"></i>
             </a>
             <a *ngIf="section.secondaryButtonText" [routerLink]="section.secondaryButtonLink || '/page/offers'" class="btn btn-secondary btn-lg">
               {{ section.secondaryButtonText }}
             </a>
-            <a href="https://www.zomato.com/meerut/foody-bhai-mohan-puri/order" target="_blank" class="btn btn-lg btn-zomato">
+            <a *ngIf="section.zomatoLink" [href]="section.zomatoLink" target="_blank" class="btn btn-lg btn-zomato">
               <strong style="font-style: italic; font-weight: 800; font-size: 1.15rem; letter-spacing: 0.5px;">zomato</strong>
             </a>
-            <a href="https://www.swiggy.com/city/meerut/foody-bhai-meerut-cantt-rest1404714" target="_blank" class="btn btn-lg btn-swiggy">
+            <a *ngIf="section.swiggyLink" [href]="section.swiggyLink" target="_blank" class="btn btn-lg btn-swiggy">
               <strong style="font-weight: 800; font-size: 1.15rem; letter-spacing: 0.5px;">SWIGGY</strong>
             </a>
           </div>
 
-          <!-- Quick Stats -->
-          <div class="hero-stats">
-            <div class="stat">
-              <span class="stat-number">30+</span>
-              <span class="stat-text">Minutes Prep Time</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">100%</span>
-              <span class="stat-text">Fresh Ingredients</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">4.3 <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 0.8em;"></i></span>
-              <span class="stat-text">Based on 200+ ratings</span>
+          <!-- Quick Stats (strictly from CMS items) -->
+          <div class="hero-stats" *ngIf="section.items && section.items.length > 0">
+            <div class="stat" *ngFor="let item of section.items">
+              <span class="stat-number">
+                {{ item.title }}
+                <i *ngIf="item.icon && item.icon.includes('fa-')" [class]="item.icon" style="color: #f59e0b; font-size: 0.8em;"></i>
+              </span>
+              <span class="stat-text" *ngIf="item.description">{{ item.description }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Hero Image Slice -->
-        <div class="hero-image animate-fade-in" style="animation-delay: 0.2s">
+        <!-- Hero Image Slice (strictly from CMS) -->
+        <div class="hero-image animate-fade-in" *ngIf="section.imageUrl" style="animation-delay: 0.2s">
           <div class="img-wrapper" [style.border-radius]="section.style.borderRadius || '30px'">
-            <img [src]="section.imageUrl || 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80'" 
-                 [alt]="section.title || 'Delicious Food'"
-                 onerror="this.src='https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80'">
+            <img [src]="section.imageUrl" [alt]="section.title || 'Foody Bhai'">
             
-            <div class="floating-card rating-card">
+            <div class="floating-card rating-card" *ngIf="section.ratingValue || section.ratingLabel">
               <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 24px;"></i>
               <div>
-                <strong style="display: block; font-size: 18px; color: #1e293b;">4.3/5</strong>
-                <span style="font-size: 12px; color: #64748b;">Foody Bhai Rating</span>
+                <strong *ngIf="section.ratingValue" style="display: block; font-size: 18px; color: #1e293b;">{{ section.ratingValue }}</strong>
+                <span *ngIf="section.ratingLabel" style="font-size: 12px; color: #64748b;">{{ section.ratingLabel }}</span>
               </div>
             </div>
           </div>

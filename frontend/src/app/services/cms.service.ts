@@ -17,28 +17,14 @@ export const DEFAULT_WEBSITE_PAGES: CmsPage[] = [];
   providedIn: 'root'
 })
 export class CmsService {
-  private getInitialPages(): CmsPage[] {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        const cached = localStorage.getItem(STORAGE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to parse cached CMS pages', e);
-    }
-    return [];
-  }
-
-  private pagesSubject = new BehaviorSubject<CmsPage[]>(this.getInitialPages());
+  private pagesSubject = new BehaviorSubject<CmsPage[]>([]);
   public pages$: Observable<CmsPage[]> = this.pagesSubject.asObservable();
 
-  private isPagesLoadingSubject = new BehaviorSubject<boolean>(this.getInitialPages().length === 0);
+  private isPagesLoadingSubject = new BehaviorSubject<boolean>(true);
   public isPagesLoading$: Observable<boolean> = this.isPagesLoadingSubject.asObservable();
+
+  private isBackendOfflineSubject = new BehaviorSubject<boolean>(false);
+  public isBackendOffline$: Observable<boolean> = this.isBackendOfflineSubject.asObservable();
 
   private isBrowser: boolean;
   private readonly PAGES_API_URL = `${environment.apiUrl}/pages`;
@@ -55,23 +41,10 @@ export class CmsService {
   private initializePages() {
     if (!this.isBrowser) return;
 
-    // 1. Read cached pages immediately
-    const cached = localStorage.getItem(STORAGE_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.pagesSubject.next(parsed);
-        }
-      } catch (e) {
-        console.warn('Failed to parse cached CMS pages', e);
-      }
-    }
-
-    // 2. Fetch remote live pages from backend database with cache buster
+    // Fetch live pages strictly from backend database API
     this.fetchLivePages(true).subscribe();
 
-    // 3. Listen for live updates from Admin App across tabs
+    // Listen for live updates from Admin App across tabs
     try {
       if ('BroadcastChannel' in window) {
         const channel = new BroadcastChannel('foodybhai_cms_channel');
@@ -82,7 +55,7 @@ export class CmsService {
         };
       }
       window.addEventListener('storage', (ev) => {
-        if (ev.key === 'foodybhai_cms_last_published' || ev.key === STORAGE_KEY) {
+        if (ev.key === 'foodybhai_cms_last_published') {
           this.fetchLivePages(true).subscribe();
         }
       });
@@ -112,12 +85,12 @@ export class CmsService {
         return pages as CmsPage[];
       }),
       tap(pages => {
+        this.isBackendOfflineSubject.next(false);
         if (pages && pages.length > 0) {
           const fresh = JSON.parse(JSON.stringify(pages));
           this.pagesSubject.next(fresh);
-          if (this.isBrowser) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
-          }
+        } else {
+          this.pagesSubject.next([]);
         }
         this.isPagesLoadingSubject.next(false);
       }),
@@ -127,15 +100,21 @@ export class CmsService {
         return this.http.get<any>(fallbackUrl, { headers }).pipe(
           map(res => (res && res.value && Array.isArray(res.value) ? res.value : []) as CmsPage[]),
           tap(pages => {
+            this.isBackendOfflineSubject.next(false);
             if (pages && pages.length > 0) {
               const fresh = JSON.parse(JSON.stringify(pages));
               this.pagesSubject.next(fresh);
+            } else {
+              this.pagesSubject.next([]);
             }
             this.isPagesLoadingSubject.next(false);
           }),
           catchError(() => {
+            // When backend is unreachable, mark offline and clear pages - no fake website fallbacks
+            this.isBackendOfflineSubject.next(true);
+            this.pagesSubject.next([]);
             this.isPagesLoadingSubject.next(false);
-            return of(this.pagesSubject.value);
+            return of([]);
           })
         );
       })

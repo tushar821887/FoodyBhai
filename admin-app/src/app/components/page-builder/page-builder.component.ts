@@ -416,6 +416,13 @@ export class PageBuilderComponent implements OnInit {
   }
 
   private getDefaultItemsForType(type: SectionType): CmsSectionItem[] | undefined {
+    if (type === 'hero') {
+      return [
+        { id: '1', title: '30+', description: 'Minutes Prep Time' },
+        { id: '2', title: '100%', description: 'Fresh Ingredients' },
+        { id: '3', icon: 'fa-solid fa-star', title: '4.3 ★', description: 'Based on 200+ ratings' }
+      ];
+    }
     if (type === 'about_story') {
       return [
         { id: '1', icon: 'fa-solid fa-list-check', title: 'Step-by-Step Instructions', description: 'Tested recipes guaranteeing rich taste and consistent perfection.' },

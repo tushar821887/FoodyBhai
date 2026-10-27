@@ -49,10 +49,15 @@ export interface CmsSection {
   subtitle?: string;
   content?: string;
   badge?: string;
+  badge2?: string;
   buttonText?: string;
   buttonLink?: string;
   secondaryButtonText?: string;
   secondaryButtonLink?: string;
+  zomatoLink?: string;
+  swiggyLink?: string;
+  ratingValue?: string;
+  ratingLabel?: string;
   imageUrl?: string;
   imagePosition?: 'left' | 'right';
   items?: CmsSectionItem[];

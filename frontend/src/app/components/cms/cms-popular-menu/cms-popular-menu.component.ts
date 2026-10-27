@@ -24,10 +24,10 @@ import { MenuCard } from '../../menu-card/menu-card';
           <div *ngIf="section.badge" class="cms-badge">
             {{ section.badge }}
           </div>
-          <h2 class="section-title"
+          <h2 *ngIf="section.title" class="section-title"
               [style.color]="section.style.textColor || 'var(--secondary-color, #241814)'"
               [style.font-size]="section.style.titleFontSize || '36px'"
-              [innerHTML]="section.title || 'Popular <span>Menu</span>'">
+              [innerHTML]="section.title">
           </h2>
           <p *ngIf="section.subtitle" class="section-subtitle"
              [style.color]="section.style.textColor ? (section.style.textColor === '#ffffff' ? 'rgba(255,255,255,0.85)' : section.style.textColor) : 'var(--text-light, #716661)'"
@@ -55,9 +55,9 @@ import { MenuCard } from '../../menu-card/menu-card';
         </div>
 
         <!-- CTA Action -->
-        <div class="text-center" style="margin-top: 3rem;">
+        <div *ngIf="section.buttonText" class="text-center" style="margin-top: 3rem;">
           <a [routerLink]="section.buttonLink || '/menu'" class="btn btn-primary">
-            {{ section.buttonText || 'Browse Full Menu' }}
+            {{ section.buttonText }}
           </a>
         </div>
 

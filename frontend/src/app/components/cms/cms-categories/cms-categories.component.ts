@@ -23,10 +23,10 @@ import { RecipeService } from '../../../services/recipe.service';
           <div *ngIf="section.badge" class="cms-badge">
             {{ section.badge }}
           </div>
-          <h2 class="section-title"
+          <h2 *ngIf="section.title" class="section-title"
               [style.color]="section.style.textColor || 'var(--secondary-color, #241814)'"
               [style.font-size]="section.style.titleFontSize || '36px'"
-              [innerHTML]="section.title || 'Explore <span>Categories</span>'">
+              [innerHTML]="section.title">
           </h2>
           <p *ngIf="section.subtitle" class="section-subtitle"
              [style.color]="section.style.textColor ? (section.style.textColor === '#ffffff' ? 'rgba(255,255,255,0.85)' : section.style.textColor) : 'var(--text-light, #716661)'"

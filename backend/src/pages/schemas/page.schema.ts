@@ -105,6 +105,9 @@ export class PageSection {
   badge?: string;
 
   @Prop()
+  badge2?: string;
+
+  @Prop()
   buttonText?: string;
 
   @Prop()
@@ -115,6 +118,18 @@ export class PageSection {
 
   @Prop()
   secondaryButtonLink?: string;
+
+  @Prop()
+  zomatoLink?: string;
+
+  @Prop()
+  swiggyLink?: string;
+
+  @Prop()
+  ratingValue?: string;
+
+  @Prop()
+  ratingLabel?: string;
 
   @Prop()
   imageUrl?: string;
