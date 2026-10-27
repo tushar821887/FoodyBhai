@@ -1,4 +1,4 @@
-﻿
+
 export interface PromoBannerConfig {
   enabled: boolean;
   text: string;
@@ -218,6 +218,13 @@ export class OrdersPage implements OnInit, OnDestroy {
   isAddingAgent = false;
   
   // Settings
+  activeSettingsTab: 'payment' | 'billing' | 'app' | 'smtp' | 'notifications' = 'payment';
+
+  setSettingsTab(tab: 'payment' | 'billing' | 'app' | 'smtp' | 'notifications') {
+    this.activeSettingsTab = tab;
+    this.cdr.detectChanges();
+  }
+
   upiId: string = '';
   restaurantOpen = true;
   restaurantClosedReason = 'We are currently closed. Please check back later.';
@@ -385,6 +392,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.route.queryParams.subscribe((params: any) => {
       if (params['tab'] && (params['tab'] === 'categories' || params['tab'] === 'items' || params['tab'] === 'mapping')) {
         this.menuTab = params['tab'];
+        this.cdr.detectChanges();
+      }
+      if (params['tab'] && ['payment', 'billing', 'app', 'smtp', 'notifications'].includes(params['tab'])) {
+        this.activeSettingsTab = params['tab'];
         this.cdr.detectChanges();
       }
     });

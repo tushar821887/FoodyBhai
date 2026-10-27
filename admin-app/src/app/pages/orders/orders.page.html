@@ -1642,7 +1642,54 @@
           <p style="margin: 0; opacity: 0.9; font-size: 15px;">Configure your payment gateway and store preferences.</p>
         </div>
         
-        <div class="settings-card">
+        <!-- Modern Settings Navigation Tabs -->
+        <div class="settings-nav-tabs">
+          <button type="button" 
+                  class="settings-nav-tab" 
+                  [class.active]="activeSettingsTab === 'payment'" 
+                  (click)="setSettingsTab('payment')">
+            <span class="tab-icon"><i class="fa-solid fa-qrcode"></i></span>
+            <span class="tab-title">Payment & QR</span>
+          </button>
+
+          <button type="button" 
+                  class="settings-nav-tab" 
+                  [class.active]="activeSettingsTab === 'billing'" 
+                  (click)="setSettingsTab('billing')">
+            <span class="tab-icon"><i class="fa-solid fa-receipt"></i></span>
+            <span class="tab-title">Taxes & Delivery</span>
+          </button>
+
+          <button type="button" 
+                  class="settings-nav-tab" 
+                  [class.active]="activeSettingsTab === 'app'" 
+                  (click)="setSettingsTab('app')">
+            <span class="tab-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
+            <span class="tab-title">App & APK Releases</span>
+            <span class="tab-pill" *ngIf="appVersion">v{{ appVersion }}</span>
+          </button>
+
+          <button type="button" 
+                  class="settings-nav-tab" 
+                  [class.active]="activeSettingsTab === 'smtp'" 
+                  (click)="setSettingsTab('smtp')">
+            <span class="tab-icon"><i class="fa-solid fa-envelope"></i></span>
+            <span class="tab-title">Email & SMS (SMTP)</span>
+            <span class="tab-status-dot" [class.is-connected]="smtpHost && smtpUser && smtpPass" [title]="smtpHost && smtpUser && smtpPass ? 'Configured' : 'Incomplete'"></span>
+          </button>
+
+          <button type="button" 
+                  class="settings-nav-tab" 
+                  [class.active]="activeSettingsTab === 'notifications'" 
+                  (click)="setSettingsTab('notifications')">
+            <span class="tab-icon"><i class="fa-solid fa-bell"></i></span>
+            <span class="tab-title">Sounds & Alerts</span>
+            <span class="tab-pill" [class.pill-success]="notificationPermissionState === 'granted'">
+              {{ notificationPermissionState === 'granted' ? 'Active' : 'Setup' }}
+            </span>
+          </button>
+        </div>
+        <div class="settings-card animate-fade-in" *ngIf="activeSettingsTab === 'payment'">
           <div class="card-header-styled">
             <div class="icon-circle">ðŸ’°</div>
             <div>
@@ -1693,7 +1740,7 @@
         </div>
 
         <!-- Taxes & Billing Configuration Card -->
-        <div class="settings-card" style="margin-top: 25px;">
+        <div class="settings-card animate-fade-in" *ngIf="activeSettingsTab === 'billing'">
           <div class="card-header-styled">
             <div class="icon-circle" style="background: #eff6ff; color: #2563eb;">ðŸ§¾</div>
             <div>
@@ -1766,7 +1813,7 @@
         </div>
 
         <!-- Android App & APK Release Card -->
-        <div class="settings-card" style="margin-top: 25px;">
+        <div class="settings-card animate-fade-in" *ngIf="activeSettingsTab === 'app'">
           <div class="card-header-styled">
             <div class="icon-circle" style="background: #ecfdf5; color: #10b981;">ðŸ“±</div>
             <div>
@@ -1855,7 +1902,7 @@
         </div>
 
         <!-- Email (SMTP) & SMS OTP Gateway Card -->
-        <div class="settings-card" style="margin-top: 25px;">
+        <div class="settings-card animate-fade-in" *ngIf="activeSettingsTab === 'smtp'">
           <div class="card-header-styled" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div style="display: flex; align-items: center; gap: 15px;">
               <div class="icon-circle" style="background: #eff6ff; color: #2563eb;">ðŸ“§</div>
@@ -1984,7 +2031,7 @@
         </div>
 
         <!-- Notification & Sound Permissions Card -->
-        <div class="settings-card" style="margin-top: 25px;">
+        <div class="settings-card animate-fade-in" *ngIf="activeSettingsTab === 'notifications'">
           <div class="card-header-styled">
             <div class="icon-circle" style="background: #fef2f2; color: #ef4444;">ðŸ””</div>
             <div>
