@@ -1,5 +1,12 @@
-<div class="home-cms-canvas">
-  @for (sec of (homePage?.sections || []); track trackBySection($index, sec)) {
-    <app-dynamic-section-renderer [section]="sec"></app-dynamic-section-renderer>
-  }
-</div>
+@if (isLoading && (!homePage || !homePage.sections || homePage.sections.length === 0)) {
+  <div class="global-loading-container">
+    <i class="fa-solid fa-spinner fa-spin global-loading-spinner"></i>
+    <p style="color: var(--text-light); font-weight: 500;">Loading Foody Bhai kitchen...</p>
+  </div>
+} @else {
+  <div class="home-cms-canvas">
+    @for (sec of (homePage?.sections || []); track trackBySection($index, sec)) {
+      <app-dynamic-section-renderer [section]="sec"></app-dynamic-section-renderer>
+    }
+  </div>
+}

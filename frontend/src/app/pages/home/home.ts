@@ -13,6 +13,7 @@ import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-se
 })
 export class Home implements OnInit {
   homePage: CmsPage | null = null;
+  isLoading = true;
 
   private cmsService = inject(CmsService);
   private cdr = inject(ChangeDetectorRef);
@@ -21,12 +22,22 @@ export class Home implements OnInit {
     this.cmsService.getPageBySlug('').subscribe(page => {
       if (page && page.sections && page.sections.length > 0) {
         this.homePage = JSON.parse(JSON.stringify(page));
+        this.isLoading = false;
         this.cdr.detectChanges();
       }
     });
 
     // Proactively pull latest database CMS pages on navigation
-    this.cmsService.fetchLivePages(true).subscribe();
+    this.cmsService.fetchLivePages(true).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   trackBySection(index: number, sec: CmsSection): string {

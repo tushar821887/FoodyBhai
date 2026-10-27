@@ -42,24 +42,37 @@ export class Header implements OnInit {
   isAuthModalOpen = false;
   isAccountDropdownOpen = false;
 
-  bannerConfig: PromoBannerConfig = {
-    enabled: true,
-    text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉',
-    badgeText: 'SPECIAL OFFER',
-    badgeBg: '#ffffff',
-    badgeColor: '#ea580c',
-    bgColor: '#ea580c',
-    bgGradientEnd: '#f97316',
-    isGradient: true,
-    textColor: '#ffffff',
-    height: '34px',
-    fontSize: '13px',
-    alignment: 'center',
-    isMarquee: true,
-    marqueeSpeed: 'normal',
-    linkUrl: '/menu',
-    closeable: false
-  };
+  bannerConfig: PromoBannerConfig = (() => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const cached = localStorage.getItem('foodybhai_promo_banner');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === 'object') {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {}
+    return {
+      enabled: true,
+      text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY30 at checkout! 🎉 🔥',
+      badgeText: 'SPECIAL OFFER',
+      badgeBg: '#fae8ff',
+      badgeColor: '#7e22ce',
+      bgColor: '#6d28d9',
+      bgGradientEnd: '#9333ea',
+      isGradient: true,
+      textColor: '#ffffff',
+      height: '48px',
+      fontSize: '12px',
+      alignment: 'center',
+      isMarquee: true,
+      marqueeSpeed: 'slow',
+      linkUrl: '/menu',
+      closeable: false
+    };
+  })();
   isBannerDismissed = false;
 
   constructor(
@@ -93,6 +106,20 @@ export class Header implements OnInit {
   }
 
   loadBannerConfig() {
+    // 1. Immediately read from localStorage to avoid any color flash on refresh
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const cached = localStorage.getItem('foodybhai_promo_banner');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === 'object') {
+            this.bannerConfig = { ...this.bannerConfig, ...parsed };
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 2. Fetch live settings from API
     this.orderService.getSetting('promo_banner').subscribe({
       next: (res) => {
         if (res && res.value !== undefined && res.value !== null) {
@@ -100,10 +127,20 @@ export class Header implements OnInit {
             const parsed = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
             if (parsed && typeof parsed === 'object') {
               this.bannerConfig = { ...this.bannerConfig, ...parsed };
+              try {
+                if (typeof localStorage !== 'undefined') {
+                  localStorage.setItem('foodybhai_promo_banner', JSON.stringify(this.bannerConfig));
+                }
+              } catch (e) {}
             }
           } catch {
             if (typeof res.value === 'object') {
               this.bannerConfig = { ...this.bannerConfig, ...res.value };
+              try {
+                if (typeof localStorage !== 'undefined') {
+                  localStorage.setItem('foodybhai_promo_banner', JSON.stringify(this.bannerConfig));
+                }
+              } catch (e) {}
             }
           }
           this.cdr.detectChanges();
@@ -111,6 +148,32 @@ export class Header implements OnInit {
       },
       error: () => {}
     });
+
+    // 3. Listen for live updates across tabs
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const ch = new BroadcastChannel('foodybhai_banner_channel');
+        ch.onmessage = (ev) => {
+          if (ev.data && ev.data.banner) {
+            this.bannerConfig = { ...this.bannerConfig, ...ev.data.banner };
+            try {
+              localStorage.setItem('foodybhai_promo_banner', JSON.stringify(this.bannerConfig));
+            } catch (e) {}
+            this.cdr.detectChanges();
+          }
+        };
+      }
+      if (typeof window !== 'undefined') {
+        window.addEventListener('storage', (ev) => {
+          if (ev.key === 'foodybhai_promo_banner' && ev.newValue) {
+            try {
+              this.bannerConfig = { ...this.bannerConfig, ...JSON.parse(ev.newValue) };
+              this.cdr.detectChanges();
+            } catch (e) {}
+          }
+        });
+      }
+    } catch (e) {}
   }
 
   getBannerBackground(): string {

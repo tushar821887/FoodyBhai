@@ -11,8 +11,25 @@ const STORAGE_KEY = 'foodybhai_active_theme';
   providedIn: 'root'
 })
 export class ThemeService {
-  private readonly defaultTheme: WebsiteTheme = THEME_PRESETS[0];
-  private currentThemeSubject = new BehaviorSubject<WebsiteTheme>(this.defaultTheme);
+  private readonly defaultTheme: WebsiteTheme = THEME_PRESETS.find(p => p.id === 'bollywood-sunset') || THEME_PRESETS[0];
+
+  private getInitialTheme(): WebsiteTheme {
+    const fallback = THEME_PRESETS.find(p => p.id === 'bollywood-sunset') || THEME_PRESETS[0];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === 'object' && parsed.primaryColor) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {}
+    return fallback;
+  }
+
+  private currentThemeSubject = new BehaviorSubject<WebsiteTheme>(this.getInitialTheme());
   public currentTheme$: Observable<WebsiteTheme> = this.currentThemeSubject.asObservable();
 
   private isBrowser: boolean;
@@ -29,19 +46,10 @@ export class ThemeService {
   private initializeTheme() {
     if (!this.isBrowser) return;
 
-    // 1. Immediately apply cached theme from localStorage to avoid flash of unstyled theme
-    const cached = localStorage.getItem(STORAGE_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        this.applyThemeToDOM(parsed);
-        this.currentThemeSubject.next(parsed);
-      } catch (e) {
-        this.applyThemeToDOM(this.defaultTheme);
-      }
-    } else {
-      this.applyThemeToDOM(this.defaultTheme);
-    }
+    // 1. Immediately apply cached/active theme to avoid flash of unstyled theme
+    const active = this.getInitialTheme();
+    this.applyThemeToDOM(active);
+    this.currentThemeSubject.next(active);
 
     // 2. Fetch latest live theme from backend API
     this.fetchLiveTheme(true).subscribe();

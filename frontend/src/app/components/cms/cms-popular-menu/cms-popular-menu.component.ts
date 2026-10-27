@@ -36,8 +36,19 @@ import { MenuCard } from '../../menu-card/menu-card';
           </p>
         </div>
 
-        <!-- Menu Grid -->
-        <div class="menu-grid" 
+        <!-- Skeletons while loading from API -->
+        <div *ngIf="isLoading" class="menu-grid" 
+             [style.grid-template-columns]="'repeat(' + (section.style.gridColumns || 4) + ', 1fr)'"
+             [style.gap]="section.style.gridGap || '24px'">
+          <div *ngFor="let s of [1,2,3,4]" style="background: white; border-radius: 12px; padding: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); height: 260px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: #f1f5f9; height: 140px; border-radius: 8px; animation: cmsPulse 1.5s infinite ease-in-out;"></div>
+            <div style="background: #f1f5f9; height: 18px; width: 75%; border-radius: 4px; animation: cmsPulse 1.5s infinite ease-in-out;"></div>
+            <div style="background: #f1f5f9; height: 14px; width: 45%; border-radius: 4px; animation: cmsPulse 1.5s infinite ease-in-out;"></div>
+          </div>
+        </div>
+
+        <!-- Menu Grid from Live API -->
+        <div *ngIf="!isLoading && popularItems.length > 0" class="menu-grid" 
              [style.grid-template-columns]="'repeat(' + (section.style.gridColumns || 4) + ', 1fr)'"
              [style.gap]="section.style.gridGap || '24px'">
           <app-menu-card *ngFor="let item of popularItems; trackBy: trackById" [item]="item"></app-menu-card>
@@ -105,17 +116,22 @@ export class CmsPopularMenuComponent implements OnInit {
   @Input() section!: CmsSection;
 
   popularItems: Recipe[] = [];
+  isLoading = true;
   private recipeService = inject(RecipeService);
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.recipeService.getRecipes().subscribe({
       next: items => {
+        this.isLoading = false;
         const count = (this.section.style.gridColumns || 4) * 2;
         this.popularItems = (items || []).slice(0, count || 4);
         this.cdr.detectChanges();
       },
-      error: () => {}
+      error: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 

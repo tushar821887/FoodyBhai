@@ -1,4 +1,4 @@
-
+﻿
 export interface PromoBannerConfig {
   enabled: boolean;
   text: string;
@@ -86,12 +86,12 @@ export class OrdersPage implements OnInit, OnDestroy {
     show: false,
     title: '',
     message: '',
-    icon: '❓',
+    icon: 'â“',
     onConfirm: () => {},
     onCancel: () => {}
   };
 
-  showConfirm(title: string, message: string, icon: string = '❓'): Promise<boolean> {
+  showConfirm(title: string, message: string, icon: string = 'â“'): Promise<boolean> {
     return new Promise((resolve) => {
       this.confirmDialog = {
         show: true,
@@ -119,7 +119,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   promoBanner: PromoBannerConfig = {
     enabled: true,
-    text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉',
+    text: 'ðŸŽ‰ Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! ðŸŽ‰',
     badgeText: 'SPECIAL OFFER',
     badgeBg: '#ffffff',
     badgeColor: '#ea580c',
@@ -162,7 +162,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   newCategoryImg = '';
 
   presetIcons = [
-    { label: 'PopCorn', icon: '🍿', type: 'emoji' },
+    { label: 'PopCorn', icon: 'ðŸ¿', type: 'emoji' },
     { label: 'Thali & Meals', icon: 'fa-solid fa-utensils', type: 'fa' },
     { label: 'Rice & Biryani', icon: 'fa-solid fa-bowl-rice', type: 'fa' },
     { label: 'Puri & Sabzi', icon: 'fa-solid fa-plate-wheat', type: 'fa' },
@@ -508,7 +508,7 @@ export class OrdersPage implements OnInit, OnDestroy {
       if (typeof window !== 'undefined') {
         localStorage.setItem('foodybhai_notif_permission_status', 'granted');
       }
-      this.showNotification('🔔 Notifications & sound alerts enabled!', 'success');
+      this.showNotification('ðŸ”” Notifications & sound alerts enabled!', 'success');
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         try { navigator.vibrate([200, 100, 200]); } catch(e) {}
       }
@@ -533,10 +533,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.notificationService.startRinging();
     setTimeout(() => this.notificationService.stopRinging(), 2500);
     this.notificationService.sendNotification({
-      title: '🔔 Test Alert - FoodyBhai',
+      title: 'ðŸ”” Test Alert - FoodyBhai',
       body: 'Notifications and sound alarms are working perfectly!'
     });
-    this.showNotification('🔔 Sound alarm & test notification triggered!', 'success');
+    this.showNotification('ðŸ”” Sound alarm & test notification triggered!', 'success');
   }
 
   async recheckPermissionAfterUnblock() {
@@ -549,13 +549,13 @@ export class OrdersPage implements OnInit, OnDestroy {
       }
       this.showNotificationBlockedGuideModal = false;
       this.showNotificationPermissionPrompt = false;
-      this.showNotification('✅ Notifications & sound alerts are now active!', 'success');
+      this.showNotification('âœ… Notifications & sound alerts are now active!', 'success');
       this.notificationService.sendNotification({
-        title: '🔔 FoodyBhai Alerts Active',
+        title: 'ðŸ”” FoodyBhai Alerts Active',
         body: 'You will now receive instant notifications when orders arrive!'
       });
     } else {
-      this.showNotification('Still blocked. Please toggle Notifications to Allow in the address bar (🔒 icon), then re-check.', 'error');
+      this.showNotification('Still blocked. Please toggle Notifications to Allow in the address bar (ðŸ”’ icon), then re-check.', 'error');
     }
     this.cdr.detectChanges();
   }
@@ -579,7 +579,7 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.eventSource.onmessage = (event) => {
           try {
             const payload = JSON.parse(event.data);
-            console.log('⚡ Instant live order event received:', payload);
+            console.log('âš¡ Instant live order event received:', payload);
             if (payload && payload.type === 'new_order') {
               this.manuallySilenced = false;
             }
@@ -655,11 +655,11 @@ export class OrdersPage implements OnInit, OnDestroy {
                const shortId = o._id.slice(-6).toUpperCase();
                const address = o.deliveryDetails?.address || 'Customer Location';
                this.notificationService.sendNotification({
-                 title: `🛵 Delivery Assigned: #${shortId}!`,
+                 title: `ðŸ›µ Delivery Assigned: #${shortId}!`,
                  body: `Deliver to ${address}. Tap to open route & details.`,
                  data: { orderId: o._id, ...o }
                });
-               this.showNotification(`🛵 Delivery #${shortId} assigned to you!`, 'success');
+               this.showNotification(`ðŸ›µ Delivery #${shortId} assigned to you!`, 'success');
              }
            });
 
@@ -705,15 +705,15 @@ export class OrdersPage implements OnInit, OnDestroy {
                this.manuallySilenced = false;
                const shortId = o._id.slice(-6).toUpperCase();
                const custName = o.deliveryDetails?.name || 'Customer';
-               const amount = o.totalAmount ? `₹${o.totalAmount}` : '';
+               const amount = o.totalAmount ? `â‚¹${o.totalAmount}` : '';
                const itemsCount = o.items ? `${o.items.length} item(s)` : '';
                
                this.notificationService.sendNotification({
-                 title: `🔔 NEW ORDER #${shortId} (${amount})!`,
+                 title: `ðŸ”” NEW ORDER #${shortId} (${amount})!`,
                  body: `${custName} ordered ${itemsCount}. Tap to view and accept order.`,
                  data: { orderId: o._id, ...o }
                });
-               this.showNotification(`🔔 New Order #${shortId} received (${amount})!`, 'success');
+               this.showNotification(`ðŸ”” New Order #${shortId} received (${amount})!`, 'success');
                if (!this.notificationService.isCurrentlyRinging()) {
                  this.startRinging();
                }
@@ -727,7 +727,7 @@ export class OrdersPage implements OnInit, OnDestroy {
                this.notifiedReassignOrderIds.add(o._id);
                const agentName = o.reassignRequest?.requestedByAgent?.name || o.deliveryAgent?.name || 'Agent';
                const shortId = o._id.slice(-6).toUpperCase();
-               this.showNotification(`⚠️ Agent ${agentName} requested reassignment for Order #${shortId}! Reason: ${o.reassignRequest?.reason}`, 'error');
+               this.showNotification(`âš ï¸ Agent ${agentName} requested reassignment for Order #${shortId}! Reason: ${o.reassignRequest?.reason}`, 'error');
              }
            });
         }
@@ -1413,16 +1413,6 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   editRecipe(recipe: any) {
     let html = recipe.recipeHtml || '';
-    if (!html && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
-      html = `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin: 12px 0;">
-        <h4 style="color: #e11d48; margin-top: 0; display: flex; align-items: center; gap: 8px;">
-          👨‍🍳 Chef's Ingredients
-        </h4>
-        <ul style="padding-left: 20px; line-height: 1.8;">
-          ${recipe.ingredients.map((ing: string) => `<li>${ing}</li>`).join('')}
-        </ul>
-      </div><p><br></p>`;
-    }
     this.editingRecipe = {
       ...recipe,
       recipeHtml: html
@@ -1505,7 +1495,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.saveSetting('smtp_from', from).subscribe();
     this.api.saveSetting('fast2sms_api_key', (this.fast2smsKey || '').trim()).subscribe(() => {
       if (showNotification) {
-        this.showNotification('✅ Email (SMTP) & SMS Gateway settings saved successfully!', 'success');
+        this.showNotification('âœ… Email (SMTP) & SMS Gateway settings saved successfully!', 'success');
       }
       this.cdr.detectChanges();
     });
@@ -1541,13 +1531,13 @@ export class OrdersPage implements OnInit, OnDestroy {
             success: true,
             message: res.message || 'SMTP connected and test email delivered successfully!'
           };
-          this.showNotification('✅ SMTP connection verified! Test email delivered.', 'success');
+          this.showNotification('âœ… SMTP connection verified! Test email delivered.', 'success');
         } else {
           this.smtpTestResult = {
             success: false,
             message: res.error || 'Failed to authenticate or send email.'
           };
-          this.showNotification('❌ SMTP Test Failed: ' + (res.error || 'Connection error'), 'error');
+          this.showNotification('âŒ SMTP Test Failed: ' + (res.error || 'Connection error'), 'error');
         }
         this.cdr.detectChanges();
       },
@@ -1558,7 +1548,7 @@ export class OrdersPage implements OnInit, OnDestroy {
           success: false,
           message: msg
         };
-        this.showNotification('❌ SMTP Test Error: ' + msg, 'error');
+        this.showNotification('âŒ SMTP Test Error: ' + msg, 'error');
         this.cdr.detectChanges();
       }
     });
@@ -1602,7 +1592,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.saveSetting('promo_banner', this.promoBanner).subscribe({
       next: () => {
         this.isSavingBanner = false;
-        this.showNotification('🎉 Header Promo Banner settings saved successfully!', 'success');
+        this.showNotification('ðŸŽ‰ Header Promo Banner settings saved successfully!', 'success');
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -1616,7 +1606,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   resetPromoBannerSettings() {
     this.promoBanner = {
       enabled: true,
-      text: '🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉',
+      text: 'ðŸŽ‰ Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! ðŸŽ‰',
       badgeText: 'SPECIAL OFFER',
       badgeBg: '#ffffff',
       badgeColor: '#ea580c',
@@ -1753,7 +1743,7 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.isUploadingApk = false;
         this.appDownloadUrl = res.downloadUrl || '/downloads/foodybhai.apk';
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        this.showNotification(`🎉 ${file.name} (${sizeMb} MB) uploaded & published successfully!`, 'success');
+        this.showNotification(`ðŸŽ‰ ${file.name} (${sizeMb} MB) uploaded & published successfully!`, 'success');
         this.cdr.detectChanges();
       },
       error: (err: any) => {
@@ -1870,10 +1860,10 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   async resolveCancel(order: any, approve: boolean) {
-    if (await this.showConfirm('Confirm Action', `Are you sure you want to ${approve ? 'approve' : 'reject'} this cancellation request?`, '❓')) {
+    if (await this.showConfirm('Confirm Action', `Are you sure you want to ${approve ? 'approve' : 'reject'} this cancellation request?`, 'â“')) {
       let processRefund = false;
       if (approve && order.paymentMethod === 'online') {
-        processRefund = await this.showConfirm('Refund Order?', `This order was paid online. Do you want to process a refund now?`, '💳');
+        processRefund = await this.showConfirm('Refund Order?', `This order was paid online. Do you want to process a refund now?`, 'ðŸ’³');
       }
       this.api.resolveCancelOrder(order._id, approve, processRefund).subscribe(() => {
         this.fetchOrders();
@@ -1883,7 +1873,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   async processRefund(order: any) {
-    if (await this.showConfirm('Process Refund', 'Are you sure you want to process the refund for this order?', '💳')) {
+    if (await this.showConfirm('Process Refund', 'Are you sure you want to process the refund for this order?', 'ðŸ’³')) {
       this.api.processRefund(order._id).subscribe(() => {
         this.fetchOrders();
         this.showNotification('Refund processed successfully!', 'success');
@@ -2013,7 +2003,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   async rejectReassign(order: any) {
     const agentName = order.reassignRequest?.requestedByAgent?.name || order.deliveryAgent?.name || 'Agent';
-    if (await this.showConfirm('Reject Reassignment', `Reject reassignment request from ${agentName}?`, '❌')) {
+    if (await this.showConfirm('Reject Reassignment', `Reject reassignment request from ${agentName}?`, 'âŒ')) {
       this.api.resolveReassignOrder(order._id, false).subscribe({
         next: () => {
           this.showNotification('Reassignment request rejected.', 'success');
@@ -2278,7 +2268,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   async deleteCoupon(coupon: any) {
-    if (await this.showConfirm('Delete Coupon', 'Are you sure you want to permanently delete coupon "' + coupon.code + '"?', '🗑️')) {
+    if (await this.showConfirm('Delete Coupon', 'Are you sure you want to permanently delete coupon "' + coupon.code + '"?', 'ðŸ—‘ï¸')) {
       this.api.deleteCoupon(coupon._id).subscribe({
         next: () => {
           this.showNotification('Coupon "' + coupon.code + '" deleted.', 'success');

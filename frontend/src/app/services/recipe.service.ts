@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { STATIC_RECIPES } from '../data/recipes.data';
+// Data is loaded directly from API
 
 export interface Recipe {
   _id?: string;
@@ -65,36 +65,15 @@ export class RecipeService {
     }
     return this.http.get<Recipe[]>(`${this.API_URL}/recipes`).pipe(
       map(recipes => {
-        if (!recipes || !Array.isArray(recipes) || recipes.length === 0) {
-          return STATIC_RECIPES;
+        if (!recipes || !Array.isArray(recipes)) {
+          return [];
         }
-        return recipes.map(r => {
-          if (!r.ingredients || r.ingredients.length === 0) {
-            const staticMatch = STATIC_RECIPES.find(s => s.slug === r.slug || s.id === r.id);
-            if (staticMatch) {
-              return {
-                ...staticMatch,
-                ...r,
-                ingredients: staticMatch.ingredients,
-                instructions: staticMatch.instructions,
-                tips: staticMatch.tips,
-                prepTime: r.prepTime || staticMatch.prepTime,
-                cookTime: r.cookTime || staticMatch.cookTime,
-                totalTime: r.totalTime || staticMatch.totalTime,
-                difficulty: r.difficulty || staticMatch.difficulty,
-                introduction: r.introduction || staticMatch.introduction,
-                cuisine: r.cuisine || staticMatch.cuisine
-              };
-            }
-          }
-          return r;
-        });
+        return recipes;
       }),
       tap(recipes => { this.recipesCache = recipes; }),
       catchError(err => {
-        console.warn('API recipes fetch failed or unavailable, using static recipes fallback', err);
-        this.recipesCache = STATIC_RECIPES;
-        return of(STATIC_RECIPES);
+        console.error('API recipes fetch failed', err);
+        return of([]);
       })
     );
   }

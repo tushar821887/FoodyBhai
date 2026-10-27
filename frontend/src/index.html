@@ -9,6 +9,44 @@
   <meta name="keywords" content="Foody Bhai, food delivery Meerut, best restaurants in Meerut, order food online Meerut, pure veg food Meerut, cloud kitchen Meerut, dinner delivery, fast food Meerut, thali delivery Meerut, zomato Meerut, swiggy Meerut, online takeaway, Mohan Puri restaurants">
   <link rel="icon" type="image/x-icon" href="foodybhaifavicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <!-- Immediate Theme & Promo Banner Hydration to prevent color flash on refresh -->
+  <script>
+    (function() {
+      try {
+        var tStr = localStorage.getItem('foodybhai_active_theme');
+        if (tStr) {
+          var t = JSON.parse(tStr);
+          var s = document.documentElement.style;
+          if (t.primaryColor) s.setProperty('--primary-color', t.primaryColor);
+          if (t.primaryHover) s.setProperty('--primary-hover', t.primaryHover);
+          if (t.primaryDark) s.setProperty('--primary-dark', t.primaryDark);
+          if (t.primaryLight) s.setProperty('--primary-light', t.primaryLight);
+          if (t.primaryBorder) s.setProperty('--primary-border', t.primaryBorder);
+          if (t.primaryGlow) s.setProperty('--primary-glow', t.primaryGlow);
+          if (t.secondaryColor) s.setProperty('--secondary-color', t.secondaryColor);
+          if (t.secondaryLight) s.setProperty('--secondary-light', t.secondaryLight);
+          if (t.backgroundLight) s.setProperty('--background-light', t.backgroundLight);
+          if (t.backgroundWhite) s.setProperty('--background-white', t.backgroundWhite);
+          if (t.textDark) s.setProperty('--text-dark', t.textDark);
+          if (t.textLight) s.setProperty('--text-light', t.textLight);
+          if (t.gradientStart && t.gradientEnd) {
+            s.setProperty('--primary-gradient', 'linear-gradient(' + (t.gradientAngle || '135deg') + ', ' + t.gradientStart + ', ' + t.gradientEnd + ')');
+          }
+        }
+        var bStr = localStorage.getItem('foodybhai_promo_banner');
+        if (bStr) {
+          var b = JSON.parse(bStr);
+          var s = document.documentElement.style;
+          if (b.bgColor) s.setProperty('--promo-banner-bg', b.bgColor);
+          if (b.bgGradientEnd) s.setProperty('--promo-banner-bg-end', b.bgGradientEnd);
+          if (b.textColor) s.setProperty('--promo-banner-color', b.textColor);
+          if (b.height) s.setProperty('--promo-banner-height', b.height);
+          if (b.fontSize) s.setProperty('--promo-banner-font-size', b.fontSize);
+        }
+      } catch (e) {}
+    })();
+  </script>
   
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

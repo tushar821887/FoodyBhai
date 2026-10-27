@@ -11,7 +11,13 @@ import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-se
   standalone: true,
   imports: [CommonModule, RouterModule, DynamicSectionRendererComponent],
   template: `
-    <div class="cms-dynamic-page" *ngIf="page">
+    <!-- Loading state -->
+    <div *ngIf="isLoading" class="global-loading-container">
+      <i class="fa-solid fa-spinner fa-spin global-loading-spinner"></i>
+      <p style="color: var(--text-light); font-weight: 500;">Loading page...</p>
+    </div>
+
+    <div class="cms-dynamic-page" *ngIf="!isLoading && page">
       <div *ngFor="let section of page.sections; trackBy: trackBySectionId">
         <app-dynamic-section-renderer [section]="section"></app-dynamic-section-renderer>
       </div>
@@ -20,7 +26,7 @@ import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-se
     <!-- Fallback / Page Not Found -->
     <div *ngIf="!isLoading && !page" class="page-not-found-container text-center section">
       <div class="container animate-fade-in">
-        <div class="empty-icon-wrap">🔍</div>
+        <div class="empty-icon-wrap">ðŸ”</div>
         <h2>Page Under Construction</h2>
         <p>This page hasn't been published yet or is currently being updated in our CMS Studio.</p>
         <a routerLink="/" class="btn btn-primary mt-3">Return to Home</a>

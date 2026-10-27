@@ -1,4 +1,10 @@
-@if (recipe) {
+@if (isLoading) {
+  <div class="container text-center section" style="min-height: 55vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 1rem;">
+    <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: var(--primary-color, #ea580c); margin-bottom: 1.25rem;"></i>
+    <h3 style="font-weight: 700; color: var(--secondary-color, #241814);">Loading recipe details...</h3>
+    <p class="text-muted" style="margin-top: 0.25rem;">Fetching authentic ingredients and preparation steps</p>
+  </div>
+} @else if (recipe) {
   <div [innerHTML]="schemaMarkup"></div>
   
   <div class="recipe-header">
@@ -65,38 +71,19 @@
             </div>
           </div>
 
-          <div class="recipe-ingredients mb-5">
-            <div class="section-heading-wrapper mb-3">
-              <h2 class="ingredients-title">
-                <i class="fa-solid fa-mortar-pestle"></i>
-                Chef's Ingredients & Spices
-              </h2>
-              <p class="ingredients-subtitle">
-                Authentic ingredients curated by our chef to prepare this signature dish.
-              </p>
+          @if (recipe.instructions && recipe.instructions.length > 0) {
+            <div class="recipe-instructions mb-5">
+              <h2 class="instructions-heading">Step-by-Step Instructions</h2>
+              <ol class="instructions-list">
+                @for (step of recipe.instructions; track step; let i = $index) {
+                  <li>
+                    <strong class="step-title">Step {{i + 1}}</strong>
+                    <p class="step-desc">{{step}}</p>
+                  </li>
+                }
+              </ol>
             </div>
-
-            <div class="chef-ingredients-grid">
-              @for (ingredient of recipe.ingredients; track ingredient; let idx = $index) {
-                <div class="chef-ingredient-card">
-                  <span class="ingredient-badge">{{ idx + 1 }}</span>
-                  <span class="ingredient-text">{{ ingredient }}</span>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="recipe-instructions mb-5">
-            <h2 class="instructions-heading">Step-by-Step Instructions</h2>
-            <ol class="instructions-list">
-              @for (step of recipe.instructions; track step; let i = $index) {
-                <li>
-                  <strong class="step-title">Step {{i + 1}}</strong>
-                  <p class="step-desc">{{step}}</p>
-                </li>
-              }
-            </ol>
-          </div>
+          }
 
           @if (recipe.tips && recipe.tips.length > 0) {
             <div class="recipe-tips mb-5">
@@ -131,7 +118,7 @@
               </li>
               <li *ngIf="recipe.price">
                 <strong>Price:</strong> 
-                <span class="recipe-price">₹{{recipe.price}}</span>
+                <span class="recipe-price">â‚¹{{recipe.price}}</span>
               </li>
             </ul>
             <button 
@@ -170,7 +157,7 @@
     <div class="mobile-recipe-bar-content">
       <div class="mobile-bar-info">
         <span class="mobile-bar-label">Price</span>
-        <span class="mobile-bar-price">₹{{recipe.price}}</span>
+        <span class="mobile-bar-price">â‚¹{{recipe.price}}</span>
       </div>
       <button 
         class="mobile-bar-add-btn" 

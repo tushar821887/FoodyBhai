@@ -16,6 +16,7 @@ export class RecipeDetail implements OnInit {
   recipe: Recipe | undefined;
   relatedRecipes: Recipe[] = [];
   schemaMarkup: SafeHtml = '';
+  isLoading = true;
 
   private route = inject(ActivatedRoute);
   private recipeService = inject(RecipeService);
@@ -28,15 +29,28 @@ export class RecipeDetail implements OnInit {
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       if (slug) {
-        this.recipeService.getRecipeBySlug(slug).subscribe(recipe => {
-          this.recipe = recipe;
-          if (recipe) {
-            this.setSeoTags(recipe);
-            this.generateSchema(recipe);
-            this.loadRelatedRecipes(recipe);
+        this.isLoading = true;
+        this.recipe = undefined;
+        this.recipeService.getRecipeBySlug(slug).subscribe({
+          next: (recipe) => {
+            this.recipe = recipe;
+            this.isLoading = false;
+            if (recipe) {
+              this.setSeoTags(recipe);
+              this.generateSchema(recipe);
+              this.loadRelatedRecipes(recipe);
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.isLoading = false;
+            this.recipe = undefined;
+            this.cdr.detectChanges();
           }
-          this.cdr.detectChanges();
         });
+      } else {
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

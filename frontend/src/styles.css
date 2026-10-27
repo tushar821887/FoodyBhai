@@ -1,23 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Colors - Foody Bhai Logo Friendly Warm Palette */
-  --primary-color: #f95f00; /* Warm culinary orange matching the logo ring, 'BHAI' & chef accents */
-  --primary-hover: #ea580c;
-  --primary-dark: #c2410c;
-  --primary-light: #fff5ed;
-  --primary-border: #fed7aa;
-  --primary-glow: rgba(249, 95, 0, 0.25);
+  /* Colors - Bollywood Sunset Palette matching active database theme */
+  --primary-color: #f04438;
+  --primary-hover: #d92d20;
+  --primary-dark: #b42318;
+  --primary-light: #fff4ed;
+  --primary-border: #fecdca;
+  --primary-glow: rgba(240, 68, 56, 0.25);
+  --primary-gradient: linear-gradient(135deg, #f04438, #f79009);
   
-  --secondary-color: #241814; /* Deep roasted coffee charcoal from logo 'Foody' typography */
-  --secondary-light: #3e2d26;
-  --background-light: #fbf6f2; /* Warm culinary cream */
+  --secondary-color: #1d1917;
+  --secondary-light: #2e2623;
+  --background-light: #fdf8f6;
   --background-white: #ffffff;
   --background-warm: #fff9f5;
-  --text-dark: #241814;
-  --text-light: #716661;
+  --text-dark: #1d1917;
+  --text-light: #6b615c;
   --text-muted: #9c8e88;
   --border-color: #ede2d8;
+
+  /* Promo Banner defaults matching active database config */
+  --promo-banner-bg: #6d28d9;
+  --promo-banner-bg-end: #9333ea;
+  --promo-banner-color: #ffffff;
+  --promo-banner-height: 48px;
+  --promo-banner-font-size: 12px;
   
   --success: #16a34a;
   --warning: #f59e0b;
@@ -254,4 +262,35 @@ img {
   :root {
     --container-padding: 0.5rem;
   }
+}
+
+/* Global Skeleton Loaders */
+.menu-card-skeleton, .skeleton-card {
+  height: 380px;
+  background: linear-gradient(90deg, #f0ede8 25%, #f7f4f0 50%, #f0ede8 75%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.5s infinite;
+  border-radius: 16px;
+  border: 1px solid rgba(237, 226, 216, 0.7);
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Global Content Spinners */
+.global-loading-container {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+}
+
+.global-loading-spinner {
+  color: var(--primary-color, #f04438);
+  font-size: 2.75rem;
+  margin-bottom: 1.25rem;
 }
