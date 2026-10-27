@@ -1737,6 +1737,19 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.saveBillingSettings(true);
   }
 
+  getNextVersion(currentVersion: string): string {
+    if (!currentVersion || typeof currentVersion !== 'string') {
+      return '1.0.1';
+    }
+    const cleaned = currentVersion.trim().replace(/^v/i, '');
+    const parts = cleaned.split('.').map(p => parseInt(p, 10));
+    if (parts.length > 0 && !parts.some(isNaN)) {
+      parts[parts.length - 1] += 1;
+      return parts.join('.');
+    }
+    return '1.0.1';
+  }
+
   onApkFileSelected(event: any) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
@@ -1746,9 +1759,11 @@ export class OrdersPage implements OnInit, OnDestroy {
       return;
     }
 
+    const nextVersion = this.getNextVersion(this.appVersion);
+
     const formData = new FormData();
     formData.append('apk', file);
-    if (this.appVersion) formData.append('version', this.appVersion.trim());
+    formData.append('version', nextVersion);
     if (this.appReleaseNotes) formData.append('releaseNotes', this.appReleaseNotes.trim());
 
     this.isUploadingApk = true;
@@ -1758,9 +1773,10 @@ export class OrdersPage implements OnInit, OnDestroy {
     this.api.uploadApk(formData).subscribe({
       next: (res: any) => {
         this.isUploadingApk = false;
+        this.appVersion = res.version || nextVersion;
         this.appDownloadUrl = res.downloadUrl || '/downloads/foodybhai.apk';
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        this.showNotification(`🎉 ${file.name} (${sizeMb} MB) uploaded & published successfully!`, 'success');
+        this.showNotification(`🎉 ${file.name} (${sizeMb} MB) uploaded! App version automatically updated to v${this.appVersion}`, 'success');
         this.cdr.detectChanges();
       },
       error: (err: any) => {

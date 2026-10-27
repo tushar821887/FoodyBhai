@@ -76,9 +76,24 @@ export class SettingsController {
       } catch (e) {}
     }
 
-    if (body && body.version) {
-      await this.settingsService.setSetting('app_version', body.version);
+    // Automatically calculate and increment app version on every upload
+    const currentVersionSetting = await this.settingsService.getSetting('app_version');
+    const currentVersion = (currentVersionSetting || '1.0.0').toString().trim().replace(/^v/i, '');
+
+    let newVersion = '';
+    if (body && body.version && body.version.trim() && body.version.trim().replace(/^v/i, '') !== currentVersion) {
+      newVersion = body.version.trim().replace(/^v/i, '');
+    } else {
+      const parts = currentVersion.split('.').map((p: string) => parseInt(p, 10));
+      if (parts.length > 0 && !parts.some(isNaN)) {
+        parts[parts.length - 1] += 1;
+        newVersion = parts.join('.');
+      } else {
+        newVersion = '1.0.1';
+      }
     }
+
+    await this.settingsService.setSetting('app_version', newVersion);
     if (body && body.releaseNotes) {
       await this.settingsService.setSetting('app_release_notes', body.releaseNotes);
     }
@@ -87,7 +102,8 @@ export class SettingsController {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
     return {
       success: true,
-      message: `APK uploaded successfully (${sizeMb} MB)!`,
+      message: `APK uploaded successfully (${sizeMb} MB)! Version updated to v${newVersion}`,
+      version: newVersion,
       size: file.size,
       downloadUrl: '/downloads/foodybhai.apk'
     };
