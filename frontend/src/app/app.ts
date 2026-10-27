@@ -1,3 +1,4 @@
+import { AiSpeechAssistantComponent } from './components/ai-speech-assistant/ai-speech-assistant.component';
 import { Component, signal, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { isPlatformBrowser, Location } from '@angular/common';
@@ -13,7 +14,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, Header, Footer, LocationModalComponent, AppDownloadBannerComponent],
+  imports: [CommonModule, RouterOutlet, Header, Footer, LocationModalComponent, AppDownloadBannerComponent, AiSpeechAssistantComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

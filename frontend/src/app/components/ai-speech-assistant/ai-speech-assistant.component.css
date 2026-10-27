@@ -1,0 +1,501 @@
+/* --- Floating AI Voice Assistant Button --- */
+.ai-voice-floating-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 22px;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #c2410c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 18px 10px 12px;
+  box-shadow: 0 10px 25px -4px rgba(234, 88, 12, 0.45), 0 4px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  font-family: inherit;
+}
+
+.ai-voice-floating-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 14px 30px -4px rgba(234, 88, 12, 0.55), 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.ai-voice-floating-btn.is-active {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 10px 25px -4px rgba(16, 185, 129, 0.5);
+}
+
+.ai-btn-icon-wrapper {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  backdrop-filter: blur(4px);
+}
+
+.ai-pulse-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  animation: pulse-ring 2s infinite ease-out;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.ai-btn-text-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ai-btn-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.ai-btn-subtitle {
+  font-size: 10px;
+  opacity: 0.9;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* --- Voice Assistant Modal Backdrop --- */
+.ai-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInBackdrop 0.25s ease-out;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- Voice Assistant Card --- */
+.ai-assistant-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  flex-direction: column;
+  animation: scaleUpCard 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUpCard {
+  from { transform: scale(0.92) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Card Header */
+.ai-card-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ai-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.35);
+}
+
+.ai-header-titles h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.ai-header-titles span {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.ai-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-lang-pill {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-lang-pill:hover, .ai-lang-pill.active {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+}
+
+.ai-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.ai-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Card Body */
+.ai-card-body {
+  padding: 24px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  background: #fdfdfd;
+}
+
+/* Sound Wave & Big Mic Button */
+.ai-mic-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  width: 100%;
+}
+
+.ai-big-mic-btn {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #ffffff;
+  font-size: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(234, 88, 12, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.ai-big-mic-btn:hover {
+  transform: scale(1.06);
+}
+
+.ai-big-mic-btn.is-listening {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.5);
+  animation: listeningPulse 1.5s infinite;
+}
+
+@keyframes listeningPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Animated Audio Waveform */
+.ai-waveform-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+}
+
+.waveform-bar {
+  width: 4px;
+  background: #ea580c;
+  border-radius: 4px;
+  animation: waveMotion 1s ease-in-out infinite;
+}
+
+.waveform-bar:nth-child(1) { height: 8px; animation-delay: 0.1s; }
+.waveform-bar:nth-child(2) { height: 18px; animation-delay: 0.3s; }
+.waveform-bar:nth-child(3) { height: 26px; animation-delay: 0.2s; }
+.waveform-bar:nth-child(4) { height: 16px; animation-delay: 0.4s; }
+.waveform-bar:nth-child(5) { height: 10px; animation-delay: 0.25s; }
+
+@keyframes waveMotion {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.2); }
+}
+
+.ai-mic-status-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+  text-align: center;
+}
+
+/* Real-time Spoken Transcript Box */
+.ai-transcript-box {
+  width: 100%;
+  background: #f1f5f9;
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 50px;
+}
+
+.ai-transcript-box .label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ai-transcript-box .text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.ai-transcript-box.is-empty .text {
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Assistant Message Bubble */
+.ai-response-bubble {
+  width: 100%;
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ai-response-avatar {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ai-response-text {
+  font-size: 14px;
+  color: #1e293b;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.speaking-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+}
+
+.speaking-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ea580c;
+  animation: dotBlink 1s infinite;
+}
+
+.speaking-dot:nth-child(2) { animation-delay: 0.2s; }
+.speaking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Suggested Action Chips */
+.ai-suggestions-section {
+  width: 100%;
+}
+
+.ai-suggestions-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ai-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ai-chip {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.ai-chip:hover {
+  background: #fff7ed;
+  border-color: #f97316;
+  color: #ea580c;
+  transform: translateY(-1px);
+}
+
+/* Live Cart Snapshot Footer */
+.ai-cart-snapshot {
+  width: 100%;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  padding: 16px 22px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-cart-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-cart-count {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.ai-cart-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ai-btn-checkout {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s;
+}
+
+.ai-btn-checkout:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .ai-voice-floating-btn {
+    bottom: 80px;
+    right: 16px;
+    padding: 8px 14px 8px 10px;
+  }
+  .ai-btn-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .ai-btn-title {
+    font-size: 12px;
+  }
+  .ai-btn-subtitle {
+    display: none;
+  }
+  .ai-assistant-card {
+    border-radius: 20px;
+  }
+  .ai-big-mic-btn {
+    width: 76px;
+    height: 76px;
+    font-size: 30px;
+  }
+}

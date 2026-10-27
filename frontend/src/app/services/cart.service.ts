@@ -302,6 +302,27 @@ export class CartService {
     this.syncCart(currentItems);
   }
 
+  addItemsToCart(recipe: Recipe, quantity: number = 1): boolean {
+    if (this.isOffline$.value || recipe.inStock === false) {
+      return false;
+    }
+    const qty = Math.max(1, Math.floor(quantity) || 1);
+    const currentItems = [...this.itemsSubject.value];
+    const existingIndex = currentItems.findIndex(i => (i.recipe.id || i.recipe._id) == (recipe.id || recipe._id));
+    
+    if (existingIndex >= 0) {
+      currentItems[existingIndex] = {
+        ...currentItems[existingIndex],
+        quantity: currentItems[existingIndex].quantity + qty
+      };
+    } else {
+      currentItems.push({ recipe, quantity: qty });
+    }
+    
+    this.syncCart(currentItems);
+    return true;
+  }
+
   getQuantity(recipeId: number): Observable<number> {
     return this.items$.pipe(
       map(items => {

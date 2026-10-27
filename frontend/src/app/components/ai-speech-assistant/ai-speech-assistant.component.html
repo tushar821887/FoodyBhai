@@ -1,0 +1,159 @@
+<!-- Floating AI Voice Assistant Button -->
+<button 
+  type="button" 
+  class="ai-voice-floating-btn animate-fade-in"
+  [class.is-active]="(isListening$ | async)"
+  (click)="toggleAssistant()"
+  title="Order with AI Voice Assistant">
+  <div class="ai-btn-icon-wrapper">
+    <div class="ai-pulse-ring" *ngIf="!(isOpen$ | async)"></div>
+    <span>{{ (isListening$ | async) ? '🔴' : '🎙️' }}</span>
+  </div>
+  <div class="ai-btn-text-content">
+    <span class="ai-btn-title">Foody Voice AI</span>
+    <span class="ai-btn-subtitle">Order by Voice</span>
+  </div>
+</button>
+
+<!-- Full Interactive AI Voice Assistant Modal / Sheet -->
+<div class="ai-modal-backdrop" *ngIf="isOpen$ | async" (click)="onBackdropClick($event)">
+  <div class="ai-assistant-card" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="ai-card-header">
+      <div class="ai-header-brand">
+        <div class="ai-header-avatar">✨</div>
+        <div class="ai-header-titles">
+          <h3>Foody AI Assistant</h3>
+          <span>Voice Food Ordering</span>
+        </div>
+      </div>
+
+      <div class="ai-header-controls">
+        <!-- Language Switcher -->
+        <button 
+          type="button" 
+          class="ai-lang-pill" 
+          [class.active]="(language$ | async) === 'en-IN'"
+          (click)="setLanguage('en-IN')">
+          🇮🇳 EN
+        </button>
+        <button 
+          type="button" 
+          class="ai-lang-pill" 
+          [class.active]="(language$ | async) === 'hi-IN'"
+          (click)="setLanguage('hi-IN')">
+          🇮🇳 हिंदी
+        </button>
+
+        <!-- Mute/Unmute Voice Response -->
+        <button 
+          type="button" 
+          class="ai-icon-btn" 
+          (click)="toggleMute()" 
+          [title]="(isMuted$ | async) ? 'Unmute voice feedback' : 'Mute voice feedback'">
+          {{ (isMuted$ | async) ? '🔇' : '🔊' }}
+        </button>
+
+        <!-- Close Dialog -->
+        <button 
+          type="button" 
+          class="ai-icon-btn" 
+          (click)="closeAssistant()" 
+          title="Close voice assistant">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="ai-card-body">
+      
+      <!-- Central Big Mic & Waveform Section -->
+      <div class="ai-mic-section">
+        <button 
+          type="button" 
+          class="ai-big-mic-btn"
+          [class.is-listening]="isListening$ | async"
+          (click)="toggleListening()"
+          [title]="(isListening$ | async) ? 'Tap to stop listening' : 'Tap to start speaking'">
+          <span>{{ (isListening$ | async) ? '⏹️' : '🎙️' }}</span>
+        </button>
+
+        <!-- Waveform visualizer active when listening -->
+        <div class="ai-waveform-container" *ngIf="isListening$ | async">
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+        </div>
+
+        <div class="ai-mic-status-label">
+          {{ (isListening$ | async) ? 'Listening... Speak your order now' : 'Tap the microphone to speak' }}
+        </div>
+      </div>
+
+      <!-- Real-time Spoken Transcript Box -->
+      <div class="ai-transcript-box" [class.is-empty]="!(transcript$ | async)">
+        <span class="label">You:</span>
+        <span class="text">
+          {{ (transcript$ | async) || 'Say something like "Add 2 Dal Fry" or "Show cart"...' }}
+        </span>
+      </div>
+
+      <!-- Assistant AI Message Bubble -->
+      <div class="ai-response-bubble">
+        <span class="ai-response-avatar">🤖</span>
+        <div class="ai-response-text">
+          {{ assistantMessage$ | async }}
+          <span class="speaking-indicator" *ngIf="isSpeaking$ | async" title="Assistant is speaking">
+            <span class="speaking-dot"></span>
+            <span class="speaking-dot"></span>
+            <span class="speaking-dot"></span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Suggested Quick Voice Commands -->
+      <div class="ai-suggestions-section">
+        <span class="ai-suggestions-label">Try saying or tap to order:</span>
+        <div class="ai-chips-grid">
+          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Add 2 South Indian Poha')">
+            🥣 Add 2 Poha
+          </button>
+          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Add 1 Dal Fry')">
+            🍲 Order Dal Fry
+          </button>
+          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Add Paneer Butter Masala')">
+            🧀 Paneer Masala
+          </button>
+          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Show my cart')">
+            🛒 Show Cart
+          </button>
+          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Apply coupon FOODY20')">
+            🎟️ Apply FOODY20
+          </button>
+          <button type="button" class="ai-chip" (click)="triggerQuickCommand('Checkout')">
+            ⚡ Checkout
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Live Cart Snapshot & Direct Order Action -->
+    <div class="ai-cart-snapshot" *ngIf="(cartService.totalItems$ | async)! > 0">
+      <div class="ai-cart-info">
+        <span class="ai-cart-count">{{ cartService.totalItems$ | async }} item(s) in cart</span>
+        <span class="ai-cart-total">₹{{ cartService.totalPrice$ | async }}</span>
+      </div>
+
+      <button type="button" class="ai-btn-checkout" (click)="goToCheckout()">
+        <span>View Cart & Checkout</span>
+        <span>➔</span>
+      </button>
+    </div>
+
+  </div>
+</div>
