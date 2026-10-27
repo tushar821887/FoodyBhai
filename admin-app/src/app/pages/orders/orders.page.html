@@ -2067,6 +2067,306 @@
       </div>
     </ng-container>
  
+
+    <!-- HEADER PROMO BANNER VIEW -->
+    <ng-container *ngIf="currentView === 'banner'">
+      <div class="settings-container animate-fade-in" style="max-width: 1200px; margin: 0 auto; padding: 24px 20px;">
+        
+        <!-- Header Banner Title Card -->
+        <div class="view-header-card">
+          <div class="view-header-info">
+            <span class="view-header-badge">Announcement Management</span>
+            <h2>📢 Header Promo & Announcement Banner</h2>
+            <p>Customize the announcement ticker banner appearing at the top of the entire website. Announce special offers, deals, festive discounts, or urgent alerts in real time.</p>
+          </div>
+          <div class="view-header-actions">
+            <button type="button" class="btn-cancel" (click)="resetPromoBannerSettings()" style="padding: 10px 18px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+              ↺ Reset Defaults
+            </button>
+            <button type="button" class="btn-save-modern" [disabled]="isSavingBanner" (click)="savePromoBannerSettings()" style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);">
+              <span class="save-icon">{{ isSavingBanner ? '⏳' : '💾' }}</span>
+              <span>{{ isSavingBanner ? 'Saving...' : 'Save & Publish Banner' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Interactive Preview Card -->
+        <div class="banner-preview-card">
+          <div class="preview-header">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="preview-dot" [style.background]="promoBanner.enabled ? '#10b981' : '#94a3b8'"></span>
+              <strong style="color: #0f172a; font-weight: 700;">Desktop & Mobile Website Preview</strong>
+              <span [class]="promoBanner.enabled ? 'badge-active' : 'badge-inactive'">
+                {{ promoBanner.enabled ? '● Active on Website' : '○ Currently Disabled' }}
+              </span>
+            </div>
+            <span class="preview-hint">Live preview reflects your edits instantly</span>
+          </div>
+
+          <div class="preview-browser-frame">
+            <div class="browser-mock-header">
+              <div class="browser-circle red"></div>
+              <div class="browser-circle yellow"></div>
+              <div class="browser-circle green"></div>
+              <span class="browser-url">https://foodybhai.in</span>
+            </div>
+
+            <!-- Live Banner Strip -->
+            <div *ngIf="promoBanner.enabled" class="preview-banner-strip" 
+                 [style.background]="getBannerPreviewBackground()"
+                 [style.color]="promoBanner.textColor || '#ffffff'"
+                 [style.min-height]="promoBanner.height || '34px'"
+                 [style.font-size]="promoBanner.fontSize || '13px'">
+              
+              <!-- Marquee Track -->
+              <div *ngIf="promoBanner.isMarquee" class="preview-marquee-track" [style.animation-duration]="getBannerPreviewDuration()">
+                <div class="preview-banner-item" *ngFor="let repeat of [1, 2, 3, 4]">
+                  <span *ngIf="promoBanner.badgeText" class="preview-badge" 
+                        [style.background]="promoBanner.badgeBg || '#ffffff'" 
+                        [style.color]="promoBanner.badgeColor || '#ea580c'">
+                    {{ promoBanner.badgeText }}
+                  </span>
+                  <span class="preview-text">{{ promoBanner.text }}</span>
+                  <span *ngIf="promoBanner.linkUrl" class="preview-arrow">➜</span>
+                </div>
+              </div>
+
+              <!-- Static Centered Container -->
+              <div *ngIf="!promoBanner.isMarquee" class="preview-static-container"
+                   [style.justify-content]="promoBanner.alignment === 'left' ? 'flex-start' : (promoBanner.alignment === 'right' ? 'flex-end' : 'center')">
+                <span *ngIf="promoBanner.badgeText" class="preview-badge" 
+                      [style.background]="promoBanner.badgeBg || '#ffffff'" 
+                      [style.color]="promoBanner.badgeColor || '#ea580c'">
+                  {{ promoBanner.badgeText }}
+                </span>
+                <span class="preview-text">{{ promoBanner.text }}</span>
+                <span *ngIf="promoBanner.linkUrl" class="preview-arrow">➜</span>
+              </div>
+            </div>
+
+            <div *ngIf="!promoBanner.enabled" class="banner-disabled-placeholder">
+              <span>⚠️ Header Promo Banner is currently turned OFF. Toggle "Enable Header Promo Banner" below to display across the website.</span>
+            </div>
+
+            <div class="browser-mock-nav">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">🍽️</span>
+                <strong style="font-size: 14px; color: #1e293b;">Foody Bhai</strong>
+              </div>
+              <div style="display: flex; gap: 14px; font-size: 12px; color: #64748b;">
+                <span>Home</span>
+                <span>Menu</span>
+                <span>Special Offers</span>
+                <span>Cart (0)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Settings Grid -->
+        <div class="banner-settings-grid">
+          
+          <!-- Card 1: Content & Behavior -->
+          <div class="admin-card">
+            <div class="card-header-styled">
+              <div class="card-icon">⚙️</div>
+              <div>
+                <h4>Display, Text & Behavior</h4>
+                <p>Configure banner text, scrolling animation, badge tag, and target link.</p>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="control-label">
+                <strong>Enable Header Promo Banner</strong>
+                <small>Show announcement bar at the top of the entire website</small>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" [(ngModel)]="promoBanner.enabled">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="control-row">
+              <div class="control-label">
+                <strong>Continuous Scrolling (Marquee)</strong>
+                <small>Smooth animated ticker scrolling across the header</small>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" [(ngModel)]="promoBanner.isMarquee">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="control-row" *ngIf="promoBanner.isMarquee">
+              <div class="control-label">
+                <strong>Scroll Speed</strong>
+                <small>Controls how fast the marquee moves</small>
+              </div>
+              <div class="segmented-control">
+                <button type="button" class="segment-btn" [class.active]="promoBanner.marqueeSpeed === 'slow'" (click)="promoBanner.marqueeSpeed = 'slow'">Slow</button>
+                <button type="button" class="segment-btn" [class.active]="promoBanner.marqueeSpeed === 'normal'" (click)="promoBanner.marqueeSpeed = 'normal'">Normal</button>
+                <button type="button" class="segment-btn" [class.active]="promoBanner.marqueeSpeed === 'fast'" (click)="promoBanner.marqueeSpeed = 'fast'">Fast</button>
+              </div>
+            </div>
+
+            <div class="control-row" *ngIf="!promoBanner.isMarquee">
+              <div class="control-label">
+                <strong>Text Alignment</strong>
+                <small>Positioning when marquee animation is turned off</small>
+              </div>
+              <div class="segmented-control">
+                <button type="button" class="segment-btn" [class.active]="promoBanner.alignment === 'left'" (click)="promoBanner.alignment = 'left'">Left</button>
+                <button type="button" class="segment-btn" [class.active]="promoBanner.alignment === 'center'" (click)="promoBanner.alignment = 'center'">Center</button>
+                <button type="button" class="segment-btn" [class.active]="promoBanner.alignment === 'right'" (click)="promoBanner.alignment = 'right'">Right</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <label class="form-label-bold">Announcement / Offer Message</label>
+              <textarea [(ngModel)]="promoBanner.text" class="modern-input" rows="3" style="width: 100%; box-sizing: border-box; font-family: inherit; font-size: 13.5px;" placeholder="e.g. 🎉 Special Offer! Get 20% OFF on all orders today! Use code FOODY20 at checkout! 🎉"></textarea>
+              
+              <div class="emoji-picker-row" style="margin-top: 10px;">
+                <span class="emoji-picker-label">Quick Emojis:</span>
+                <div class="emoji-chips">
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('🎉')">🎉</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('🔥')">🔥</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('⚡')">⚡</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('🛵')">🛵</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('🍔')">🍔</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('🍕')">🍕</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('✨')">✨</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('🏷️')">🏷️</button>
+                  <button type="button" class="emoji-chip" (click)="insertBannerEmoji('⭐')">⭐</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <label class="form-label-bold">Badge / Pill Text (Optional)</label>
+              <input type="text" [(ngModel)]="promoBanner.badgeText" class="modern-input" style="width: 100%; box-sizing: border-box;" placeholder="e.g. SPECIAL OFFER, LIMITED TIME, NEW">
+            </div>
+
+            <div style="margin-top: 16px;">
+              <label class="form-label-bold">Click Destination URL / Route (Optional)</label>
+              <input type="text" [(ngModel)]="promoBanner.linkUrl" class="modern-input" style="width: 100%; box-sizing: border-box;" placeholder="e.g. /menu, /page/offers, /cart">
+              <small style="color: #64748b; font-size: 11.5px; margin-top: 4px; display: block;">Users who tap anywhere on the banner will be navigated to this route.</small>
+            </div>
+          </div>
+
+          <!-- Card 2: Styling & Color Palettes -->
+          <div class="admin-card">
+            <div class="card-header-styled">
+              <div class="card-icon">🎨</div>
+              <div>
+                <h4>Styling & Color Palettes</h4>
+                <p>Pick ready-made presets or fine-tune custom gradient background, badge, and font sizing.</p>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div class="preset-theme-picker">
+                <span class="preset-label">Preset Palettes:</span>
+                <div class="preset-buttons-container">
+                  <button type="button" class="preset-btn theme-orange" (click)="applyBannerPreset('orange')">Orange Glow</button>
+                  <button type="button" class="preset-btn theme-red" (click)="applyBannerPreset('red')">Crimson Red</button>
+                  <button type="button" class="preset-btn theme-dark" (click)="applyBannerPreset('dark')">Midnight Gold</button>
+                  <button type="button" class="preset-btn theme-emerald" (click)="applyBannerPreset('emerald')">Emerald</button>
+                  <button type="button" class="preset-btn theme-purple" (click)="applyBannerPreset('purple')">Royal Violet</button>
+                  <button type="button" class="preset-btn" style="background: linear-gradient(90deg, #c2410c, #f97316);" (click)="applyBannerPreset('saffron')">Saffron</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="control-label">
+                <strong>Gradient Background</strong>
+                <small>Blend primary and secondary colors seamlessly</small>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" [(ngModel)]="promoBanner.isGradient">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px;">
+              <div>
+                <label class="form-label-bold">Primary Background</label>
+                <div class="color-picker-input">
+                  <input type="color" [(ngModel)]="promoBanner.bgColor">
+                  <input type="text" [(ngModel)]="promoBanner.bgColor" class="modern-input" style="width: 100%; box-sizing: border-box; font-family: monospace; font-size: 13px;">
+                </div>
+              </div>
+
+              <div *ngIf="promoBanner.isGradient">
+                <label class="form-label-bold">Gradient End Color</label>
+                <div class="color-picker-input">
+                  <input type="color" [(ngModel)]="promoBanner.bgGradientEnd">
+                  <input type="text" [(ngModel)]="promoBanner.bgGradientEnd" class="modern-input" style="width: 100%; box-sizing: border-box; font-family: monospace; font-size: 13px;">
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label-bold">Text Color</label>
+                <div class="color-picker-input">
+                  <input type="color" [(ngModel)]="promoBanner.textColor">
+                  <input type="text" [(ngModel)]="promoBanner.textColor" class="modern-input" style="width: 100%; box-sizing: border-box; font-family: monospace; font-size: 13px;">
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label-bold">Badge Background</label>
+                <div class="color-picker-input">
+                  <input type="color" [(ngModel)]="promoBanner.badgeBg">
+                  <input type="text" [(ngModel)]="promoBanner.badgeBg" class="modern-input" style="width: 100%; box-sizing: border-box; font-family: monospace; font-size: 13px;">
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label-bold">Badge Text Color</label>
+                <div class="color-picker-input">
+                  <input type="color" [(ngModel)]="promoBanner.badgeColor">
+                  <input type="text" [(ngModel)]="promoBanner.badgeColor" class="modern-input" style="width: 100%; box-sizing: border-box; font-family: monospace; font-size: 13px;">
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label-bold">Banner Height</label>
+                <select [(ngModel)]="promoBanner.height" class="modern-select" style="width: 100%; box-sizing: border-box;">
+                  <option value="30px">Compact (30px)</option>
+                  <option value="34px">Standard (34px)</option>
+                  <option value="40px">Comfortable (40px)</option>
+                  <option value="48px">Prominent (48px)</option>
+                </select>
+              </div>
+
+              <div style="grid-column: 1 / -1;">
+                <label class="form-label-bold">Font Size</label>
+                <select [(ngModel)]="promoBanner.fontSize" class="modern-select" style="width: 100%; box-sizing: border-box;">
+                  <option value="11px">Extra Small (11px)</option>
+                  <option value="12px">Small (12px)</option>
+                  <option value="13px">Medium (13px)</option>
+                  <option value="14px">Large (14px)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Footer Action Buttons -->
+        <div class="banner-footer-actions">
+          <button type="button" class="btn-cancel" (click)="resetPromoBannerSettings()" style="padding: 10px 20px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            ↺ Reset Defaults
+          </button>
+          <button type="button" class="btn-save-modern" [disabled]="isSavingBanner" (click)="savePromoBannerSettings()" style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);">
+            <span class="save-icon">{{ isSavingBanner ? '⏳' : '💾' }}</span>
+            <span>{{ isSavingBanner ? 'Saving...' : 'Save & Publish Banner' }}</span>
+          </button>
+        </div>
+
+      </div>
+    </ng-container>
+
     <!-- THEME MANAGER VIEW -->
     <ng-container *ngIf="currentView === 'theme'">
       <div class="studio-wrapper animate-fade-in">
