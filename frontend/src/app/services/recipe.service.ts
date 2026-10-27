@@ -68,7 +68,10 @@ export class RecipeService {
         if (!recipes || !Array.isArray(recipes)) {
           return [];
         }
-        return recipes;
+        return recipes.map(r => ({
+          ...r,
+          price: Number(r.price) || 0
+        }));
       }),
       tap(recipes => { this.recipesCache = recipes; }),
       catchError(err => {

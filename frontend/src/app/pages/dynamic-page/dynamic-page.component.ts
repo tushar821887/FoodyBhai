@@ -26,7 +26,7 @@ import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-se
     <!-- Fallback / Page Not Found -->
     <div *ngIf="!isLoading && !page" class="page-not-found-container text-center section">
       <div class="container animate-fade-in">
-        <div class="empty-icon-wrap">ðŸ”</div>
+        <div class="empty-icon-wrap">🔍</div>
         <h2>Page Under Construction</h2>
         <p>This page hasn't been published yet or is currently being updated in our CMS Studio.</p>
         <a routerLink="/" class="btn btn-primary mt-3">Return to Home</a>
