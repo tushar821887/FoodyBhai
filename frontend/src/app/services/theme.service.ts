@@ -1,7 +1,8 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
+import { Router, NavigationEnd } from '@angular/router';
+import { BehaviorSubject, Observable, tap, catchError, of, filter } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { WebsiteTheme, THEME_PRESETS } from '../models/theme.model';
 
@@ -11,10 +12,10 @@ const STORAGE_KEY = 'foodybhai_active_theme';
   providedIn: 'root'
 })
 export class ThemeService {
-  private readonly defaultTheme: WebsiteTheme = THEME_PRESETS.find(p => p.id === 'bollywood-sunset') || THEME_PRESETS[0];
+  // Baseline signature brand theme fallback if network/API is offline
+  private readonly defaultTheme: WebsiteTheme = THEME_PRESETS[0];
 
   private getInitialTheme(): WebsiteTheme {
-    const fallback = THEME_PRESETS.find(p => p.id === 'bollywood-sunset') || THEME_PRESETS[0];
     try {
       if (typeof localStorage !== 'undefined') {
         const cached = localStorage.getItem(STORAGE_KEY);
@@ -26,7 +27,7 @@ export class ThemeService {
         }
       }
     } catch (e) {}
-    return fallback;
+    return this.defaultTheme;
   }
 
   private currentThemeSubject = new BehaviorSubject<WebsiteTheme>(this.getInitialTheme());
@@ -34,6 +35,7 @@ export class ThemeService {
 
   private isBrowser: boolean;
   private readonly API_URL = `${environment.apiUrl}/settings/website_theme`;
+  private router = inject(Router, { optional: true });
 
   constructor(
     private http: HttpClient,
@@ -51,20 +53,31 @@ export class ThemeService {
     this.applyThemeToDOM(active);
     this.currentThemeSubject.next(active);
 
-    // 2. Fetch latest live theme from backend API
+    // 2. Fetch latest live theme from backend API (source of truth from admin-app)
     this.fetchLiveTheme(true).subscribe();
 
-    // 3. Listen for live updates from Admin across browser tabs
+    // 3. Re-apply theme on every route change to ensure persistence across all pages
+    if (this.router) {
+      this.router.events
+        .pipe(filter(event => event instanceof NavigationEnd))
+        .subscribe(() => {
+          this.applyThemeToDOM(this.getCurrentTheme());
+        });
+    }
+
+    // 4. Listen for live updates from Admin App across browser tabs
     try {
       if ('BroadcastChannel' in window) {
         const ch = new BroadcastChannel('foodybhai_theme_channel');
         ch.onmessage = (ev) => {
           if (ev.data?.type === 'THEME_UPDATED') {
-            if (ev.data.theme) {
+            if (ev.data.theme && typeof ev.data.theme === 'object' && ev.data.theme.primaryColor) {
               this.applyThemeToDOM(ev.data.theme);
               this.currentThemeSubject.next(ev.data.theme);
               if (this.isBrowser) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(ev.data.theme));
+                try {
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(ev.data.theme));
+                } catch (e) {}
               }
             } else {
               this.fetchLiveTheme(true).subscribe();
@@ -86,17 +99,29 @@ export class ThemeService {
     const url = `${this.API_URL}?t=${Date.now()}`;
     return this.http.get<any>(url).pipe(
       tap(res => {
-        const theme = res && res.value ? res.value : this.defaultTheme;
-        if (theme && typeof theme === 'object') {
+        let rawTheme = (res && res.value !== undefined && res.value !== null) ? res.value : null;
+        if (typeof rawTheme === 'string') {
+          try {
+            rawTheme = JSON.parse(rawTheme);
+          } catch (e) {}
+        }
+
+        const theme = (rawTheme && typeof rawTheme === 'object' && rawTheme.primaryColor)
+          ? rawTheme
+          : this.getInitialTheme();
+
+        if (theme && typeof theme === 'object' && theme.primaryColor) {
           this.applyThemeToDOM(theme);
           this.currentThemeSubject.next(theme);
           if (this.isBrowser) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
+            } catch (e) {}
           }
         }
       }),
       catchError(err => {
-        console.warn('Could not fetch remote theme, using cached or default', err);
+        console.warn('Could not fetch remote theme from API, using cached or default', err);
         return of(null);
       })
     );
@@ -163,7 +188,7 @@ export class ThemeService {
     // Primary Gradient for CTA buttons, badges, highlights
     const angle = theme.gradientAngle || '135deg';
     const gradStart = theme.gradientStart || theme.primaryColor;
-    const gradEnd = theme.gradientEnd || theme.primaryHover;
+    const gradEnd = theme.gradientEnd || theme.primaryHover || theme.primaryColor;
     const gradient = `linear-gradient(${angle}, ${gradStart} 0%, ${gradEnd} 100%)`;
     root.style.setProperty('--primary-gradient', gradient);
 
@@ -190,7 +215,7 @@ export class ThemeService {
           --primary-border: ${theme.primaryBorder || this.hexToRgba(theme.primaryColor, 0.22)} !important;
           --primary-glow: ${theme.primaryGlow || this.hexToRgba(theme.primaryColor, 0.28)} !important;
           --secondary-color: ${theme.secondaryColor || '#241814'} !important;
-          --secondary-light: ${theme.secondaryLight || '#3d2c25'} !important;
+          --secondary-light: ${theme.secondaryLight || '#3e2d26'} !important;
           --primary-gradient: ${gradient} !important;
           --marquee-gradient: ${marqueeGradient} !important;
         }
@@ -205,7 +230,9 @@ export class ThemeService {
     this.applyThemeToDOM(theme);
     this.currentThemeSubject.next(theme);
     if (this.isBrowser) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
+      } catch (e) {}
     }
 
     // 2. Persist to server settings

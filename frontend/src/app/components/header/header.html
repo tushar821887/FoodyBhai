@@ -53,93 +53,350 @@
     </div>
   }
 
-  <div class="header-inner">
-    <div class="container header-container">
-    <div class="header-left">
-      <a routerLink="/" class="logo">
-        <img src="/assets/images/logo.png" alt="Foody Bhai Logo" class="logo-img">
-      </a>
+  <div class="header-inner"
+       [style.background]="headerConfig.enableGlassmorphism ? (headerConfig.bgColor || 'rgba(255, 255, 255, 0.85)') : (headerConfig.bgColor || '#ffffff')"
+       [style.backdropFilter]="getHeaderBackdropFilter()"
+       [style.webkitBackdropFilter]="getHeaderBackdropFilter()"
+       [style.padding]="getHeaderPadding()"
+       [style.boxShadow]="getHeaderBoxShadow()"
+       [style.borderBottom]="getHeaderBorderBottom()"
+       [style.borderRadius]="headerConfig.headerRadius || '0px'">
+    <div class="container header-container" [style.maxWidth]="headerConfig.containerWidth || '1200px'">
+      <div class="header-left" [style.gap]="headerConfig.logoGap || '14px'">
+        <a [routerLink]="headerConfig.logoLink || '/'" class="logo" [title]="headerConfig.logoAlt || 'Home'">
+          <div class="logo-container-box"
+               [ngClass]="'shape-' + (headerConfig.logoShape || 'circle')"
+               [style.height]="headerConfig.logoHeight || '48px'"
+               [style.width]="headerConfig.logoWidth === 'auto' ? (headerConfig.logoShape === 'circle' ? (headerConfig.logoHeight || '48px') : 'auto') : (headerConfig.logoWidth || (headerConfig.logoHeight || '48px'))"
+               [style.borderColor]="headerConfig.logoBorderColor || '#f97316'"
+               [style.borderWidth]="headerConfig.logoBorderWidth || '1.5px'"
+               [style.borderStyle]="(headerConfig.logoShape === 'natural' || headerConfig.logoBorderWidth === '0px') ? 'none' : 'solid'"
+               [style.borderRadius]="headerConfig.logoShape === 'circle' ? '50%' : (headerConfig.logoShape === 'rounded' ? '12px' : '0px')">
+            <img [src]="headerConfig.logoUrl || '/assets/images/logo.png'" 
+                 [alt]="headerConfig.logoAlt || 'Foody Bhai Logo'" 
+                 class="logo-img">
+          </div>
+        </a>
 
-      <!-- Location Selector -->
-      <div class="header-location" (click)="locationService.openLocationModal()">
-        <i class="fa-solid fa-location-dot location-icon"></i>
-        <div class="loc-text">
-          <span class="loc-label">Delivering to</span>
-          <span class="loc-value"><span class="loc-value-text">{{ (locationService.location$ | async) || 'Select Location' }}</span> <i class="fa-solid fa-chevron-down"></i></span>
-        </div>
+        <!-- Location Selector -->
+        @if (headerConfig.showLocation !== false) {
+          <div class="header-location" (click)="locationService.openLocationModal()">
+            <i class="fa-solid fa-location-dot location-icon" [style.color]="headerConfig.accentColor || '#059669'"></i>
+            <div class="loc-text">
+              <span class="loc-label">{{ headerConfig.deliveringToLabel || 'Delivering to' }}</span>
+              <span class="loc-value">
+                <span class="loc-value-text">{{ (locationService.location$ | async) || headerConfig.defaultLocationText || 'Select Location' }}</span> 
+                <i class="fa-solid fa-chevron-down" [style.color]="headerConfig.accentColor || '#059669'"></i>
+              </span>
+            </div>
+          </div>
+        }
       </div>
-    </div>
 
-    <!-- Desktop Nav (Centered) -->
-    <nav class="nav-menu desktop-nav">
-      <ul class="nav-list">
-        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
-        <li><a routerLink="/menu" routerLinkActive="active">Menu</a></li>
-        <li><a routerLink="/about" routerLinkActive="active">About</a></li>
-        <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+      <!-- Desktop Nav (Centered) -->
+      <nav class="nav-menu desktop-nav">
+        <ul class="nav-list" 
+            [ngClass]="'active-style-' + (headerConfig.navActiveStyle || 'underline')"
+            [style.gap]="headerConfig.navGap || '20px'">
+        @for (link of getVisibleNavLinks(); track link.label; let idx = $index) {
+          <li class="nav-item-wrap" 
+              [class.has-dropdown]="link.hasDropdown !== false && getVisibleSubcategories(link).length > 0"
+              (mouseenter)="onNavMouseEnter(idx)" 
+              (mouseleave)="onNavMouseLeave(idx)">
+            
+            <a [routerLink]="link.url" 
+               routerLinkActive="active" 
+               [routerLinkActiveOptions]="{exact: link.exact !== false}"
+               [style.color]="link.color || headerConfig.textColor"
+               [style.fontSize]="link.fontSize || headerConfig.navFontSize || '14px'"
+               [style.fontWeight]="link.fontWeight || headerConfig.navFontWeight || '600'"
+               [style.textTransform]="headerConfig.navTextTransform || 'none'"
+               [style.letterSpacing]="headerConfig.navLetterSpacing || 'normal'"
+               [style.backgroundColor]="link.highlightBg || ''"
+               [style.borderColor]="link.highlightBorder || ''"
+               class="nav-link-anchor">
+              <span>{{ link.label }}</span>
+              @if (link.badge) {
+                <span class="nav-badge" 
+                      [style.background]="link.badgeBg || link.badgeColor || headerConfig.accentColor || '#ea580c'"
+                      [style.color]="link.badgeColor || '#ffffff'">
+                  {{ link.badge }}
+                </span>
+              }
+              @if (link.hasDropdown !== false && getVisibleSubcategories(link).length > 0) {
+                <i class="fa-solid fa-chevron-down nav-dropdown-caret" [class.rotated]="activeDropdownIndex === idx"></i>
+              }
+            </a>
+
+            <!-- Subcategories / Dropdown Menu -->
+            @if (link.hasDropdown !== false && getVisibleSubcategories(link).length > 0 && activeDropdownIndex === idx) {
+              <div class="nav-dropdown-menu" 
+                   [ngClass]="['dropdown-' + (headerConfig.dropdownStyle || 'light'), (headerConfig.dropdownColumns === '2' ? 'cols-2' : 'cols-1')]">
+                <div class="dropdown-arrow"></div>
+                <div class="dropdown-inner-grid">
+                  @for (sub of getVisibleSubcategories(link); track sub.label) {
+                    <a [routerLink]="sub.url" 
+                       (click)="closeDropdowns()" 
+                       class="dropdown-subitem"
+                       [style.borderRadius]="headerConfig.subcatItemRadius || '10px'"
+                       [style.backgroundColor]="sub.bgColor || ''"
+                       [style.borderColor]="sub.borderColor || ''">
+                      @if (sub.icon) {
+                        <span class="subitem-icon" [style.fontSize]="headerConfig.subcatIconSize || '22px'">{{ sub.icon }}</span>
+                      }
+                      <div class="subitem-content">
+                        <div class="subitem-title-row">
+                          <span class="subitem-title"
+                                [style.fontSize]="sub.fontSize || headerConfig.subcatNameFontSize || '13.5px'"
+                                [style.fontWeight]="sub.fontWeight || headerConfig.subcatNameFontWeight || '700'"
+                                [style.color]="sub.color || headerConfig.subcatNameColor || '#0f172a'">
+                            {{ sub.label }}
+                          </span>
+                          @if (sub.badge) {
+                            <span class="subitem-badge"
+                                  [style.background]="sub.badgeBg || '#ea580c'"
+                                  [style.color]="sub.badgeColor || '#ffffff'">
+                              {{ sub.badge }}
+                            </span>
+                          }
+                        </div>
+                        @if (sub.description) {
+                          <span class="subitem-desc"
+                                [style.fontSize]="sub.descFontSize || headerConfig.subcatDescFontSize || '11.5px'"
+                                [style.color]="sub.descColor || headerConfig.subcatDescColor || '#64748b'">
+                            {{ sub.description }}
+                          </span>
+                        }
+                      </div>
+                    </a>
+                  }
+                </div>
+              </div>
+            }
+
+          </li>
+        }
       </ul>
     </nav>
     
     <div class="header-right desktop-nav">
-      <div class="header-actions">
-        <a href="tel:8218870579" class="header-phone">
-          <i class="fa-solid fa-phone"></i> +91 8218870579
-        </a>
-
-        <button type="button" class="header-app-btn" (click)="appUpdateService.downloadOrUpdateApk()" [class.has-update]="appUpdateService.hasUpdate" [title]="appUpdateService.hasUpdate ? 'Update Available to v' + appUpdateService.latestVersion : 'Download Android App'">
-          <i class="fa-solid fa-mobile-screen-button"></i>
-          <span class="action-label">{{ appUpdateService.hasUpdate ? 'Update App' : 'Get App' }}</span>
-          @if (appUpdateService.hasUpdate) {
-            <span class="app-badge-dot"></span>
+      <div class="header-actions" [style.gap]="headerConfig.actionsGap || '14px'">
+        @for (action of getVisibleActions(); track action.id) {
+          
+          <!-- 1. PHONE / HOTLINE ACTION -->
+          @if (action.type === 'phone') {
+            <a [href]="action.url || ('tel:' + action.label)" 
+               class="header-action-item action-phone"
+               [ngClass]="['action-variant-' + (action.variant || 'ghost'), 'mode-' + (action.displayMode || 'icon-and-label')]"
+               [style.color]="action.color || headerConfig.textColor"
+               [style.backgroundColor]="action.bgColor || ''"
+               [style.borderColor]="action.borderColor || ''"
+               [style.fontSize]="action.fontSize || '14px'"
+               [style.fontWeight]="action.fontWeight || '600'"
+               [style.borderRadius]="action.borderRadius || headerConfig.buttonRadius || '24px'">
+              @if (action.displayMode !== 'label-only') {
+                <span class="action-icon-wrap" [style.color]="action.color || headerConfig.accentColor || '#059669'">
+                  @if (isFontAwesome(action.icon)) {
+                    <i [class]="action.icon"></i>
+                  } @else {
+                    <span>{{ action.icon || '📞' }}</span>
+                  }
+                </span>
+              }
+              @if (action.displayMode !== 'icon-only' && action.label) {
+                <span class="action-label">{{ action.label }}</span>
+              }
+            </a>
           }
-        </button>
-        
-        <a routerLink="/cart" class="cart-toggle-btn" style="text-decoration: none;">
-          <i class="fa-solid fa-cart-shopping"></i>
-          @if ((cartService.totalItems$ | async)! > 0) {
-            <span class="cart-badge">{{cartService.totalItems$ | async}}</span>
-          }
-          <span class="action-label">Cart</span>
-        </a>
 
-        @if (authService.isAuthenticated$ | async) {
-          <div class="account-dropdown-wrapper">
-            <button class="account-toggle-btn" (click)="toggleAccountDropdown($event)">
-              <div class="account-icon-wrapper">
-                <i class="fa-solid fa-user"></i>
-                <i class="fa-solid fa-circle-check account-badge"></i>
-              </div>
-              <span class="action-label">Account</span>
+          <!-- 2. APP DOWNLOAD ACTION -->
+          @else if (action.type === 'app-download') {
+            <button type="button" 
+                    class="header-action-item action-app-btn"
+                    [ngClass]="['action-variant-' + (action.variant || 'outline'), 'mode-' + (action.displayMode || 'icon-and-label')]"
+                    [style.color]="action.color || ''"
+                    [style.backgroundColor]="action.bgColor || ''"
+                    [style.borderColor]="action.borderColor || ''"
+                    [style.fontSize]="action.fontSize || ''"
+                    [style.fontWeight]="action.fontWeight || ''"
+                    [style.borderRadius]="action.borderRadius || headerConfig.buttonRadius || '24px'"
+                    [class.has-update]="appUpdateService.hasUpdate"
+                    [title]="appUpdateService.hasUpdate ? 'Update Available to v' + appUpdateService.latestVersion : 'Download Android App'"
+                    (click)="appUpdateService.downloadOrUpdateApk()">
+              @if (action.displayMode !== 'label-only') {
+                <span class="action-icon-wrap">
+                  @if (isFontAwesome(action.icon)) {
+                    <i [class]="action.icon"></i>
+                  } @else {
+                    <span>{{ action.icon || '📱' }}</span>
+                  }
+                </span>
+              }
+              @if (action.displayMode !== 'icon-only') {
+                <span class="action-label">{{ appUpdateService.hasUpdate ? (action.loggedInLabel || 'Update App') : (action.label || 'Get App') }}</span>
+              }
+              @if (appUpdateService.hasUpdate) {
+                <span class="app-badge-dot"></span>
+              }
             </button>
+          }
 
-            @if (isAccountDropdownOpen) {
-              <div class="account-dropdown-menu">
-                <div class="dropdown-header">
-                  <span class="user-name">{{ (authService.currentUser$ | async)?.name }}</span>
-                  <span class="user-email">{{ (authService.currentUser$ | async)?.email }}</span>
-                </div>
-                <a routerLink="/orders" class="dropdown-item" (click)="closeAccountDropdown($event)">
-                  <i class="fa-regular fa-folder-open"></i> My Orders
-                </a>
-                <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
-                  <i class="fa-regular fa-address-book"></i> My Addresses
-                </a>
-                <a routerLink="/profile" class="dropdown-item" (click)="closeAccountDropdown($event)">
-                  <i class="fa-regular fa-user"></i> My Account
-                </a>
-                <button type="button" class="dropdown-item app-dropdown-item" (click)="appUpdateService.downloadOrUpdateApk(); closeAccountDropdown($event)">
-                  <i class="fa-solid fa-mobile-screen-button"></i>
-                  <span>{{ appUpdateService.hasUpdate ? '🔄 Update App (v' + appUpdateService.latestVersion + ')' : (appUpdateService.isInstalledOnDevice ? '📱 Open / Reinstall App' : '📱 Download App (.apk)') }}</span>
+          <!-- 3. CART ACTION -->
+          @else if (action.type === 'cart') {
+            <a [routerLink]="action.url || '/cart'" 
+               class="header-action-item action-cart"
+               [ngClass]="['action-variant-' + (action.variant || 'ghost'), 'mode-' + (action.displayMode || 'icon-and-label')]"
+               [style.color]="action.color || headerConfig.textColor"
+               [style.backgroundColor]="action.bgColor || ''"
+               [style.borderColor]="action.borderColor || ''"
+               [style.fontSize]="action.fontSize || '14px'"
+               [style.fontWeight]="action.fontWeight || '600'"
+               [style.borderRadius]="action.borderRadius || headerConfig.buttonRadius || '24px'">
+              @if (action.displayMode !== 'label-only') {
+                <span class="action-icon-wrap">
+                  @if (isFontAwesome(action.icon)) {
+                    <i [class]="action.icon"></i>
+                  } @else {
+                    <span>{{ action.icon || '🛒' }}</span>
+                  }
+                  @if (action.showBadge !== false && ((cartService.totalItems$ | async)! > 0 || action.badge)) {
+                    <span class="action-badge" 
+                          [style.background]="action.badgeBg || headerConfig.accentColor || '#059669'"
+                          [style.color]="action.badgeColor || '#ffffff'">
+                      {{ action.badge || (cartService.totalItems$ | async) }}
+                    </span>
+                  }
+                </span>
+              }
+              @if (action.displayMode !== 'icon-only' && action.label) {
+                <span class="action-label">{{ action.label }}</span>
+              }
+            </a>
+          }
+
+          <!-- 4. ACCOUNT / USER AUTH ACTION -->
+          @else if (action.type === 'account') {
+            @if (authService.isAuthenticated$ | async) {
+              <div class="account-dropdown-wrapper">
+                <button type="button" 
+                        class="header-action-item action-account"
+                        [ngClass]="['action-variant-' + (action.variant || 'solid'), 'mode-' + (action.displayMode || 'icon-and-label')]"
+                        [style.color]="action.color || (action.variant === 'solid' ? '#ffffff' : headerConfig.textColor)"
+                        [style.backgroundColor]="action.bgColor || (action.variant === 'solid' ? (headerConfig.accentColor || '#059669') : '')"
+                        [style.borderColor]="action.borderColor || ''"
+                        [style.fontSize]="action.fontSize || '14px'"
+                        [style.fontWeight]="action.fontWeight || '700'"
+                        [style.borderRadius]="action.borderRadius || headerConfig.buttonRadius || '24px'"
+                        (click)="toggleAccountDropdown($event)">
+                  @if (action.displayMode !== 'label-only') {
+                    <span class="action-icon-wrap">
+                      @if (isFontAwesome(action.icon)) {
+                        <i [class]="action.icon"></i>
+                      } @else {
+                        <span>{{ action.icon || '👤' }}</span>
+                      }
+                      <i class="fa-solid fa-circle-check account-badge"></i>
+                    </span>
+                  }
+                  @if (action.displayMode !== 'icon-only') {
+                    <span class="action-label">{{ action.loggedInLabel || action.label || 'Account' }}</span>
+                  }
                 </button>
-                <div class="dropdown-divider"></div>
-                <button type="button" class="dropdown-item logout-btn" (click)="logout()">
-                  <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-                </button>
+
+                @if (isAccountDropdownOpen) {
+                  <div class="account-dropdown-menu">
+                    <div class="dropdown-header">
+                      <span class="user-name">{{ (authService.currentUser$ | async)?.name }}</span>
+                      <span class="user-email">{{ (authService.currentUser$ | async)?.email }}</span>
+                    </div>
+                    <a routerLink="/orders" class="dropdown-item" (click)="closeAccountDropdown($event)">
+                      <i class="fa-regular fa-folder-open"></i> My Orders
+                    </a>
+                    <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
+                      <i class="fa-regular fa-address-book"></i> My Addresses
+                    </a>
+                    <a routerLink="/profile" class="dropdown-item" (click)="closeAccountDropdown($event)">
+                      <i class="fa-regular fa-user"></i> My Account
+                    </a>
+                    <button type="button" class="dropdown-item app-dropdown-item" (click)="appUpdateService.downloadOrUpdateApk(); closeAccountDropdown($event)">
+                      <i class="fa-solid fa-mobile-screen-button"></i>
+                      <span>{{ appUpdateService.hasUpdate ? '🔄 Update App (v' + appUpdateService.latestVersion + ')' : (appUpdateService.isInstalledOnDevice ? '📱 Open / Reinstall App' : '📱 Download App (.apk)') }}</span>
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button type="button" class="dropdown-item logout-btn" (click)="logout()">
+                      <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                    </button>
+                  </div>
+                }
               </div>
+            } @else {
+              <button type="button" 
+                      class="header-action-item action-login"
+                      [ngClass]="['action-variant-' + (action.variant || 'solid'), 'mode-' + (action.displayMode || 'icon-and-label')]"
+                      [style.color]="action.color || (action.variant === 'solid' ? '#ffffff' : headerConfig.textColor)"
+                      [style.backgroundColor]="action.bgColor || (action.variant === 'solid' ? (headerConfig.accentColor || '#059669') : '')"
+                      [style.borderColor]="action.borderColor || ''"
+                      [style.fontSize]="action.fontSize || '14px'"
+                      [style.fontWeight]="action.fontWeight || '700'"
+                      [style.borderRadius]="action.borderRadius || headerConfig.buttonRadius || '24px'"
+                      (click)="openAuthModal()">
+                @if (action.displayMode !== 'label-only') {
+                  <span class="action-icon-wrap">
+                    @if (isFontAwesome(action.icon)) {
+                      <i [class]="action.icon"></i>
+                    } @else {
+                      <span>{{ action.icon || '👤' }}</span>
+                    }
+                  </span>
+                }
+                @if (action.displayMode !== 'icon-only') {
+                  <span class="action-label">{{ action.label || 'Login' }}</span>
+                }
+              </button>
             }
-          </div>
-        } @else {
-          <button class="login-header-btn" (click)="openAuthModal()">Login</button>
+          }
+
+          <!-- 5. CUSTOM LINK / CUSTOM BUTTON ACTION -->
+          @else {
+            <a [routerLink]="action.url || '/'" 
+               [target]="action.openInNewTab ? '_blank' : '_self'"
+               class="header-action-item action-custom"
+               [ngClass]="['action-variant-' + (action.variant || 'ghost'), 'mode-' + (action.displayMode || 'icon-and-label')]"
+               [style.color]="action.color || headerConfig.textColor"
+               [style.backgroundColor]="action.bgColor || ''"
+               [style.borderColor]="action.borderColor || ''"
+               [style.fontSize]="action.fontSize || '14px'"
+               [style.fontWeight]="action.fontWeight || '600'"
+               [style.borderRadius]="action.borderRadius || headerConfig.buttonRadius || '24px'">
+              @if (action.displayMode !== 'label-only' && action.icon) {
+                <span class="action-icon-wrap">
+                  @if (isFontAwesome(action.icon)) {
+                    <i [class]="action.icon"></i>
+                  } @else {
+                    <span>{{ action.icon }}</span>
+                  }
+                  @if (action.badge) {
+                    <span class="action-badge" 
+                          [style.background]="action.badgeBg || headerConfig.accentColor || '#ea580c'"
+                          [style.color]="action.badgeColor || '#ffffff'">
+                      {{ action.badge }}
+                    </span>
+                  }
+                </span>
+              }
+              @if (action.displayMode !== 'icon-only' && action.label) {
+                <span class="action-label">{{ action.label }}</span>
+              }
+              @if (action.displayMode === 'label-only' && action.badge) {
+                <span class="action-badge-inline" 
+                      [style.background]="action.badgeBg || headerConfig.accentColor || '#ea580c'"
+                      [style.color]="action.badgeColor || '#ffffff'">
+                  {{ action.badge }}
+                </span>
+              }
+            </a>
+          }
+
         }
       </div>
     </div>

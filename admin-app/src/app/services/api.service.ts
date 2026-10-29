@@ -96,7 +96,7 @@ export class ApiService {
     }
     return null;
   }
-  private apiUrl = environment.apiUrl;
+  public apiUrl = environment.apiUrl;
   private tokenKey = 'foodybhai_admin_token';
   
   private authSubject = new BehaviorSubject<boolean>(false);

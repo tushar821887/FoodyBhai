@@ -8,13 +8,14 @@ import { Header } from './components/header/header';
 import { Footer } from './components/footer/footer';
 import { LocationModalComponent } from './components/location-modal/location-modal';
 import { AppDownloadBannerComponent } from './components/app-download-banner/app-download-banner';
+import { FloatingCartBarComponent } from './components/floating-cart-bar/floating-cart-bar';
 import { OrderService } from './services/order.service';
 import { ThemeService } from './services/theme.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, Header, Footer, LocationModalComponent, AppDownloadBannerComponent, AiSpeechAssistantComponent],
+  imports: [CommonModule, RouterOutlet, Header, Footer, LocationModalComponent, AppDownloadBannerComponent, AiSpeechAssistantComponent, FloatingCartBarComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -34,6 +35,7 @@ export class App implements OnInit {
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.setupBackButton();
+      this.themeService.fetchLiveTheme(true).subscribe();
       this.orderService.getSetting('restaurant_open').subscribe(res => {
         if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true;
       });

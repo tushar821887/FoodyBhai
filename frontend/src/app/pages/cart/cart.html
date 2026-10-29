@@ -54,11 +54,11 @@
                     </div>
                     <div class="cart-item-controls">
                       <div class="qty-controls">
-                        <button class="qty-btn" (click)="decreaseQuantity(item)"><i class="fa-solid fa-minus"></i></button>
+                        <button class="qty-btn" (click)="handleDecreaseQuantity(item)" title="Decrease quantity"><i class="fa-solid fa-minus"></i></button>
                         <span class="qty-val">{{item.quantity}}</span>
-                        <button class="qty-btn" (click)="increaseQuantity(item)"><i class="fa-solid fa-plus"></i></button>
+                        <button class="qty-btn" (click)="increaseQuantity(item)" title="Increase quantity"><i class="fa-solid fa-plus"></i></button>
                       </div>
-                      <button class="remove-btn" (click)="removeItem(item)" title="Remove item"><i class="fa-solid fa-trash-can"></i></button>
+                      <button class="remove-btn" (click)="confirmRemoveItem(item)" title="Remove item"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                   </div>
                 }
@@ -81,16 +81,18 @@
                   <div style="display: flex; gap: 10px;">
                     <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;"
                            [style.border-color]="orderType === 'delivery' ? 'var(--primary-color)' : '#e2e8f0'"
-                           [style.background]="orderType === 'delivery' ? '#fff5ed' : 'transparent'">
-                      <input type="radio" name="orderType" value="delivery" [(ngModel)]="orderType" style="display: none;">
+                           [style.background]="orderType === 'delivery' ? '#fff5ed' : 'transparent'"
+                           (click)="setOrderType('delivery')">
+                      <input type="radio" name="orderType" value="delivery" [ngModel]="orderType" (ngModelChange)="setOrderType($event)" style="display: none;">
                       <i class="fa-solid fa-motorcycle" style="margin-right: 5px;" [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#64748b'"></i>
                       <span [style.font-weight]="orderType === 'delivery' ? '600' : 'normal'"
                             [style.color]="orderType === 'delivery' ? 'var(--primary-color)' : '#334155'">Delivery</span>
                     </label>
                     <label style="flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;"
                            [style.border-color]="orderType === 'pickup' ? 'var(--primary-color)' : '#e2e8f0'"
-                           [style.background]="orderType === 'pickup' ? '#fff5ed' : 'transparent'">
-                      <input type="radio" name="orderType" value="pickup" [(ngModel)]="orderType" style="display: none;">
+                           [style.background]="orderType === 'pickup' ? '#fff5ed' : 'transparent'"
+                           (click)="setOrderType('pickup')">
+                      <input type="radio" name="orderType" value="pickup" [ngModel]="orderType" (ngModelChange)="setOrderType($event)" style="display: none;">
                       <i class="fa-solid fa-person-walking-luggage" style="margin-right: 5px;" [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#64748b'"></i>
                       <span [style.font-weight]="orderType === 'pickup' ? '600' : 'normal'"
                             [style.color]="orderType === 'pickup' ? 'var(--primary-color)' : '#334155'">Self Pickup</span>
@@ -880,6 +882,33 @@
 
   </div>
 </div>
+
+<!-- ===================== DELETE ITEM CONFIRMATION MODAL ===================== -->
+@if (showRemoveConfirmModal && itemToRemove) {
+  <div class="modal-overlay confirm-modal-overlay" (click)="cancelRemoveItem()">
+    <div class="confirm-modal-card animate-scale-up" (click)="$event.stopPropagation()">
+      <div class="confirm-modal-icon-wrap">
+        <div class="confirm-modal-icon">
+          <i class="fa-solid fa-trash-can"></i>
+        </div>
+      </div>
+
+      <h3 class="confirm-modal-title">Remove Item?</h3>
+      <p class="confirm-modal-text">
+        Are you sure you want to remove <strong class="confirm-item-name">{{ itemToRemove.recipe.title }}</strong> from your cart?
+      </p>
+
+      <div class="confirm-modal-actions">
+        <button type="button" class="btn-confirm-cancel" (click)="cancelRemoveItem()">
+          Cancel
+        </button>
+        <button type="button" class="btn-confirm-delete" (click)="executeRemoveItem()">
+          <i class="fa-solid fa-trash-can me-1"></i> Remove
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ===================== TOAST NOTIFICATION ===================== -->
 @if (toastVisible) {

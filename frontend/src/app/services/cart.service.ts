@@ -86,9 +86,19 @@ export class CartService {
     maxOffersToShow: 5
   });
 
-  public deliveryFee$ = combineLatest([this.totalPrice$, this.dynamicDeliveryFee$, this.freeDeliveryMinAmount$]).pipe(
-    map(([total, fee, minFree]) => {
-      if (total === 0) return 0;
+  public orderType$ = new BehaviorSubject<'delivery' | 'pickup'>('delivery');
+
+  public setOrderType(type: 'delivery' | 'pickup') {
+    this.orderType$.next(type);
+  }
+
+  public getOrderType(): 'delivery' | 'pickup' {
+    return this.orderType$.value;
+  }
+
+  public deliveryFee$ = combineLatest([this.totalPrice$, this.dynamicDeliveryFee$, this.freeDeliveryMinAmount$, this.orderType$]).pipe(
+    map(([total, fee, minFree, orderType]) => {
+      if (orderType === 'pickup' || total === 0) return 0;
       if (minFree > 0 && total >= minFree) return 0;
       return fee;
     })

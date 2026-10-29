@@ -32,6 +32,12 @@ export class CartComponent implements OnInit, OnDestroy {
   customerEmail = '';
   orderType: 'delivery' | 'pickup' = 'delivery';
 
+  setOrderType(type: 'delivery' | 'pickup') {
+    this.orderType = type;
+    this.cartService.setOrderType(type);
+    this.cdr.detectChanges();
+  }
+
   // Address properties
   deliveryAddress = '';
   savedAddresses: Address[] = [];
@@ -304,6 +310,7 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.cartService.setOrderType(this.orderType);
     this.loadAvailableCoupons();
     const currentCoupon = this.cartService.getCouponCode();
     if (currentCoupon) {
@@ -422,6 +429,31 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // --- Remove Item Confirmation Modal ---
+  showRemoveConfirmModal = false;
+  itemToRemove: CartItem | null = null;
+
+  confirmRemoveItem(item: CartItem) {
+    this.itemToRemove = item;
+    this.showRemoveConfirmModal = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelRemoveItem() {
+    this.itemToRemove = null;
+    this.showRemoveConfirmModal = false;
+    this.cdr.detectChanges();
+  }
+
+  executeRemoveItem() {
+    if (this.itemToRemove && this.itemToRemove.recipe) {
+      const title = this.itemToRemove.recipe.title;
+      this.cartService.removeFromCart(this.itemToRemove.recipe.id);
+      this.showToast(`"${title}" removed from cart`, 'info');
+    }
+    this.cancelRemoveItem();
+  }
+
   // --- Cart Quantity ---
   increaseQuantity(item: CartItem) {
     this.cartService.updateQuantity(item.recipe.id, item.quantity + 1);
@@ -431,8 +463,16 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cartService.updateQuantity(item.recipe.id, item.quantity - 1);
   }
 
+  handleDecreaseQuantity(item: CartItem) {
+    if (item.quantity <= 1) {
+      this.confirmRemoveItem(item);
+    } else {
+      this.decreaseQuantity(item);
+    }
+  }
+
   removeItem(item: CartItem) {
-    this.cartService.removeFromCart(item.recipe.id);
+    this.confirmRemoveItem(item);
   }
 
   // --- Stepper ---
@@ -526,7 +566,7 @@ export class CartComponent implements OnInit, OnDestroy {
 
   deleteAddress(id: string | undefined, event: Event) {
     event.stopPropagation();
-    if (!id) return;
+    if (!id || !confirm('Are you sure you want to delete this address?')) return;
     this.authService.deleteAddress(id).subscribe();
   }
 
@@ -591,7 +631,12 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
     if (this.orderType === 'delivery') {
       this.cartService.deliveryFee$.subscribe(v => deliveryFee = v).unsubscribe();
+    } else {
+      deliveryFee = 0;
     }
+
+    const effectiveTotal = Math.max(0, itemTotal - discount + platformFee + gst + (this.orderType === 'pickup' ? 0 : deliveryFee));
+    this.currentTotal = effectiveTotal;
 
     if (this.cartService.isOffline$.value) {
       this.showToast("We are currently offline and not accepting orders.", 'error');
@@ -613,9 +658,9 @@ export class CartComponent implements OnInit, OnDestroy {
       couponDiscount: discount,
       gst,
       platformFee,
-      deliveryFee,
-      deliveryCharge: deliveryFee,
-      totalAmount: this.currentTotal,
+      deliveryFee: this.orderType === 'pickup' ? 0 : deliveryFee,
+      deliveryCharge: this.orderType === 'pickup' ? 0 : deliveryFee,
+      totalAmount: effectiveTotal,
       orderType: this.orderType,
       paymentMethod: this.paymentMethod,
       deliveryDetails: {

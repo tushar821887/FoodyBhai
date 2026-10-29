@@ -45,6 +45,11 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border: 1px solid #e2e8f0;
   padding: 10px 14px;
+  transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-app-banner.has-floating-cart {
+  bottom: calc(130px + env(safe-area-inset-bottom, 0px));
 }
 
 .banner-inner {

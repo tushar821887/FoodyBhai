@@ -1,28 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Colors - Bollywood Sunset Palette matching active database theme */
-  --primary-color: #f04438;
-  --primary-hover: #d92d20;
-  --primary-dark: #b42318;
-  --primary-light: #fff4ed;
-  --primary-border: #fecdca;
-  --primary-glow: rgba(240, 68, 56, 0.25);
-  --primary-gradient: linear-gradient(135deg, #f04438, #f79009);
+  /* Brand base variables - dynamically driven by ThemeService API data from admin-app */
+  --primary-color: #f95f00;
+  --primary-hover: #ea580c;
+  --primary-dark: #c2410c;
+  --primary-light: #fff5ed;
+  --primary-border: #fed7aa;
+  --primary-glow: rgba(249, 95, 0, 0.25);
+  --primary-gradient: linear-gradient(135deg, #ff6e1a 0%, #ea580c 100%);
+  --marquee-gradient: linear-gradient(90deg, #ea580c 0%, #f97316 50%, #ea580c 100%);
   
-  --secondary-color: #1d1917;
-  --secondary-light: #2e2623;
-  --background-light: #fdf8f6;
+  --secondary-color: #241814;
+  --secondary-light: #3e2d26;
+  --background-light: #fbf6f2;
   --background-white: #ffffff;
   --background-warm: #fff9f5;
-  --text-dark: #1d1917;
-  --text-light: #6b615c;
+  --text-dark: #241814;
+  --text-light: #716661;
   --text-muted: #9c8e88;
   --border-color: #ede2d8;
 
-  /* Promo Banner defaults matching active database config */
-  --promo-banner-bg: #6d28d9;
-  --promo-banner-bg-end: #9333ea;
+  /* Promo Banner base variables - dynamically driven by settings API from admin-app */
+  --promo-banner-bg: #ea580c;
+  --promo-banner-bg-end: #f97316;
   --promo-banner-color: #ffffff;
   --promo-banner-height: 48px;
   --promo-banner-font-size: 12px;
@@ -235,11 +236,10 @@ img {
     padding-bottom: 0 !important;
   }
 
-  /* Critical Scroll Fix: Ensure entire page content scrolls well past the fixed bottom navigation bar */
   .main-content {
     margin-top: 0;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom, 24px)) !important;
-    min-height: calc(100vh - 88px);
+    padding-bottom: 0 !important;
+    min-height: auto !important;
     width: 100%;
     overflow-x: clip;
   }
@@ -290,7 +290,7 @@ img {
 }
 
 .global-loading-spinner {
-  color: var(--primary-color, #f04438);
+  color: var(--primary-color, #f95f00);
   font-size: 2.75rem;
   margin-bottom: 1.25rem;
 }

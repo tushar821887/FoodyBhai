@@ -8,12 +8,19 @@
   <div [innerHTML]="schemaMarkup"></div>
   
   <div class="recipe-header">
-    <div class="container text-center animate-fade-in">
-      <div class="breadcrumbs">
-        <a routerLink="/">Home</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
-        <a routerLink="/menu">Menu</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
-        <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
-        <span>{{recipe.title}}</span>
+    <div class="container animate-fade-in">
+      <div class="recipe-nav-header">
+        <button type="button" class="back-btn" (click)="goBack()" aria-label="Go back to previous page" title="Go back">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back</span>
+        </button>
+
+        <div class="breadcrumbs desktop-breadcrumbs">
+          <a routerLink="/">Home</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+          <a routerLink="/menu">Menu</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+          <a [routerLink]="['/category', getCategorySlug(recipe.category)]">{{recipe.category}}</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+          <span>{{recipe.title}}</span>
+        </div>
       </div>
       <h1 class="page-title">{{recipe.title}}</h1>
       <p class="recipe-description">{{recipe.description}}</p>
@@ -96,8 +103,8 @@
             </div>
           }
 
-          @if (recipe.recipeHtml) {
-            <div class="recipe-rich-content mb-5" [innerHTML]="recipe.recipeHtml"></div>
+          @if (getCleanRecipeHtml(recipe.recipeHtml)) {
+            <div class="recipe-rich-content mb-5" [innerHTML]="getCleanRecipeHtml(recipe.recipeHtml)"></div>
           }
         </div>
 

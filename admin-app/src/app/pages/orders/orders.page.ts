@@ -31,11 +31,12 @@ import { filter } from 'rxjs/operators';
 import { RichEditorComponent } from '../../components/rich-editor/rich-editor.component';
 import { ThemeManagerComponent } from '../../components/theme-manager/theme-manager.component';
 import { PageBuilderComponent } from '../../components/page-builder/page-builder.component';
+import { HeaderFooterManagerComponent } from '../../components/header-footer-manager/header-footer-manager.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent],
+  imports: [CommonModule, FormsModule, RouterModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent, HeaderFooterManagerComponent],
   templateUrl: './orders.page.html',
   styleUrl: './orders.page.css'
 })
@@ -114,7 +115,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   baseOrders: Order[] = [];
   contacts: any[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
 
   promoBanner: PromoBannerConfig = {
@@ -413,6 +414,9 @@ export class OrdersPage implements OnInit, OnDestroy {
     // Connect to instant real-time order stream (SSE)
     this.connectToLiveOrderStream();
 
+    // Start & configure native Android background order monitoring service
+    this.notificationService.configureBackgroundService(this.api.apiUrl);
+
     this.api.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) this.restaurantOpen = res.value === 'true' || res.value === true; });
     this.api.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) this.upiId = res.value; });
     this.api.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) this.qrImageUrl = res.value; });
@@ -499,6 +503,9 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
     this.showNotificationPermissionPrompt = false;
     this.notificationService.unlockAudio();
+    this.notificationService.configureBackgroundService(this.api.apiUrl);
+    this.notificationService.requestBatteryOptimization();
+    this.notificationService.requestOverlayPermission();
 
     const currentState = await this.notificationService.checkPermission();
     if (currentState === 'denied') {
@@ -851,6 +858,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   historyFilterStatus: string = 'all';
   historyFilterPayment: string = 'all';
   historyFilterAgent: string = 'all';
+  historyFilterType: string = 'all';
   showOrderDetailsModal: boolean = false;
   selectedHistoryOrder: any = null;
 
@@ -892,6 +900,14 @@ export class OrdersPage implements OnInit, OnDestroy {
         if (this.historyFilterPayment === 'online') return p === 'online';
         if (this.historyFilterPayment === 'cod') return p === 'cod';
         return true;
+      });
+    }
+
+    // Order Type Filter
+    if (this.historyFilterType !== 'all') {
+      result = result.filter(o => {
+        const t = (o.orderType || 'delivery').toLowerCase();
+        return t === this.historyFilterType;
       });
     }
 
@@ -1027,8 +1043,8 @@ export class OrdersPage implements OnInit, OnDestroy {
     if (!path) {
       path = this.router.url.split('?')[0].replace(/^\//, '');
     }
-    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner'> = [
-      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms', 'coupons', 'banner'
+    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer'> = [
+      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms', 'coupons', 'banner', 'header-footer'
     ];
     let matchedView = validViews.find(v => v === path);
     if (!matchedView) {
@@ -1045,7 +1061,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner', updateRoute: boolean = true) {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer', updateRoute: boolean = true) {
     this.currentView = view;
     this.closeMobileMenu();
     if (updateRoute) {
@@ -1420,15 +1436,12 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   editRecipe(recipe: any) {
     let html = recipe.recipeHtml || '';
-    if (!html && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
-      html = `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin: 12px 0;">
-        <h4 style="color: #e11d48; margin-top: 0; display: flex; align-items: center; gap: 8px;">
-          👨‍🍳 Chef's Ingredients
-        </h4>
-        <ul style="padding-left: 20px; line-height: 1.8;">
-          ${recipe.ingredients.map((ing: string) => `<li>${ing}</li>`).join('')}
-        </ul>
-      </div><p><br></p>`;
+    if (html) {
+      html = html
+        .replace(/<div[^>]*>[\s\S]*?(?:Chef's Ingredients|Chef's Recipe Ingredients|Ingredients & Spices)[\s\S]*?<\/ul>[\s\S]*?<\/div>/gi, '')
+        .replace(/<h[1-6][^>]*>[\s\S]*?(?:Chef's Ingredients|Chef's Recipe Ingredients|Ingredients & Spices)[\s\S]*?<\/h[1-6]>(\s*<ul[^>]*>[\s\S]*?<\/ul>)?/gi, '')
+        .replace(/<p>\s*(<br\s*\/?>|&nbsp;|\s)*<\/p>/gi, '')
+        .trim();
     }
     this.editingRecipe = {
       ...recipe,

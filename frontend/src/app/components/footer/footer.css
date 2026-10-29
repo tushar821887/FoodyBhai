@@ -132,6 +132,8 @@
 
 @media (max-width: 768px) {
   .footer {
-    padding-bottom: calc(88px + env(safe-area-inset-bottom, 24px)); /* Safe space for bottom nav */
+    margin-top: 1.5rem !important;
+    padding-top: 2rem !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 24px)) !important; /* Safe space for bottom nav */
   }
 }

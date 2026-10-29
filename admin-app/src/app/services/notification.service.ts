@@ -4,6 +4,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Subject } from 'rxjs';
 
 const AppLauncher = registerPlugin<any>('AppLauncher');
+const OrderAlertPlugin = registerPlugin<any>('OrderAlertPlugin');
 
 export interface AppNotification {
   id?: number;
@@ -105,6 +106,43 @@ export class NotificationService {
   /**
    * Attempts to bring MainActivity to the foreground and wake up the screen
    */
+  public async configureBackgroundService(apiUrl: string) {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await OrderAlertPlugin.configure({ apiUrl });
+        await OrderAlertPlugin.startService();
+      } catch (e) {
+        console.warn('OrderAlertPlugin configure error:', e);
+      }
+    }
+  }
+
+  public async stopNativeAlarm() {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await OrderAlertPlugin.stopAlarm();
+      } catch (e) {
+        console.warn('OrderAlertPlugin stopAlarm error:', e);
+      }
+    }
+  }
+
+  public async requestBatteryOptimization() {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await OrderAlertPlugin.requestBatteryOptimization();
+      } catch (e) {}
+    }
+  }
+
+  public async requestOverlayPermission() {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await OrderAlertPlugin.requestOverlayPermission();
+      } catch (e) {}
+    }
+  }
+
   public async bringAppToFront() {
     if (Capacitor.isNativePlatform()) {
       try {
@@ -357,6 +395,7 @@ export class NotificationService {
 
   public stopRinging() {
     this.isRinging = false;
+    this.stopNativeAlarm();
     if (this.ringIntervalTimer) {
       clearInterval(this.ringIntervalTimer);
       this.ringIntervalTimer = null;

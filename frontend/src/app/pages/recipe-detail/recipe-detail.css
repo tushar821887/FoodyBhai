@@ -1,16 +1,63 @@
 .recipe-header {
-  padding: 3rem 0 2rem;
+  padding: 2.5rem 0 1.8rem;
   background: linear-gradient(180deg, #fffaf6 0%, #ffffff 100%);
   border-bottom: 1px solid var(--border-color);
+}
+
+.recipe-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 999px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.back-btn i {
+  font-size: 0.92rem;
+  color: var(--primary-color, #ea580c);
+  transition: transform 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.back-btn:hover i {
+  transform: translateX(-3px);
+}
+
+.back-btn:active {
+  transform: scale(0.95);
+  background: #f1f5f9;
 }
 
 .breadcrumbs {
   font-size: 0.88rem;
   color: var(--text-light);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
@@ -491,19 +538,30 @@
 /* Responsive & Mobile Scroll Fixes */
 @media (max-width: 768px) {
   .recipe-header {
-    padding: 1.25rem 0 1rem;
+    padding: 0.85rem 0 0.85rem;
   }
 
-  .breadcrumbs {
-    font-size: 0.78rem;
-    margin-bottom: 0.5rem;
+  .recipe-nav-header {
     justify-content: flex-start;
+    margin-bottom: 0.4rem;
+  }
+
+  /* Completely remove breadcrumb on mobile view */
+  .breadcrumbs,
+  .desktop-breadcrumbs {
+    display: none !important;
+  }
+
+  .back-btn {
+    padding: 6px 12px 6px 10px;
+    font-size: 0.84rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   }
 
   .page-title {
     font-size: 1.65rem;
-    margin-top: 0.25rem;
-    margin-bottom: 0.4rem;
+    margin-top: 0.15rem;
+    margin-bottom: 0.35rem;
     text-align: left;
   }
 

@@ -17,21 +17,49 @@
         var tStr = localStorage.getItem('foodybhai_active_theme');
         if (tStr) {
           var t = JSON.parse(tStr);
-          var s = document.documentElement.style;
-          if (t.primaryColor) s.setProperty('--primary-color', t.primaryColor);
-          if (t.primaryHover) s.setProperty('--primary-hover', t.primaryHover);
-          if (t.primaryDark) s.setProperty('--primary-dark', t.primaryDark);
-          if (t.primaryLight) s.setProperty('--primary-light', t.primaryLight);
-          if (t.primaryBorder) s.setProperty('--primary-border', t.primaryBorder);
-          if (t.primaryGlow) s.setProperty('--primary-glow', t.primaryGlow);
-          if (t.secondaryColor) s.setProperty('--secondary-color', t.secondaryColor);
-          if (t.secondaryLight) s.setProperty('--secondary-light', t.secondaryLight);
-          if (t.backgroundLight) s.setProperty('--background-light', t.backgroundLight);
-          if (t.backgroundWhite) s.setProperty('--background-white', t.backgroundWhite);
-          if (t.textDark) s.setProperty('--text-dark', t.textDark);
-          if (t.textLight) s.setProperty('--text-light', t.textLight);
-          if (t.gradientStart && t.gradientEnd) {
-            s.setProperty('--primary-gradient', 'linear-gradient(' + (t.gradientAngle || '135deg') + ', ' + t.gradientStart + ', ' + t.gradientEnd + ')');
+          if (t && t.primaryColor) {
+            var s = document.documentElement.style;
+            var angle = t.gradientAngle || '135deg';
+            var gStart = t.gradientStart || t.primaryColor;
+            var gEnd = t.gradientEnd || t.primaryHover || t.primaryColor;
+            var grad = 'linear-gradient(' + angle + ', ' + gStart + ' 0%, ' + gEnd + ' 100%)';
+            var mStart = t.marqueeStart || gEnd;
+            var mEnd = t.marqueeEnd || gStart;
+            var marq = 'linear-gradient(90deg, ' + mStart + ' 0%, ' + mEnd + ' 50%, ' + mStart + ' 100%)';
+
+            s.setProperty('--primary-color', t.primaryColor);
+            if (t.primaryHover) s.setProperty('--primary-hover', t.primaryHover);
+            if (t.primaryDark) s.setProperty('--primary-dark', t.primaryDark);
+            if (t.primaryLight) s.setProperty('--primary-light', t.primaryLight);
+            if (t.primaryBorder) s.setProperty('--primary-border', t.primaryBorder);
+            if (t.primaryGlow) s.setProperty('--primary-glow', t.primaryGlow);
+            if (t.secondaryColor) s.setProperty('--secondary-color', t.secondaryColor);
+            if (t.secondaryLight) s.setProperty('--secondary-light', t.secondaryLight);
+            if (t.backgroundLight) s.setProperty('--background-light', t.backgroundLight);
+            if (t.backgroundWhite) s.setProperty('--background-white', t.backgroundWhite);
+            if (t.textDark) s.setProperty('--text-dark', t.textDark);
+            if (t.textLight) s.setProperty('--text-light', t.textLight);
+            s.setProperty('--primary-gradient', grad);
+            s.setProperty('--marquee-gradient', marq);
+
+            var styleTag = document.getElementById('dynamic-theme-style');
+            if (!styleTag) {
+              styleTag = document.createElement('style');
+              styleTag.id = 'dynamic-theme-style';
+              document.head.appendChild(styleTag);
+            }
+            styleTag.textContent = ':root {' +
+              '--primary-color:' + t.primaryColor + ' !important;' +
+              '--primary-hover:' + (t.primaryHover || t.primaryColor) + ' !important;' +
+              '--primary-dark:' + (t.primaryDark || t.primaryColor) + ' !important;' +
+              (t.primaryLight ? ('--primary-light:' + t.primaryLight + ' !important;') : '') +
+              (t.primaryBorder ? ('--primary-border:' + t.primaryBorder + ' !important;') : '') +
+              (t.primaryGlow ? ('--primary-glow:' + t.primaryGlow + ' !important;') : '') +
+              (t.secondaryColor ? ('--secondary-color:' + t.secondaryColor + ' !important;') : '') +
+              (t.secondaryLight ? ('--secondary-light:' + t.secondaryLight + ' !important;') : '') +
+              '--primary-gradient:' + grad + ' !important;' +
+              '--marquee-gradient:' + marq + ' !important;' +
+            '}';
           }
         }
         var bStr = localStorage.getItem('foodybhai_promo_banner');

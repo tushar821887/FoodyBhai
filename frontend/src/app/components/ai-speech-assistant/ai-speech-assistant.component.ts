@@ -1,8 +1,9 @@
 import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { filter, map, startWith, combineLatest } from 'rxjs';
 import { AiSpeechService, ChatMessage } from '../../services/ai-speech.service';
 import { CartService } from '../../services/cart.service';
 import { Recipe } from '../../services/recipe.service';
@@ -32,6 +33,27 @@ export class AiSpeechAssistantComponent implements AfterViewChecked {
   public language$ = this.speechService.language$;
   public isMuted$ = this.speechService.isMuted$;
   public messages$ = this.speechService.messages$;
+
+  public isCartRoute$ = this.router.events.pipe(
+    filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+    map(event => {
+      const clean = (event.urlAfterRedirects || event.url).split('?')[0].split('#')[0];
+      return clean === '/cart' || clean.startsWith('/cart/') || clean === '/admin' || clean.startsWith('/admin/');
+    }),
+    startWith(
+      (() => {
+        const clean = (this.router.url || '').split('?')[0].split('#')[0];
+        return clean === '/cart' || clean.startsWith('/cart/') || clean === '/admin' || clean.startsWith('/admin/');
+      })()
+    )
+  );
+
+  public hasFloatingCart$ = combineLatest([
+    this.cartService.totalQuantity$,
+    this.isCartRoute$
+  ]).pipe(
+    map(([qty, isCart]) => (qty > 0) && !isCart)
+  );
 
   // Local state
   public inputText: string = '';

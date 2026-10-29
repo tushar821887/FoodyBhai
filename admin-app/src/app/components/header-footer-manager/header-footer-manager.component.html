@@ -1,0 +1,1468 @@
+<div class="hfm-container animate-fade-in">
+
+  <!-- Top Toast Notification -->
+  <div *ngIf="toastMessage" class="hfm-toast" [ngClass]="toastType">
+    <span>{{ toastMessage }}</span>
+  </div>
+
+  <!-- Header Banner -->
+  <div class="hfm-header-banner">
+    <div class="banner-title-area">
+      <div class="banner-icon-badge">🧭</div>
+      <div>
+        <h2 class="banner-title">Header & Footer Design Studio</h2>
+        <p class="banner-subtitle">Configure header navigation, subcategories/dropdowns, typography, borders, shadows, glassmorphism, and live branding.</p>
+      </div>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div class="hfm-tab-nav">
+      <button type="button" 
+              class="hfm-tab-btn" 
+              [class.active]="activeTab === 'header'" 
+              (click)="activeTab = 'header'">
+        <i class="fa-solid fa-compass"></i>
+        <span>Header & Navigation</span>
+      </button>
+      <button type="button" 
+              class="hfm-tab-btn" 
+              [class.active]="activeTab === 'footer'" 
+              (click)="activeTab = 'footer'">
+        <i class="fa-solid fa-shoe-prints"></i>
+        <span>Footer Details</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== HEADER CONFIGURATION TAB ==================== -->
+  <div *ngIf="activeTab === 'header'" class="hfm-section animate-fade-in">
+
+    <!-- Interactive Live Header Preview Card -->
+    <div class="hfm-preview-card">
+      <div class="preview-card-header">
+        <div class="preview-card-title">
+          <i class="fa-solid fa-eye"></i>
+          <span>Live Interactive Header Preview</span>
+          <span class="live-pill">REAL-TIME CSS & DROPDOWN</span>
+        </div>
+        <div class="preview-mode-switch">
+          <button type="button" 
+                  class="preview-toggle-btn" 
+                  [class.active]="previewMode === 'desktop'" 
+                  (click)="previewMode = 'desktop'">
+            <i class="fa-solid fa-desktop"></i> Desktop View
+          </button>
+          <button type="button" 
+                  class="preview-toggle-btn" 
+                  [class.active]="previewMode === 'mobile'" 
+                  (click)="previewMode = 'mobile'">
+            <i class="fa-solid fa-mobile-screen"></i> Mobile View
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Stage -->
+      <div class="preview-stage" [class.mobile-stage]="previewMode === 'mobile'">
+        
+        <!-- Desktop Header Mockup -->
+        <div *ngIf="previewMode === 'desktop'" 
+             class="mock-desktop-header" 
+             [style.backgroundColor]="headerConfig.enableGlassmorphism ? (headerConfig.bgColor || 'rgba(255, 255, 255, 0.85)') : (headerConfig.bgColor || '#ffffff')"
+             [style.backdropFilter]="headerConfig.enableGlassmorphism ? 'blur(' + (headerConfig.glassmorphismBlur || '12px') + ')' : 'none'"
+             [style.color]="headerConfig.textColor || '#1e293b'"
+             [style.padding]="getPreviewPadding()"
+             [style.boxShadow]="getPreviewBoxShadow()"
+             [style.borderBottom]="getPreviewBorderBottom()"
+             [style.borderRadius]="headerConfig.headerRadius || '0px'"
+             [style.maxWidth]="headerConfig.containerWidth || '1180px'">
+          
+          <!-- Left: Logo & Location -->
+          <div class="mock-header-left" [style.gap]="headerConfig.logoGap || '14px'">
+            <div class="mock-logo"
+                 [ngClass]="'shape-' + (headerConfig.logoShape || 'circle')"
+                 [style.height]="headerConfig.logoHeight || '48px'"
+                 [style.width]="headerConfig.logoWidth === 'auto' ? (headerConfig.logoShape === 'circle' ? (headerConfig.logoHeight || '48px') : 'auto') : (headerConfig.logoWidth || (headerConfig.logoHeight || '48px'))"
+                 [style.borderColor]="headerConfig.logoBorderColor || '#f97316'"
+                 [style.borderWidth]="headerConfig.logoBorderWidth || '1.5px'"
+                 [style.borderStyle]="(headerConfig.logoShape === 'natural' || headerConfig.logoBorderWidth === '0px') ? 'none' : 'solid'"
+                 [style.borderRadius]="headerConfig.logoShape === 'circle' ? '50%' : (headerConfig.logoShape === 'rounded' ? '12px' : '0px')">
+              <img [src]="headerConfig.logoUrl || '/assets/images/logo.png'" 
+                   [alt]="headerConfig.logoAlt || 'Logo'"
+                   onerror="this.src='assets/logo.png'">
+            </div>
+
+            <!-- Location Selector -->
+            <div *ngIf="headerConfig.showLocation" class="mock-location-badge">
+              <i class="fa-solid fa-location-dot mock-loc-icon" [style.color]="headerConfig.accentColor || '#059669'"></i>
+              <div class="mock-loc-text">
+                <span class="mock-loc-label">{{ headerConfig.deliveringToLabel || 'DELIVERING TO' }}</span>
+                <span class="mock-loc-val">
+                  {{ headerConfig.defaultLocationText || 'Meerut, Uttar Pradesh, India' }}
+                  <i class="fa-solid fa-chevron-down mock-caret" [style.color]="headerConfig.accentColor || '#059669'"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center: Nav Links with Subcategory Dropdown Support -->
+          <nav class="mock-nav" 
+               [ngClass]="'active-style-' + (headerConfig.navActiveStyle || 'underline')"
+               [style.gap]="headerConfig.navGap || '20px'">
+            <div *ngFor="let link of getVisibleNavLinks(); let i = index" 
+                 class="mock-nav-item-wrap"
+                 (mouseenter)="link.hasDropdown !== false && getVisibleSubcategories(link).length ? previewDropdownIndex = i : null"
+                 (mouseleave)="previewDropdownIndex === i ? previewDropdownIndex = null : null">
+              
+              <span class="mock-nav-item" 
+                    [class.active]="i === 0"
+                    [style.color]="link.color || headerConfig.textColor"
+                    [style.fontSize]="link.fontSize || headerConfig.navFontSize || '14px'"
+                    [style.fontWeight]="link.fontWeight || headerConfig.navFontWeight || '600'"
+                    [style.textTransform]="headerConfig.navTextTransform || 'none'"
+                    [style.letterSpacing]="headerConfig.navLetterSpacing || 'normal'"
+                    [style.backgroundColor]="link.highlightBg || ''"
+                    (click)="togglePreviewDropdown(i, $event)">
+                {{ link.label }}
+                <span *ngIf="link.badge" class="mock-nav-badge" [style.backgroundColor]="link.badgeBg || link.badgeColor || headerConfig.accentColor || '#ea580c'">
+                  {{ link.badge }}
+                </span>
+                <i *ngIf="link.hasDropdown !== false && getVisibleSubcategories(link).length" 
+                   class="fa-solid fa-chevron-down mock-dropdown-caret"
+                   [class.rotated]="previewDropdownIndex === i"></i>
+              </span>
+
+              <!-- Mock Dropdown Submenu Preview -->
+              <div *ngIf="link.hasDropdown !== false && getVisibleSubcategories(link).length && previewDropdownIndex === i" 
+                   class="mock-dropdown-menu"
+                   [ngClass]="['dropdown-' + (headerConfig.dropdownStyle || 'light'), (headerConfig.dropdownColumns === '2' ? 'cols-2' : 'cols-1')]">
+                <div class="mock-dropdown-grid">
+                  <div *ngFor="let sub of getVisibleSubcategories(link)" 
+                       class="mock-subitem"
+                       [style.borderRadius]="headerConfig.subcatItemRadius || '10px'"
+                       [style.backgroundColor]="sub.bgColor || ''"
+                       [style.borderColor]="sub.borderColor || ''">
+                    <span *ngIf="sub.icon" class="mock-subitem-icon" [style.fontSize]="headerConfig.subcatIconSize || '22px'">{{ sub.icon }}</span>
+                    <div class="mock-subitem-info">
+                      <div class="mock-subitem-header">
+                        <span class="mock-subitem-name"
+                              [style.fontSize]="sub.fontSize || headerConfig.subcatNameFontSize || '13.5px'"
+                              [style.fontWeight]="sub.fontWeight || headerConfig.subcatNameFontWeight || '700'"
+                              [style.color]="sub.color || headerConfig.subcatNameColor || '#0f172a'">
+                          {{ sub.label }}
+                        </span>
+                        <span *ngIf="sub.badge" 
+                              class="mock-subitem-badge"
+                              [style.backgroundColor]="sub.badgeBg || '#ea580c'">
+                          {{ sub.badge }}
+                        </span>
+                      </div>
+                      <span *ngIf="sub.description" 
+                            class="mock-subitem-desc"
+                            [style.fontSize]="sub.descFontSize || headerConfig.subcatDescFontSize || '11.5px'"
+                            [style.color]="sub.descColor || headerConfig.subcatDescColor || '#64748b'">
+                        {{ sub.description }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </nav>
+
+          <!-- Right: Actions -->
+          <div class="mock-header-right" [style.gap]="headerConfig.actionsGap || '14px'">
+            <div *ngFor="let act of getVisibleActionItems()" 
+                 class="mock-header-action"
+                 [ngClass]="['action-variant-' + (act.variant || 'ghost'), 'mode-' + (act.displayMode || 'icon-and-label')]"
+                 [style.color]="act.color || (act.variant === 'solid' ? '#ffffff' : headerConfig.textColor)"
+                 [style.backgroundColor]="act.bgColor || (act.variant === 'solid' ? (headerConfig.accentColor || '#059669') : '')"
+                 [style.borderColor]="act.borderColor || (act.variant === 'outline' ? (headerConfig.accentColor || '#059669') : '')"
+                 [style.borderRadius]="act.borderRadius || headerConfig.buttonRadius || '24px'"
+                 [style.fontSize]="act.fontSize || '13px'"
+                 [style.fontWeight]="act.fontWeight || (act.variant === 'solid' ? '700' : '600')">
+              
+              <span *ngIf="act.displayMode !== 'label-only'" class="mock-action-icon-wrap">
+                <i *ngIf="isFontAwesome(act.icon)" [class]="act.icon"></i>
+                <span *ngIf="!isFontAwesome(act.icon)">{{ act.icon || (act.type === 'cart' ? '🛒' : '⭐') }}</span>
+                <span *ngIf="act.type === 'cart' || act.badge" 
+                      class="mock-action-badge"
+                      [style.backgroundColor]="act.badgeBg || headerConfig.accentColor || '#059669'"
+                      [style.color]="act.badgeColor || '#ffffff'">
+                  {{ act.badge || (act.type === 'cart' ? '1' : '') }}
+                </span>
+                <span *ngIf="act.type === 'app-download'" class="mock-pulse-dot" [style.background]="headerConfig.accentColor || '#10b981'"></span>
+              </span>
+
+              <span *ngIf="act.displayMode !== 'icon-only'" class="mock-action-label">
+                {{ act.label }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Header Mockup -->
+        <div *ngIf="previewMode === 'mobile'" 
+             class="mock-mobile-wrapper"
+             [style.backgroundColor]="headerConfig.bgColor || '#ffffff'"
+             [style.color]="headerConfig.textColor || '#1e293b'">
+          <div class="mock-mobile-header" [style.borderBottom]="getPreviewBorderBottom()">
+            <button class="mock-hamburger">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="mock-logo">
+              <img [src]="headerConfig.logoUrl || '/assets/images/logo.png'" 
+                   alt="Logo"
+                   onerror="this.src='assets/logo.png'">
+            </div>
+            <div *ngIf="headerConfig.showLocation" class="mock-mobile-loc">
+              <span class="mock-loc-label">{{ headerConfig.deliveringToLabel || 'DELIVERING TO' }}</span>
+              <span class="mock-loc-val">{{ headerConfig.defaultLocationText || 'Meerut' }} ▾</span>
+            </div>
+            <div *ngIf="headerConfig.showCart" class="mock-cart-btn-mobile">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span class="mock-cart-badge" [style.backgroundColor]="headerConfig.accentColor || '#059669'">1</span>
+            </div>
+          </div>
+
+          <div class="mock-mobile-menu-preview">
+            <div class="mock-mobile-nav-title">Menu Navigation & Subcategories</div>
+            <div class="mock-mobile-links">
+              <div *ngFor="let link of headerConfig.navLinks" class="mock-mobile-link-chip-group">
+                <span class="mock-mobile-link-chip">
+                  {{ link.label }}
+                  <span *ngIf="link.badge" class="mock-mobile-badge">{{ link.badge }}</span>
+                </span>
+                <div *ngIf="link.children && link.children.length" class="mock-mobile-subcat-chips">
+                  <span *ngFor="let sub of link.children" class="mock-mobile-sub-pill">
+                    {{ sub.icon }} {{ sub.label }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Header Settings Cards Grid -->
+    <div class="hfm-grid">
+
+      <!-- CARD 1: BRANDING & LOGO -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">🏷️</div>
+          <div>
+            <h3>Brand Identity & Logo</h3>
+            <p>Header logo image, alt text, and home navigation target.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Logo Image URL</label>
+            <div class="logo-input-wrapper">
+              <div class="logo-preview-box">
+                <img [src]="headerConfig.logoUrl || '/assets/images/logo.png'" 
+                     alt="Logo"
+                     onerror="this.src='assets/logo.png'">
+              </div>
+              <input type="text" [(ngModel)]="headerConfig.logoUrl" class="hfm-input" placeholder="/assets/images/logo.png or https://...">
+            </div>
+            <span class="form-hint">Tip: Use transparent PNG or SVG for clean presentation.</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Logo Alt Text</label>
+              <input type="text" [(ngModel)]="headerConfig.logoAlt" class="hfm-input" placeholder="Foody Bhai Logo">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Logo Redirect Target</label>
+              <input type="text" [(ngModel)]="headerConfig.logoLink" class="hfm-input" placeholder="/">
+            </div>
+          </div>
+
+          <div class="card-divider"></div>
+          <div class="style-subheading">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Logo Dimensions & Shape Customization</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Logo Height</label>
+              <select [(ngModel)]="headerConfig.logoHeight" class="hfm-input">
+                <option value="40px">40px (Compact)</option>
+                <option value="44px">44px (Small)</option>
+                <option value="48px">48px (Standard / Recommended)</option>
+                <option value="54px">54px (Prominent)</option>
+                <option value="60px">60px (Large)</option>
+                <option value="68px">68px (Extra Large)</option>
+                <option value="80px">80px (Hero Size)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Logo Width</label>
+              <select [(ngModel)]="headerConfig.logoWidth" class="hfm-input">
+                <option value="auto">Auto (Natural Aspect Ratio)</option>
+                <option value="48px">48px (Square / 1:1)</option>
+                <option value="54px">54px (Square / 1:1)</option>
+                <option value="60px">60px (Square / 1:1)</option>
+                <option value="70px">70px (Square / 1:1)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Logo Container Shape</label>
+              <select [(ngModel)]="headerConfig.logoShape" class="hfm-input">
+                <option value="circle">Circle with Border (Signature)</option>
+                <option value="rounded">Rounded Box (12px radius)</option>
+                <option value="natural">Natural / No Border (Raw Image)</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="headerConfig.logoShape !== 'natural'">
+              <label class="form-label">Logo Border Width</label>
+              <select [(ngModel)]="headerConfig.logoBorderWidth" class="hfm-input">
+                <option value="0px">None (0px)</option>
+                <option value="1px">Thin (1px)</option>
+                <option value="1.5px">Standard (1.5px)</option>
+                <option value="2px">Medium (2px)</option>
+                <option value="3px">Bold (3px)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 10px;" *ngIf="headerConfig.logoShape !== 'natural' && headerConfig.logoBorderWidth !== '0px'">
+            <div class="form-group">
+              <label class="form-label">Logo Border Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.logoBorderColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.logoBorderColor" class="hfm-input hex-input" placeholder="#f97316">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: DELIVERY LOCATION SELECTOR -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">📍</div>
+          <div>
+            <h3>Delivery Location Selector</h3>
+            <p>Customer location picker display in header bar.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="toggle-row">
+            <div>
+              <span class="toggle-title">Show Location Selector</span>
+              <p class="toggle-desc">Enable location badge with dropdown in header.</p>
+            </div>
+            <label class="hfm-switch">
+              <input type="checkbox" [(ngModel)]="headerConfig.showLocation">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div *ngIf="headerConfig.showLocation" class="form-row" style="margin-top: 15px;">
+            <div class="form-group">
+              <label class="form-label">Upper Label Text</label>
+              <input type="text" [(ngModel)]="headerConfig.deliveringToLabel" class="hfm-input" placeholder="Delivering to">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Default / Fallback Location</label>
+              <input type="text" [(ngModel)]="headerConfig.defaultLocationText" class="hfm-input" placeholder="Meerut, Uttar Pradesh, India">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: NAVIGATION MENU & SUBCATEGORIES (HIERARCHICAL MANAGER) -->
+      <div class="hfm-card full-width">
+        <div class="card-title" style="justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="card-icon-badge">🔗</div>
+            <div>
+              <h3>Navigation Links & Subcategories Manager</h3>
+              <p>Reorder, configure parent links, badges, and subcategories (dropdown menus).</p>
+            </div>
+          </div>
+          <button type="button" class="btn-add-link" (click)="addNavLink()">
+            <i class="fa-solid fa-plus"></i> Add Nav Link
+          </button>
+        </div>
+
+        <div class="card-body">
+          <div class="nav-links-list">
+            <div *ngFor="let link of headerConfig.navLinks; let i = index" class="nav-link-block" [class.link-disabled]="link.enabled === false">
+              
+              <!-- Parent Link Row -->
+              <div class="nav-link-row">
+                <div class="reorder-handle">
+                  <button type="button" class="btn-reorder" [disabled]="i === 0" (click)="moveNavLink(i, 'up')" title="Move up">
+                    <i class="fa-solid fa-chevron-up"></i>
+                  </button>
+                  <button type="button" class="btn-reorder" [disabled]="i === (headerConfig.navLinks.length - 1)" (click)="moveNavLink(i, 'down')" title="Move down">
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </button>
+                </div>
+
+                <div class="link-field-group" style="max-width: 160px;">
+                  <label class="mini-label">Link Label</label>
+                  <input type="text" [(ngModel)]="link.label" class="hfm-input" placeholder="e.g. Menu">
+                </div>
+
+                <div class="link-field-group">
+                  <label class="mini-label">Target Route / URL</label>
+                  <input type="text" [(ngModel)]="link.url" class="hfm-input" placeholder="e.g. /menu">
+                </div>
+
+                <div class="link-field-group" style="max-width: 110px;">
+                  <label class="mini-label">Badge (Opt)</label>
+                  <input type="text" [(ngModel)]="link.badge" class="hfm-input" placeholder="e.g. HOT">
+                </div>
+
+                <div class="link-exact-toggle">
+                  <label class="mini-label">Exact Match</label>
+                  <label class="hfm-switch-sm">
+                    <input type="checkbox" [(ngModel)]="link.exact">
+                    <span class="slider-sm"></span>
+                  </label>
+                </div>
+
+                <!-- Enable / Disable Parent Menu Link -->
+                <div class="link-enable-toggle">
+                  <label class="mini-label">Menu Item</label>
+                  <label class="hfm-switch-sm" [title]="link.enabled !== false ? 'Menu item is active on website' : 'Menu item is hidden from website'">
+                    <input type="checkbox" [checked]="link.enabled !== false" (change)="link.enabled = !link.enabled">
+                    <span class="slider-sm"></span>
+                  </label>
+                </div>
+
+                <!-- Particular Style Button for this Link -->
+                <div class="link-particular-style-wrap">
+                  <button type="button" 
+                          class="btn-part-style-toggle"
+                          [class.active]="expandedLinkStyleIndex === i"
+                          (click)="toggleLinkStyle(i)"
+                          title="Style this particular menu link">
+                    <i class="fa-solid fa-palette"></i>
+                    <span>Style</span>
+                  </button>
+                </div>
+
+                <!-- Subcategories Toggle Button -->
+                <div class="link-subcat-toggle-wrap">
+                  <button type="button" 
+                          class="btn-subcat-toggle" 
+                          [class.active]="expandedSubcatIndex === i"
+                          [class.has-disabled-dropdown]="link.hasDropdown === false"
+                          (click)="toggleSubcategories(i)">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Subcategories</span>
+                    <span class="subcat-counter" [class.counter-disabled]="link.hasDropdown === false">{{ (link.children || []).length }}</span>
+                    <i class="fa-solid fa-chevron-down subcat-caret" [class.open]="expandedSubcatIndex === i"></i>
+                  </button>
+                </div>
+
+                <div class="link-action-del">
+                  <button type="button" class="btn-del-link" (click)="removeNavLink(i)" title="Delete link">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Expanded Particular Style Drawer for this Parent Link -->
+              <div *ngIf="expandedLinkStyleIndex === i" class="particular-style-panel animate-fade-in">
+                <div class="particular-style-header">
+                  <div class="part-title">
+                    <i class="fa-solid fa-palette"></i>
+                    <span>Particular Style for "<strong>{{ link.label }}</strong>" (Overrides global font/color)</span>
+                  </div>
+                  <button type="button" class="btn-close-part" (click)="expandedLinkStyleIndex = null">✕</button>
+                </div>
+
+                <div class="particular-style-grid">
+                  <div class="part-field">
+                    <label class="mini-label">Text Color</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="link.color" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="link.color" class="hfm-input hex-input" placeholder="Default">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Font Size</label>
+                    <select [(ngModel)]="link.fontSize" class="hfm-input">
+                      <option value="">Inherit Default</option>
+                      <option value="12px">12px (Compact)</option>
+                      <option value="13px">13px (Small)</option>
+                      <option value="14px">14px (Standard)</option>
+                      <option value="15px">15px (Medium)</option>
+                      <option value="16px">16px (Large)</option>
+                      <option value="18px">18px (Prominent)</option>
+                    </select>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Font Weight</label>
+                    <select [(ngModel)]="link.fontWeight" class="hfm-input">
+                      <option value="">Inherit Default</option>
+                      <option value="400">Regular (400)</option>
+                      <option value="500">Medium (500)</option>
+                      <option value="600">Semi-Bold (600)</option>
+                      <option value="700">Bold (700)</option>
+                      <option value="800">Extra Bold (800)</option>
+                    </select>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Highlight Background</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="link.highlightBg" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="link.highlightBg" class="hfm-input hex-input" placeholder="Transparent">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Badge Background</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="link.badgeBg" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="link.badgeBg" class="hfm-input hex-input" placeholder="#ea580c">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Badge Text Color</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="link.badgeColor" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="link.badgeColor" class="hfm-input hex-input" placeholder="#ffffff">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Expanded Subcategories Panel -->
+              <div *ngIf="expandedSubcatIndex === i" class="subcategories-panel animate-fade-in">
+                <div class="subcat-panel-header">
+                  <div class="subcat-panel-title">
+                    <i class="fa-solid fa-sitemap"></i>
+                    <span>Dropdown Subcategories under "<strong>{{ link.label }}</strong>"</span>
+                  </div>
+
+                  <!-- Dropdown Master Enable / Disable Toggle -->
+                  <div class="dropdown-enable-group">
+                    <span class="dropdown-enable-label">Subcategories Dropdown:</span>
+                    <label class="hfm-switch-sm" [title]="link.hasDropdown !== false ? 'Dropdown is enabled' : 'Dropdown is disabled'">
+                      <input type="checkbox" [checked]="link.hasDropdown !== false" (change)="link.hasDropdown = !link.hasDropdown">
+                      <span class="slider-sm"></span>
+                    </label>
+                    <span class="dropdown-status-badge" [class.badge-active]="link.hasDropdown !== false" [class.badge-inactive]="link.hasDropdown === false">
+                      {{ link.hasDropdown !== false ? 'ENABLED' : 'DISABLED' }}
+                    </span>
+                  </div>
+
+                  <div class="subcat-panel-actions">
+                    <button type="button" class="btn-subcat-quick" (click)="quickAddPopularSubcategories(i)">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Quick-Add Popular Categories
+                    </button>
+                    <button type="button" class="btn-subcat-add" (click)="addSubcategory(i)">
+                      <i class="fa-solid fa-plus"></i> Add Subcategory
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="!link.children || link.children.length === 0" class="subcat-empty-state">
+                  <p>No subcategories yet. Click <strong>"Add Subcategory"</strong> or <strong>"Quick-Add Popular Categories"</strong> to turn this link into a rich dropdown menu!</p>
+                </div>
+
+                <!-- Subcategory items list -->
+                <div *ngIf="link.children && link.children.length > 0" class="subcat-items-list">
+                  <ng-container *ngFor="let sub of link.children; let subIdx = index">
+                    <div class="subcat-item-row" [class.subcat-row-disabled]="sub.enabled === false">
+                      
+                      <div class="subcat-field-icon">
+                        <label class="mini-label">Icon</label>
+                        <input type="text" [(ngModel)]="sub.icon" class="hfm-input text-center" placeholder="🍛" style="max-width: 55px;">
+                      </div>
+
+                      <div class="subcat-field-name">
+                        <label class="mini-label">Subcategory Name</label>
+                        <input type="text" [(ngModel)]="sub.label" class="hfm-input" placeholder="e.g. Main Course">
+                      </div>
+
+                      <div class="subcat-field-url">
+                        <label class="mini-label">Target URL / Category Filter</label>
+                        <input type="text" [(ngModel)]="sub.url" class="hfm-input" placeholder="e.g. /menu?cat=main-course">
+                      </div>
+
+                      <div class="subcat-field-desc">
+                        <label class="mini-label">Subtitle / Description</label>
+                        <input type="text" [(ngModel)]="sub.description" class="hfm-input" placeholder="Paneer, Dal & curries">
+                      </div>
+
+                      <div class="subcat-field-badge">
+                        <label class="mini-label">Badge</label>
+                        <input type="text" [(ngModel)]="sub.badge" class="hfm-input" placeholder="NEW" style="max-width: 70px;">
+                      </div>
+
+                      <!-- Individual Subcategory Item Enable / Disable -->
+                      <div class="subcat-field-enable">
+                        <label class="mini-label">Active</label>
+                        <label class="hfm-switch-sm" [title]="sub.enabled !== false ? 'Subcategory is visible' : 'Subcategory is hidden'">
+                          <input type="checkbox" [checked]="sub.enabled !== false" (change)="sub.enabled = !sub.enabled">
+                          <span class="slider-sm"></span>
+                        </label>
+                      </div>
+
+                      <!-- Particular Style Toggle for this Subcategory -->
+                      <button type="button" 
+                              class="btn-subcat-style-btn" 
+                              [class.active]="isSubcatStyleOpen(i, subIdx)" 
+                              (click)="toggleSubcatStyle(i, subIdx)" 
+                              title="Style this particular subcategory">
+                        <i class="fa-solid fa-palette"></i>
+                        <span>Style</span>
+                      </button>
+
+                      <button type="button" class="btn-del-subcat" (click)="removeSubcategory(i, subIdx)" title="Delete subcategory">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+
+                    <!-- Particular Style Drawer for this Subcategory -->
+                    <div *ngIf="isSubcatStyleOpen(i, subIdx)" class="subcat-particular-style-panel animate-fade-in">
+                      <div class="subcat-part-header">
+                        <div class="part-title">
+                          <i class="fa-solid fa-paintbrush"></i>
+                          <span>Particular Style for "<strong>{{ sub.label || 'Subcategory' }}</strong>" (Overrides global typography & colors)</span>
+                        </div>
+                        <button type="button" class="btn-close-part" (click)="toggleSubcatStyle(i, subIdx)">✕</button>
+                      </div>
+
+                      <div class="subcat-part-grid">
+                        <div class="part-field">
+                          <label class="mini-label">Name Color</label>
+                          <div class="color-picker-group">
+                            <input type="color" [(ngModel)]="sub.color" class="color-swatch-input">
+                            <input type="text" [(ngModel)]="sub.color" class="hfm-input hex-input" placeholder="Default">
+                          </div>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Name Font Size</label>
+                          <select [(ngModel)]="sub.fontSize" class="hfm-input">
+                            <option value="">Inherit Default</option>
+                            <option value="12px">12px (Compact)</option>
+                            <option value="13px">13px (Small)</option>
+                            <option value="13.5px">13.5px (Standard)</option>
+                            <option value="14px">14px (Medium)</option>
+                            <option value="15px">15px (Large)</option>
+                            <option value="16px">16px (Prominent)</option>
+                          </select>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Name Font Weight</label>
+                          <select [(ngModel)]="sub.fontWeight" class="hfm-input">
+                            <option value="">Inherit Default</option>
+                            <option value="500">Medium (500)</option>
+                            <option value="600">Semi-Bold (600)</option>
+                            <option value="700">Bold (700)</option>
+                            <option value="800">Extra Bold (800)</option>
+                          </select>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Description Color</label>
+                          <div class="color-picker-group">
+                            <input type="color" [(ngModel)]="sub.descColor" class="color-swatch-input">
+                            <input type="text" [(ngModel)]="sub.descColor" class="hfm-input hex-input" placeholder="#64748b">
+                          </div>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Description Font Size</label>
+                          <select [(ngModel)]="sub.descFontSize" class="hfm-input">
+                            <option value="">Inherit Default</option>
+                            <option value="10.5px">10.5px (Micro)</option>
+                            <option value="11px">11px (Compact)</option>
+                            <option value="11.5px">11.5px (Standard)</option>
+                            <option value="12.5px">12.5px (Medium)</option>
+                            <option value="13.5px">13.5px (Large)</option>
+                          </select>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Card Background</label>
+                          <div class="color-picker-group">
+                            <input type="color" [(ngModel)]="sub.bgColor" class="color-swatch-input">
+                            <input type="text" [(ngModel)]="sub.bgColor" class="hfm-input hex-input" placeholder="Transparent">
+                          </div>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Card Border Color</label>
+                          <div class="color-picker-group">
+                            <input type="color" [(ngModel)]="sub.borderColor" class="color-swatch-input">
+                            <input type="text" [(ngModel)]="sub.borderColor" class="hfm-input hex-input" placeholder="Transparent">
+                          </div>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Badge Background</label>
+                          <div class="color-picker-group">
+                            <input type="color" [(ngModel)]="sub.badgeBg" class="color-swatch-input">
+                            <input type="text" [(ngModel)]="sub.badgeBg" class="hfm-input hex-input" placeholder="#ea580c">
+                          </div>
+                        </div>
+
+                        <div class="part-field">
+                          <label class="mini-label">Badge Text Color</label>
+                          <div class="color-picker-group">
+                            <input type="color" [(ngModel)]="sub.badgeColor" class="color-swatch-input">
+                            <input type="text" [(ngModel)]="sub.badgeColor" class="hfm-input hex-input" placeholder="#ffffff">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- CARD 4: HEADER ACTION BUTTONS & AUTHENTICATION MANAGER (DYNAMIC) -->
+      <div class="hfm-card full-width">
+        <div class="card-title">
+          <div class="card-icon-badge">⚡</div>
+          <div style="flex: 1;">
+            <h3>Header Action Buttons & Authentication Manager</h3>
+            <p>Add, reorder, and dynamically style header action buttons (Cart, Login/Account, Phone, App Download, Custom Links, Offers, Wishlist, etc.).</p>
+          </div>
+          <div class="actions-quick-bar">
+            <button type="button" class="btn-subcat-quick" (click)="addActionItem('custom-link')">
+              <i class="fa-solid fa-plus"></i> Add Action
+            </button>
+            <button type="button" class="btn-action-preset" (click)="addActionItem('cart')">
+              <i class="fa-solid fa-cart-shopping"></i> + Cart
+            </button>
+            <button type="button" class="btn-action-preset" (click)="addActionItem('account')">
+              <i class="fa-solid fa-user"></i> + Account
+            </button>
+            <button type="button" class="btn-action-preset" (click)="addActionItem('phone')">
+              <i class="fa-solid fa-phone"></i> + Phone
+            </button>
+            <button type="button" class="btn-action-preset" (click)="addActionItem('app-download')">
+              <i class="fa-solid fa-mobile-screen-button"></i> + App
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div *ngIf="!headerConfig.actionItems || headerConfig.actionItems.length === 0" class="subcat-empty-state">
+            <p>No action buttons configured yet. Click <strong>"Add Action"</strong> or use the quick buttons above to add Cart, Account, Phone, or custom buttons!</p>
+          </div>
+
+          <div *ngIf="headerConfig.actionItems && headerConfig.actionItems.length > 0" class="actions-list">
+            <ng-container *ngFor="let act of headerConfig.actionItems; let actIdx = index">
+              <div class="action-item-row" [class.action-row-disabled]="act.enabled === false">
+                
+                <!-- Reorder buttons -->
+                <div class="reorder-handle">
+                  <button type="button" class="btn-reorder" [disabled]="actIdx === 0" (click)="moveActionItem(actIdx, 'up')" title="Move up">
+                    <i class="fa-solid fa-chevron-up"></i>
+                  </button>
+                  <button type="button" class="btn-reorder" [disabled]="actIdx === headerConfig.actionItems.length - 1" (click)="moveActionItem(actIdx, 'down')" title="Move down">
+                    <i class="fa-solid fa-chevron-down"></i>
+                  </button>
+                </div>
+
+                <!-- Type Selector -->
+                <div class="action-field-type">
+                  <label class="mini-label">Type</label>
+                  <select [(ngModel)]="act.type" class="hfm-input">
+                    <option value="cart">Cart Counter</option>
+                    <option value="account">Account / Login</option>
+                    <option value="phone">Hotline Phone</option>
+                    <option value="app-download">App Download</option>
+                    <option value="custom-link">Custom Link</option>
+                    <option value="custom-button">Custom Button</option>
+                  </select>
+                </div>
+
+                <!-- Label -->
+                <div class="action-field-label">
+                  <label class="mini-label">{{ act.type === 'account' ? 'Logged-Out Label' : 'Label / Text' }}</label>
+                  <input type="text" [(ngModel)]="act.label" class="hfm-input" placeholder="e.g. Cart, Login, Offers">
+                  <span *ngIf="act.type === 'account' && act.loggedInLabel" class="action-field-subhint">
+                    Logged-in: <strong>{{ act.loggedInLabel }}</strong>
+                  </span>
+                  <span *ngIf="act.type === 'app-download' && act.loggedInLabel" class="action-field-subhint">
+                    Update: <strong>{{ act.loggedInLabel }}</strong>
+                  </span>
+                </div>
+
+                <!-- Icon -->
+                <div class="action-field-icon">
+                  <label class="mini-label">Icon / Emoji</label>
+                  <input type="text" [(ngModel)]="act.icon" class="hfm-input" placeholder="fa-solid fa-tag">
+                </div>
+
+                <!-- Target URL / Redirection Slug -->
+                <div class="action-field-url">
+                  <label class="mini-label">Redirection Slug / URL</label>
+                  <input type="text" [(ngModel)]="act.url" class="hfm-input" placeholder="e.g. /cart, /offers, tel:...">
+                </div>
+
+                <!-- Style Variant -->
+                <div class="action-field-variant">
+                  <label class="mini-label">Variant</label>
+                  <select [(ngModel)]="act.variant" class="hfm-input">
+                    <option value="ghost">Ghost</option>
+                    <option value="pill">Pill Box</option>
+                    <option value="solid">Solid</option>
+                    <option value="outline">Outline</option>
+                  </select>
+                </div>
+
+                <!-- Optional Badge -->
+                <div class="action-field-badge">
+                  <label class="mini-label">Badge</label>
+                  <input type="text" [(ngModel)]="act.badge" class="hfm-input" placeholder="HOT">
+                </div>
+
+                <!-- Grouped Action Controls: Active + Style + Delete -->
+                <div class="action-controls-group">
+                  <div class="action-field-enable">
+                    <label class="mini-label">Active</label>
+                    <label class="hfm-switch-sm" [title]="act.enabled !== false ? 'Action is visible' : 'Action is hidden'">
+                      <input type="checkbox" [checked]="act.enabled !== false" (change)="act.enabled = !act.enabled">
+                      <span class="slider-sm"></span>
+                    </label>
+                  </div>
+
+                  <button type="button" 
+                          class="btn-part-style-toggle"
+                          [class.active]="expandedActionStyleIndex === actIdx"
+                          (click)="toggleActionStyle(actIdx)"
+                          title="Style this particular action button">
+                    <i class="fa-solid fa-palette"></i>
+                    <span>Style</span>
+                  </button>
+
+                  <button type="button" class="btn-del-link" (click)="removeActionItem(actIdx)" title="Delete action">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Particular Style Drawer for this Action Item -->
+              <div *ngIf="expandedActionStyleIndex === actIdx" class="particular-style-panel animate-fade-in" style="margin-top: -6px; margin-bottom: 10px; border-radius: 0 0 10px 10px;">
+                <div class="particular-style-header">
+                  <div class="part-title">
+                    <i class="fa-solid fa-paintbrush"></i>
+                    <span>Particular Style & Options for Action "<strong>{{ act.label || act.type }}</strong>" (Overrides global styling)</span>
+                  </div>
+                  <button type="button" class="btn-close-part" (click)="expandedActionStyleIndex = null">✕</button>
+                </div>
+
+                <div class="particular-style-grid">
+                  <!-- Display Mode -->
+                  <div class="part-field">
+                    <label class="mini-label">Display Mode</label>
+                    <select [(ngModel)]="act.displayMode" class="hfm-input">
+                      <option value="icon-and-label">Icon + Label (Recommended)</option>
+                      <option value="icon-only">Icon Only</option>
+                      <option value="label-only">Label Only</option>
+                    </select>
+                  </div>
+
+                  <!-- Secondary Label for Account & App Download -->
+                  <div *ngIf="act.type === 'account' || act.type === 'app-download'" class="part-field">
+                    <label class="mini-label">{{ act.type === 'account' ? 'Logged-In Label (when authenticated)' : 'Update Available Text' }}</label>
+                    <input type="text" [(ngModel)]="act.loggedInLabel" class="hfm-input" [placeholder]="act.type === 'account' ? 'e.g. Account' : 'e.g. Update App'">
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Text / Icon Color</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="act.color" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="act.color" class="hfm-input hex-input" placeholder="Default">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Background Color</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="act.bgColor" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="act.bgColor" class="hfm-input hex-input" placeholder="Transparent">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Border Color</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="act.borderColor" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="act.borderColor" class="hfm-input hex-input" placeholder="Transparent">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Font Size</label>
+                    <select [(ngModel)]="act.fontSize" class="hfm-input">
+                      <option value="">Inherit Default</option>
+                      <option value="12px">12px (Compact)</option>
+                      <option value="13px">13px (Small)</option>
+                      <option value="14px">14px (Standard)</option>
+                      <option value="15px">15px (Medium)</option>
+                      <option value="16px">16px (Large)</option>
+                    </select>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Font Weight</label>
+                    <select [(ngModel)]="act.fontWeight" class="hfm-input">
+                      <option value="">Inherit Default</option>
+                      <option value="500">Medium (500)</option>
+                      <option value="600">Semi-Bold (600)</option>
+                      <option value="700">Bold (700)</option>
+                      <option value="800">Extra Bold (800)</option>
+                    </select>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Button Corner Radius</label>
+                    <select [(ngModel)]="act.borderRadius" class="hfm-input">
+                      <option value="">Inherit Default</option>
+                      <option value="50px">Full Pill (50px)</option>
+                      <option value="12px">Smooth Rounded (12px)</option>
+                      <option value="6px">Slight Rounded (6px)</option>
+                      <option value="0px">Squared (0px)</option>
+                    </select>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Badge Background</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="act.badgeBg" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="act.badgeBg" class="hfm-input hex-input" placeholder="#ea580c">
+                    </div>
+                  </div>
+
+                  <div class="part-field">
+                    <label class="mini-label">Badge Text Color</label>
+                    <div class="color-picker-group">
+                      <input type="color" [(ngModel)]="act.badgeColor" class="color-swatch-input">
+                      <input type="text" [(ngModel)]="act.badgeColor" class="hfm-input hex-input" placeholder="#ffffff">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 6: CSS - HEADER LAYOUT, SIZING & CONTAINER -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">📐</div>
+          <div>
+            <h3>Header Layout, Sizing & Floating Container</h3>
+            <p>CSS controls for height, container width, and border radius.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Header Vertical Padding</label>
+              <select [(ngModel)]="headerConfig.headerHeight" class="hfm-input">
+                <option value="compact">Compact (6px Padding)</option>
+                <option value="standard">Standard (12px Padding)</option>
+                <option value="spacious">Spacious (20px Padding)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Container Max Width</label>
+              <select [(ngModel)]="headerConfig.containerWidth" class="hfm-input">
+                <option value="1200px">Standard (1200px)</option>
+                <option value="1400px">Wide Cinema (1400px)</option>
+                <option value="100%">Full Width Edge-to-Edge (100%)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Header Corner Radius</label>
+              <select [(ngModel)]="headerConfig.headerRadius" class="hfm-input">
+                <option value="0px">Squared Edge (0px)</option>
+                <option value="8px">Subtle Rounded (8px)</option>
+                <option value="16px">Floating Card Header (16px)</option>
+                <option value="30px">Floating Pill Header (30px)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Sticky Navigation Bar</label>
+              <div class="toggle-row" style="margin-top: 6px;">
+                <span class="toggle-desc">Stick to top while scrolling</span>
+                <label class="hfm-switch">
+                  <input type="checkbox" [(ngModel)]="headerConfig.isSticky">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-divider"></div>
+          <div class="style-subheading">
+            <i class="fa-solid fa-arrows-left-right"></i>
+            <span>Spacing & Gaps Controls (Logo, Nav, Actions)</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Gap: Logo to Location Selector</label>
+              <select [(ngModel)]="headerConfig.logoGap" class="hfm-input">
+                <option value="8px">8px (Very Tight)</option>
+                <option value="12px">12px (Compact)</option>
+                <option value="14px">14px (Recommended)</option>
+                <option value="18px">18px (Comfortable)</option>
+                <option value="24px">24px (Spacious)</option>
+                <option value="32px">32px (Wide)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Gap: Between Navigation Links</label>
+              <select [(ngModel)]="headerConfig.navGap" class="hfm-input">
+                <option value="12px">12px (Compact)</option>
+                <option value="16px">16px (Small)</option>
+                <option value="20px">20px (Standard / Recommended)</option>
+                <option value="24px">24px (Medium)</option>
+                <option value="28px">28px (Spacious)</option>
+                <option value="34px">34px (Generous)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Gap: Between Right Actions</label>
+              <select [(ngModel)]="headerConfig.actionsGap" class="hfm-input">
+                <option value="8px">8px (Compact)</option>
+                <option value="12px">12px (Standard)</option>
+                <option value="14px">14px (Comfortable / Recommended)</option>
+                <option value="18px">18px (Spacious)</option>
+                <option value="24px">24px (Generous)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 7: CSS - COLORS, GLASSMORPHISM & SHADOWS -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">🎨</div>
+          <div>
+            <h3>Colors, Glassmorphism & Shadow Depth</h3>
+            <p>Background colors, frosted glass effects, and elevation shadows.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Header Background</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.bgColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.bgColor" class="hfm-input hex-input" placeholder="#ffffff">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Text & Link Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.textColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.textColor" class="hfm-input hex-input" placeholder="#1e293b">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Accent & Active Highlight Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.accentColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.accentColor" class="hfm-input hex-input" placeholder="#059669">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Elevation / Shadow Depth</label>
+              <select [(ngModel)]="headerConfig.shadowStyle" class="hfm-input">
+                <option value="none">None (Flat)</option>
+                <option value="soft">Soft Gentle Elevation</option>
+                <option value="modern">Modern Elevated (Subtle Glow)</option>
+                <option value="deep">Deep Card Drop Shadow</option>
+                <option value="glow">Accent Color Ambient Glow</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Glassmorphism Options -->
+          <div class="toggle-row" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+            <div>
+              <span class="toggle-title">Frosted Glass (Glassmorphism)</span>
+              <p class="toggle-desc">Translucent background with dynamic backdrop blur effect.</p>
+            </div>
+            <label class="hfm-switch">
+              <input type="checkbox" [(ngModel)]="headerConfig.enableGlassmorphism">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div *ngIf="headerConfig.enableGlassmorphism" class="form-group" style="margin-top: 10px;">
+            <label class="form-label">Backdrop Blur Strength</label>
+            <select [(ngModel)]="headerConfig.glassmorphismBlur" class="hfm-input">
+              <option value="8px">Subtle Blur (8px)</option>
+              <option value="12px">Standard Glass (12px)</option>
+              <option value="20px">Deep Frosted Glass (20px)</option>
+            </select>
+          </div>
+
+          <!-- Border Bottom Options -->
+          <div class="form-row" style="margin-top: 12px;">
+            <div class="form-group">
+              <label class="form-label">Bottom Border Width</label>
+              <select [(ngModel)]="headerConfig.borderBottomWidth" class="hfm-input">
+                <option value="0px">No Border (0px)</option>
+                <option value="1px">Subtle Hairline (1px)</option>
+                <option value="2px">Definite Border (2px)</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="headerConfig.borderBottomWidth && headerConfig.borderBottomWidth !== '0px'">
+              <label class="form-label">Bottom Border Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.borderBottomColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.borderBottomColor" class="hfm-input hex-input" placeholder="#f1f5f9">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 8: CSS - TYPOGRAPHY & SUBCATEGORY STYLING -->
+      <div class="hfm-card full-width">
+        <div class="card-title">
+          <div class="card-icon-badge">🔤</div>
+          <div>
+            <h3>Menu Labels & Subcategory Typography & Style</h3>
+            <p>Full control over font sizes, weights, colors, letter spacing, and dropdown appearance.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- SECTION 1: PARENT NAVIGATION MENU LABELS -->
+          <div class="style-subheading">
+            <i class="fa-solid fa-bars"></i>
+            <span>Main Menu Navigation Labels Styling</span>
+          </div>
+
+          <div class="form-row" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="form-group">
+              <label class="form-label">Font Size</label>
+              <select [(ngModel)]="headerConfig.navFontSize" class="hfm-input">
+                <option value="12px">Extra Small (12px)</option>
+                <option value="13px">Compact (13px)</option>
+                <option value="14px">Standard (14px)</option>
+                <option value="15px">Medium (15px)</option>
+                <option value="16px">Large (16px)</option>
+                <option value="18px">Extra Large (18px)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Font Weight</label>
+              <select [(ngModel)]="headerConfig.navFontWeight" class="hfm-input">
+                <option value="400">Regular (400)</option>
+                <option value="500">Medium (500)</option>
+                <option value="600">Semi-Bold (600)</option>
+                <option value="700">Bold (700)</option>
+                <option value="800">Extra Bold (800)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Text Transform</label>
+              <select [(ngModel)]="headerConfig.navTextTransform" class="hfm-input">
+                <option value="none">Normal (As Typed)</option>
+                <option value="uppercase">UPPERCASE</option>
+                <option value="capitalize">Capitalize Words</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Letter Spacing</label>
+              <select [(ngModel)]="headerConfig.navLetterSpacing" class="hfm-input">
+                <option value="0px">Normal (0px)</option>
+                <option value="0.5px">Slight (0.5px)</option>
+                <option value="1px">Wide (1px)</option>
+                <option value="1.5px">Spaced (1.5px)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Active Link Indicator Style</label>
+              <select [(ngModel)]="headerConfig.navActiveStyle" class="hfm-input">
+                <option value="underline">Sliding Underline (Default)</option>
+                <option value="pill">Pill Badge Background</option>
+                <option value="glow">Subtle Text Glow</option>
+                <option value="dot">Centered Dot Below</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card-divider" style="margin: 20px 0 16px 0;"></div>
+
+          <!-- SECTION 2: SUBCATEGORY ITEMS & DROPDOWN STYLING -->
+          <div class="style-subheading">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Subcategory Items & Dropdown Menu Styling</span>
+          </div>
+
+          <div class="form-row" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="form-group">
+              <label class="form-label">Subcategory Name Size</label>
+              <select [(ngModel)]="headerConfig.subcatNameFontSize" class="hfm-input">
+                <option value="12px">Compact (12px)</option>
+                <option value="13px">Small (13px)</option>
+                <option value="13.5px">Standard (13.5px)</option>
+                <option value="14px">Medium (14px)</option>
+                <option value="15px">Large (15px)</option>
+                <option value="16px">Extra Large (16px)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Subcategory Name Weight</label>
+              <select [(ngModel)]="headerConfig.subcatNameFontWeight" class="hfm-input">
+                <option value="500">Medium (500)</option>
+                <option value="600">Semi-Bold (600)</option>
+                <option value="700">Bold (700)</option>
+                <option value="800">Extra Bold (800)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Subcategory Name Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.subcatNameColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.subcatNameColor" class="hfm-input hex-input" placeholder="#0f172a">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" style="grid-template-columns: repeat(3, 1fr); margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Description Font Size</label>
+              <select [(ngModel)]="headerConfig.subcatDescFontSize" class="hfm-input">
+                <option value="10.5px">Compact (10.5px)</option>
+                <option value="11.5px">Standard (11.5px)</option>
+                <option value="12.5px">Medium (12.5px)</option>
+                <option value="13.5px">Large (13.5px)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description Font Weight</label>
+              <select [(ngModel)]="headerConfig.subcatDescFontWeight" class="hfm-input">
+                <option value="400">Regular (400)</option>
+                <option value="500">Medium (500)</option>
+                <option value="600">Semi-Bold (600)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description Text Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="headerConfig.subcatDescColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="headerConfig.subcatDescColor" class="hfm-input hex-input" placeholder="#64748b">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" style="grid-template-columns: repeat(4, 1fr); margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Subcategory Icon Size</label>
+              <select [(ngModel)]="headerConfig.subcatIconSize" class="hfm-input">
+                <option value="18px">Small (18px)</option>
+                <option value="20px">Regular (20px)</option>
+                <option value="22px">Standard (22px)</option>
+                <option value="26px">Large (26px)</option>
+                <option value="30px">Jumbo (30px)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Item Corner Radius</label>
+              <select [(ngModel)]="headerConfig.subcatItemRadius" class="hfm-input">
+                <option value="6px">Slight (6px)</option>
+                <option value="8px">Rounded (8px)</option>
+                <option value="10px">Smooth (10px)</option>
+                <option value="14px">Card Pill (14px)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Dropdown Card Theme</label>
+              <select [(ngModel)]="headerConfig.dropdownStyle" class="hfm-input">
+                <option value="light">Clean Light (White Card)</option>
+                <option value="dark">Deep Slate (Dark Mode Card)</option>
+                <option value="glass">Frosted Glassmorphism</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Dropdown Grid Layout</label>
+              <select [(ngModel)]="headerConfig.dropdownColumns" class="hfm-input">
+                <option value="1">1 Column Standard List</option>
+                <option value="2">2 Columns Mega Menu Grid</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="hfm-action-bar">
+      <button type="button" class="btn-hfm-reset" (click)="resetHeaderDefaults()">
+        <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+      </button>
+      <button type="button" class="btn-hfm-save" [disabled]="isSaving" (click)="saveHeaderSettings()">
+        <i class="fa-solid" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-check]="!isSaving"></i>
+        <span>{{ isSaving ? 'Saving Changes...' : 'Save & Publish Header' }}</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ==================== FOOTER CONFIGURATION TAB ==================== -->
+  <div *ngIf="activeTab === 'footer'" class="hfm-section animate-fade-in">
+    <div class="hfm-grid">
+
+      <!-- FOOTER BRANDING & ABOUT -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">📝</div>
+          <div>
+            <h3>Footer Brand & About Info</h3>
+            <p>Catchy brand tagline and about snippet in footer.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Brand Tagline</label>
+            <input type="text" [(ngModel)]="footerConfig.tagline" class="hfm-input" placeholder="Ghar jaisa swaad, har baar!">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">About Us Description</label>
+            <textarea [(ngModel)]="footerConfig.aboutText" class="hfm-textarea" rows="3" placeholder="Meerut's favourite cloud kitchen..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER CONTACT & ADDRESS -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">📍</div>
+          <div>
+            <h3>Contact Information</h3>
+            <p>Support contact details displayed in footer.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Support Phone</label>
+            <input type="text" [(ngModel)]="footerConfig.phone" class="hfm-input" placeholder="+91 8218870579">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Support Email</label>
+            <input type="email" [(ngModel)]="footerConfig.email" class="hfm-input" placeholder="contact@foodybhai.in">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kitchen / Office Address</label>
+            <input type="text" [(ngModel)]="footerConfig.address" class="hfm-input" placeholder="226 Bhatwara, Meerut, UP 250002">
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER SOCIAL & LEGAL -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">🌐</div>
+          <div>
+            <h3>Social Media & Copyright</h3>
+            <p>Connect links and copyright statement.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Instagram Profile URL</label>
+            <input type="url" [(ngModel)]="footerConfig.instagramUrl" class="hfm-input" placeholder="https://instagram.com/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Facebook Profile URL</label>
+            <input type="url" [(ngModel)]="footerConfig.facebookUrl" class="hfm-input" placeholder="https://facebook.com/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Twitter / X URL</label>
+            <input type="url" [(ngModel)]="footerConfig.twitterUrl" class="hfm-input" placeholder="https://twitter.com/...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Copyright Notice</label>
+            <input type="text" [(ngModel)]="footerConfig.copyrightText" class="hfm-input" placeholder="© 2026 Foody Bhai. All rights reserved.">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Actions Bar -->
+    <div class="hfm-action-bar">
+      <button type="button" class="btn-hfm-reset" (click)="resetFooterDefaults()">
+        <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+      </button>
+      <button type="button" class="btn-hfm-save" [disabled]="isSaving" (click)="saveFooterSettings()">
+        <i class="fa-solid" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-check]="!isSaving"></i>
+        <span>{{ isSaving ? 'Saving Changes...' : 'Save & Publish Footer' }}</span>
+      </button>
+    </div>
+  </div>
+
+</div>

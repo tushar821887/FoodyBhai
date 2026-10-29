@@ -157,6 +157,14 @@ export class OrdersService {
       }
     }
 
+    if (orderData?.orderType === 'pickup') {
+      orderData.deliveryFee = 0;
+      orderData.deliveryCharge = 0;
+      orderData.orderType = 'pickup';
+    } else {
+      orderData.orderType = 'delivery';
+    }
+
     const order = new this.orderModel({
       userId: resolvedUserId,
       ...orderData
@@ -551,5 +559,37 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
     this.emitOrderEvent('reassign_resolved', order);
     return order;
+  }
+
+  async getPendingAlert(): Promise<any> {
+    const pendingOrders = await this.orderModel
+      .find({ status: 'pending' })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .lean()
+      .exec();
+
+    const pendingCount = await this.orderModel.countDocuments({ status: 'pending' });
+
+    if (!pendingOrders || pendingOrders.length === 0) {
+      return {
+        hasPending: false,
+        pendingCount: 0,
+        latestOrderId: null,
+      };
+    }
+
+    const latest = pendingOrders[0];
+    return {
+      hasPending: true,
+      pendingCount,
+      latestOrderId: latest._id.toString(),
+      latestOrderTime: latest.createdAt,
+      totalAmount: latest.totalAmount || 0,
+      customerName: latest.deliveryDetails?.name || 'Customer',
+      customerPhone: latest.deliveryDetails?.phone || '',
+      orderType: latest.orderType || 'delivery',
+      itemsCount: latest.items?.length || 1,
+    };
   }
 }

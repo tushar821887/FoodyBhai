@@ -7,7 +7,7 @@
 </div>
 
 <!-- Mobile Smart App Banner (For web visitors on Android/Mobile) -->
-<aside *ngIf="!appUpdate.isNative && appUpdate.isAndroid && !appUpdate.isDismissed" class="mobile-app-banner animate-fade-in" aria-label="FoodyBhai Mobile App Banner">
+<aside *ngIf="!appUpdate.isNative && appUpdate.isAndroid && !appUpdate.isDismissed" class="mobile-app-banner animate-fade-in" [class.has-floating-cart]="hasFloatingCart$ | async" aria-label="FoodyBhai Mobile App Banner">
   <div class="banner-inner">
     <button class="banner-close" (click)="appUpdate.dismissBanner()" aria-label="Dismiss app banner">
       <i class="fa-solid fa-xmark"></i>

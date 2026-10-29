@@ -19,5 +19,6 @@ export const routes: Routes = [
   { path: 'banner', component: OrdersPage, data: { view: 'banner' } },
   { path: 'theme', component: OrdersPage, data: { view: 'theme' } },
   { path: 'cms', component: OrdersPage, data: { view: 'cms' } },
+  { path: 'header-footer', component: OrdersPage, data: { view: 'header-footer' } },
   { path: '**', redirectTo: 'dashboard' }
 ];

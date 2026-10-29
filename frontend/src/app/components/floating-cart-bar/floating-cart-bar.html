@@ -1,0 +1,34 @@
+@if (isVisible$ | async) {
+  <div class="blinkit-cart-bar-wrapper animate-slide-up" [class.is-native]="appUpdate.isNative">
+    <div 
+      class="blinkit-cart-bar" 
+      (click)="goToCart($event)" 
+      role="button" 
+      tabindex="0" 
+      aria-label="View Cart"
+      (keydown.enter)="goToCart($event)"
+      (keydown.space)="goToCart($event)">
+      
+      <!-- Left side: Cart Icon & Quantity / Price -->
+      <div class="bar-left">
+        <div class="cart-icon-box" aria-hidden="true">
+          <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+        <div class="cart-meta">
+          <span class="cart-count">
+            {{ (totalQuantity$ | async) }} {{ (totalQuantity$ | async) === 1 ? 'item' : 'items' }}
+          </span>
+          <span class="cart-price">
+            ₹ {{ (totalPrice$ | async) | number:'1.0-2' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Right side: View Cart CTA -->
+      <div class="bar-right">
+        <span class="cta-text">View Cart</span>
+        <i class="fa-solid fa-caret-right cta-icon" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+}

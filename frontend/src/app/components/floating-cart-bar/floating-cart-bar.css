@@ -1,0 +1,143 @@
+/* Outer Wrapper */
+.blinkit-cart-bar-wrapper {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  z-index: 1055;
+  display: none;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Display on mobile viewports */
+@media (max-width: 768px) {
+  .blinkit-cart-bar-wrapper {
+    display: flex;
+  }
+}
+
+/* Also display when running inside Capacitor Native Mobile App */
+.blinkit-cart-bar-wrapper.is-native {
+  display: flex !important;
+}
+
+/* The Blinkit Floating Bar */
+.blinkit-cart-bar {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 480px;
+  background-color: #0c831f; /* Blinkit signature green */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(12, 131, 31, 0.42), 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.blinkit-cart-bar:hover {
+  filter: brightness(1.03);
+  box-shadow: 0 10px 28px rgba(12, 131, 31, 0.5), 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.blinkit-cart-bar:active {
+  transform: scale(0.985);
+  filter: brightness(0.94);
+  box-shadow: 0 4px 12px rgba(12, 131, 31, 0.35);
+}
+
+/* Left Section: Icon & Price details */
+.bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cart-icon-box {
+  width: 38px;
+  height: 38px;
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 16px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cart-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cart-count {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.15;
+  letter-spacing: -0.1px;
+}
+
+.cart-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+}
+
+/* Right Section: View Cart CTA */
+.bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cta-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.cta-icon {
+  font-size: 15px;
+  color: #ffffff;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.blinkit-cart-bar:hover .cta-icon {
+  transform: translateX(3px);
+}
+
+/* Entrance Animation */
+@keyframes blinkitSlideUp {
+  0% {
+    transform: translateY(115%) scale(0.96);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(-4px) scale(1.01);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: blinkitSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

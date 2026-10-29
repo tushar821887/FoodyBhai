@@ -529,6 +529,10 @@
 }
 
 @media (max-width: 768px) {
+  .profile-page-wrapper {
+    min-height: auto;
+    padding-bottom: 1.5rem;
+  }
   .profile-cover {
     height: 120px;
   }

@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { isPlatformBrowser, CommonModule, Location } from '@angular/common';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { RecipeService, Recipe } from '../../services/recipe.service';
 import { MenuCard } from '../../components/menu-card/menu-card';
@@ -21,10 +20,20 @@ export class Category implements OnInit {
   isLoading = true;
 
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private location = inject(Location);
   private recipeService = inject(RecipeService);
   private meta = inject(Meta);
   private title = inject(Title);
   private platformId = inject(PLATFORM_ID);
+
+  goBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/menu']);
+    }
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {

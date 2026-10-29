@@ -43,6 +43,11 @@ export class OrdersController {
     return this.ordersService.cancelOrderCustomer(id, reason);
   }
 
+  @Get('pending-alert')
+  async getPendingAlert() {
+    return this.ordersService.getPendingAlert();
+  }
+
   @Get('restaurant/stats')
   async getRestaurantStats() {
     return this.ordersService.getRestaurantStats();

@@ -1,8 +1,18 @@
 <div class="page-header">
-  <div class="container text-center animate-fade-in">
-    <div class="breadcrumbs mb-3">
-      <a routerLink="/">Home</a> > <a routerLink="/menu">Menu</a> > {{categoryName}}
+  <div class="container animate-fade-in">
+    <div class="category-nav-header">
+      <button type="button" class="back-btn" (click)="goBack()" aria-label="Go back to previous page" title="Go back">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back</span>
+      </button>
+
+      <div class="breadcrumbs desktop-breadcrumbs">
+        <a routerLink="/">Home</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+        <a routerLink="/menu">Menu</a> <i class="fa-solid fa-chevron-right breadcrumb-sep"></i> 
+        <span>{{categoryName}}</span>
+      </div>
     </div>
+
     <h1 class="page-title">{{categoryName}} <span>Menu</span></h1>
     <p class="page-subtitle" style="max-width: 800px; margin: 0 auto;">{{categoryDesc}}</p>
   </div>

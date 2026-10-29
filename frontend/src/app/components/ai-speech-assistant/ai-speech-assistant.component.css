@@ -686,5 +686,8 @@
     right: 14px;
     padding: 7px 14px 7px 8px;
   }
+  .ai-copilot-trigger.has-floating-cart {
+    bottom: calc(130px + env(safe-area-inset-bottom, 0px));
+  }
   .ai-trigger-sub { display: none; }
 }

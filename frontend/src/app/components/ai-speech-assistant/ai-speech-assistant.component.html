@@ -3,6 +3,7 @@
   type="button" 
   class="ai-copilot-trigger animate-fade-in"
   [class.is-listening]="isListening$ | async"
+  [class.has-floating-cart]="hasFloatingCart$ | async"
   (click)="toggleAssistant()"
   title="Foody AI Copilot — Order by Voice or Text">
   <div class="ai-trigger-orb">

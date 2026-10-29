@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { CommonModule, Location } from '@angular/common';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RecipeService, Recipe } from '../../services/recipe.service';
 import { CartService } from '../../services/cart.service';
@@ -19,11 +19,21 @@ export class RecipeDetail implements OnInit {
   isLoading = true;
 
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private location = inject(Location);
   private recipeService = inject(RecipeService);
   private meta = inject(Meta);
   private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
   private cartService = inject(CartService);
+
+  goBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/menu']);
+    }
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -78,6 +88,15 @@ export class RecipeDetail implements OnInit {
   getCategorySlug(categoryName: string): string {
     if (!categoryName) return '';
     return categoryName.toLowerCase().replace(/ & /g, '-and-').replace(/ /g, '-');
+  }
+
+  getCleanRecipeHtml(html?: string): string {
+    if (!html) return '';
+    return html
+      .replace(/<div[^>]*>[\s\S]*?(?:Chef's Ingredients|Chef's Recipe Ingredients|Ingredients & Spices)[\s\S]*?<\/ul>[\s\S]*?<\/div>/gi, '')
+      .replace(/<h[1-6][^>]*>[\s\S]*?(?:Chef's Ingredients|Chef's Recipe Ingredients|Ingredients & Spices)[\s\S]*?<\/h[1-6]>(\s*<ul[^>]*>[\s\S]*?<\/ul>)?/gi, '')
+      .replace(/<p>\s*(<br\s*\/?>|&nbsp;|\s)*<\/p>/gi, '')
+      .trim();
   }
 
   private setSeoTags(recipe: Recipe) {
