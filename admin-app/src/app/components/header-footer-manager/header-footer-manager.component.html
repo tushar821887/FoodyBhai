@@ -1370,83 +1370,770 @@
 
   <!-- ==================== FOOTER CONFIGURATION TAB ==================== -->
   <div *ngIf="activeTab === 'footer'" class="hfm-section animate-fade-in">
+
+    <!-- LIVE FOOTER PREVIEW STUDIO -->
+    <div class="hfm-preview-card">
+      <div class="preview-card-header">
+        <div class="preview-card-title">
+          <i class="fa-solid fa-eye"></i>
+          <span>Live Interactive Footer Preview</span>
+          <span class="live-pill">REAL-TIME CSS & LAYOUT</span>
+        </div>
+        <div class="preview-mode-switch">
+          <button type="button" 
+                  class="preview-toggle-btn" 
+                  [class.active]="footerPreviewMode === 'desktop'"
+                  (click)="footerPreviewMode = 'desktop'">
+            <i class="fa-solid fa-desktop"></i> Desktop View
+          </button>
+          <button type="button" 
+                  class="preview-toggle-btn" 
+                  [class.active]="footerPreviewMode === 'mobile'"
+                  (click)="footerPreviewMode = 'mobile'">
+            <i class="fa-solid fa-mobile-screen"></i> Mobile View
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Stage -->
+      <div class="preview-stage" [class.mobile-stage]="footerPreviewMode === 'mobile'" style="padding: 24px; display: block; overflow-x: auto;">
+        
+        <!-- Desktop Footer Mockup -->
+        <div *ngIf="footerPreviewMode === 'desktop'" 
+             class="mock-footer-wrap"
+             [style.backgroundColor]="footerConfig.bgColor || '#071811'"
+             [style.color]="footerConfig.textColor || '#a4b0be'"
+             [style.paddingTop]="footerConfig.paddingTop || '3.5rem'"
+             [style.paddingBottom]="footerConfig.paddingBottom || '0'">
+          
+          <div class="mock-footer-container" [style.maxWidth]="footerConfig.containerWidth || '1280px'">
+            <div class="mock-footer-grid" 
+                 [style.gridTemplateColumns]="getPreviewGridColumns()"
+                 [style.gap]="footerConfig.columnsGap || '2rem'">
+              
+              <!-- Brand Column -->
+              <div *ngIf="footerConfig.showBrandColumn !== false" class="mock-footer-col mock-footer-brand">
+                <div class="mock-footer-logo-wrap">
+                  <img [src]="footerConfig.logoUrl || '/assets/images/logo.png'" 
+                       [alt]="footerConfig.logoAlt || 'Logo'"
+                       [style.height]="footerConfig.logoHeight || '75px'"
+                       [style.borderColor]="footerConfig.logoBorderColor || ''"
+                       [ngClass]="'logo-shape-' + (footerConfig.logoShape || 'natural')"
+                       onerror="this.src='assets/logo.png'">
+                </div>
+                <p class="mock-footer-desc" [style.color]="footerConfig.textColor || '#a4b0be'">
+                  {{ footerConfig.aboutText || footerConfig.tagline }}
+                </p>
+                <div *ngIf="footerConfig.showSocial !== false && getVisibleSocialLinks().length > 0" class="mock-footer-social">
+                  <span *ngFor="let soc of getVisibleSocialLinks()" 
+                        class="mock-social-chip"
+                        [ngClass]="'social-chip-' + (footerConfig.socialStyle || 'circle')">
+                    <i [class]="soc.icon"></i>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Dynamic Sections -->
+              <div *ngFor="let sec of getVisibleFooterSections()" 
+                   class="mock-footer-col"
+                   [style.gridColumn]="sec.columnSpan ? ('span ' + sec.columnSpan) : ''">
+                
+                <h4 class="mock-footer-heading"
+                    [style.color]="sec.titleColor || footerConfig.headingColor || '#ffffff'"
+                    [style.fontSize]="sec.titleFontSize || footerConfig.titleFontSize || '1.15rem'"
+                    [style.fontWeight]="sec.titleFontWeight || footerConfig.titleFontWeight || '700'"
+                    [style.textTransform]="footerConfig.titleTextTransform || 'none'"
+                    [class.has-underline]="sec.showUnderline !== false && footerConfig.showTitleUnderline !== false"
+                    [style.--underline-color]="sec.underlineColor || footerConfig.titleUnderlineColor || footerConfig.accentColor || '#10b981'">
+                  {{ sec.title }}
+                </h4>
+
+                <!-- Items list -->
+                <ul class="mock-footer-items-list">
+                  <li *ngFor="let item of getVisibleFooterItems(sec)">
+                    <span *ngIf="item.type === 'app-download'" class="mock-footer-app-btn" [style.color]="item.color || footerConfig.accentColor || '#10b981'">
+                      <i [class]="item.icon || 'fa-solid fa-mobile-screen-button'"></i>
+                      <span>{{ item.label }}</span>
+                    </span>
+                    <span *ngIf="item.type !== 'app-download'" class="mock-footer-item-link" [style.color]="item.color || sec.itemsColor || footerConfig.textColor || '#a4b0be'">
+                      <i *ngIf="item.icon" [class]="item.icon + ' mock-item-icon'" [style.color]="sec.underlineColor || footerConfig.accentColor || '#10b981'"></i>
+                      <span>{{ item.label }}</span>
+                      <span *ngIf="item.badge" class="mock-item-badge" [style.background]="item.badgeBg || footerConfig.accentColor || '#10b981'">
+                        {{ item.badge }}
+                      </span>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+            <!-- Mock Bottom Bar -->
+            <div *ngIf="footerConfig.showBottomBar !== false" 
+                 class="mock-footer-bottom"
+                 [style.backgroundColor]="footerConfig.bottomBarBg || 'transparent'"
+                 [style.borderTopColor]="footerConfig.bottomBarBorderColor || 'rgba(255, 255, 255, 0.1)'"
+                 [style.color]="footerConfig.bottomBarTextColor || footerConfig.textColor || '#a4b0be'"
+                 [style.textAlign]="footerConfig.bottomBarAlign || 'center'">
+              <p>{{ getFormattedCopyrightPreview() }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Footer Mockup -->
+        <div *ngIf="footerPreviewMode === 'mobile'" 
+             class="mock-mobile-footer-wrap"
+             [style.backgroundColor]="footerConfig.bgColor || '#071811'"
+             [style.color]="footerConfig.textColor || '#a4b0be'">
+          <div class="mock-mobile-footer-brand">
+            <img [src]="footerConfig.logoUrl || '/assets/images/logo.png'" 
+                 [alt]="footerConfig.logoAlt || 'Logo'"
+                 style="height: 60px; object-fit: contain;"
+                 onerror="this.src='assets/logo.png'">
+            <p style="font-size: 12px; margin: 8px 0;">{{ footerConfig.aboutText }}</p>
+            <div class="mock-footer-social">
+              <span *ngFor="let soc of getVisibleSocialLinks()" class="mock-social-chip">
+                <i [class]="soc.icon"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="mock-mobile-footer-sections">
+            <div *ngFor="let sec of getVisibleFooterSections()" class="mock-mobile-sec-chip-group">
+              <h5 [style.color]="sec.titleColor || footerConfig.headingColor || '#ffffff'">{{ sec.title }}</h5>
+              <div class="mock-mobile-items-chips">
+                <span *ngFor="let item of getVisibleFooterItems(sec)" class="mock-mobile-item-pill">
+                  {{ item.label }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock-mobile-copyright">
+            <p>{{ getFormattedCopyrightPreview() }}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FOOTER SETTINGS GRID -->
     <div class="hfm-grid">
 
-      <!-- FOOTER BRANDING & ABOUT -->
+      <!-- CARD 1: BRAND COLUMN & SOCIAL MEDIA -->
       <div class="hfm-card">
         <div class="card-title">
-          <div class="card-icon-badge">📝</div>
+          <div class="card-icon-badge">🏷️</div>
           <div>
             <h3>Footer Brand & About Info</h3>
-            <p>Catchy brand tagline and about snippet in footer.</p>
+            <p>Catchy brand tagline, about description, logo, and social channels.</p>
           </div>
         </div>
 
         <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Brand Tagline</label>
-            <input type="text" [(ngModel)]="footerConfig.tagline" class="hfm-input" placeholder="Ghar jaisa swaad, har baar!">
+          <div class="toggle-row" style="margin-bottom: 14px;">
+            <label class="hfm-switch">
+              <input type="checkbox" [(ngModel)]="footerConfig.showBrandColumn">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label">Show Brand Column in Footer</span>
           </div>
 
           <div class="form-group">
-            <label class="form-label">About Us Description</label>
-            <textarea [(ngModel)]="footerConfig.aboutText" class="hfm-textarea" rows="3" placeholder="Meerut's favourite cloud kitchen..."></textarea>
+            <label class="form-label">Logo Image URL</label>
+            <div class="logo-input-wrapper">
+              <div class="logo-preview-box">
+                <img [src]="footerConfig.logoUrl || '/assets/images/logo.png'" 
+                     alt="Logo"
+                     onerror="this.src='assets/logo.png'">
+              </div>
+              <input type="text" [(ngModel)]="footerConfig.logoUrl" class="hfm-input" placeholder="/assets/images/logo.png">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Logo Height</label>
+              <select [(ngModel)]="footerConfig.logoHeight" class="hfm-input">
+                <option value="60px">60px (Compact)</option>
+                <option value="70px">70px (Medium)</option>
+                <option value="80px">80px (Standard / Recommended)</option>
+                <option value="100px">100px (Large)</option>
+                <option value="120px">120px (Prominent)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Logo Shape</label>
+              <select [(ngModel)]="footerConfig.logoShape" class="hfm-input">
+                <option value="natural">Natural (No crop)</option>
+                <option value="circle">Circular Avatar</option>
+                <option value="rounded">Rounded Box (12px)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">About Us Description / Tagline</label>
+            <textarea [(ngModel)]="footerConfig.aboutText" class="hfm-textarea" rows="3" placeholder="Your ultimate destination for discovering authentic, easy-to-follow, and delicious recipes..."></textarea>
+          </div>
+
+          <div class="card-divider"></div>
+          <div class="style-subheading">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>Social Media Channels</span>
+          </div>
+
+          <div class="form-row" style="margin-bottom: 12px;">
+            <div class="toggle-row">
+              <label class="hfm-switch-sm">
+                <input type="checkbox" [(ngModel)]="footerConfig.showSocial">
+                <span class="slider-sm"></span>
+              </label>
+              <span class="toggle-label" style="font-size: 13px;">Show Social Icons</span>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <select [(ngModel)]="footerConfig.socialStyle" class="hfm-input">
+                <option value="circle">Circular Icons (50%)</option>
+                <option value="rounded">Rounded Square (8px)</option>
+                <option value="pill">Pill Box</option>
+                <option value="square">Square (0px)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Social Links Manager -->
+          <div class="social-links-list">
+            <div *ngFor="let soc of footerConfig.socialLinks; let sIdx = index" class="social-item-row">
+              <input type="text" [(ngModel)]="soc.icon" class="hfm-input text-center" style="max-width: 50px;" placeholder="fa-brands...">
+              <input type="text" [(ngModel)]="soc.name" class="hfm-input" style="max-width: 100px;" placeholder="Facebook">
+              <input type="url" [(ngModel)]="soc.url" class="hfm-input" style="flex: 1;" placeholder="https://...">
+              
+              <label class="hfm-switch-sm" title="Enable / Disable">
+                <input type="checkbox" [checked]="soc.enabled !== false" (change)="soc.enabled = !soc.enabled">
+                <span class="slider-sm"></span>
+              </label>
+              <button type="button" class="btn-del-subcat" (click)="removeFooterSocialLink(sIdx)">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="btn-subcat-quick" style="margin-top: 8px;" (click)="addFooterSocialLink()">
+            <i class="fa-solid fa-plus"></i> Add Social Link
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD 3: FOOTER LAYOUT & GRID COLUMNS MANAGER -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">📐</div>
+          <div>
+            <h3>Footer Layout & Grid Columns</h3>
+            <p>Control how many sections display in a row, gaps, and responsive container.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Sections in a Row (Desktop)</label>
+              <select [(ngModel)]="footerConfig.columnsPerRow" class="hfm-input">
+                <option value="2">2 Columns (Side-by-Side)</option>
+                <option value="3">3 Columns</option>
+                <option value="4">4 Columns (Recommended - Matches Screenshot)</option>
+                <option value="5">5 Columns (Wide)</option>
+                <option value="auto">Auto-Fit (Fluid Responsive)</option>
+              </select>
+              <span class="form-hint">Determines horizontal distribution of sections.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Brand Column Width Ratio</label>
+              <select [(ngModel)]="footerConfig.brandColumnSpan" class="hfm-input">
+                <option value="1">1fr (Equal Width)</option>
+                <option value="1.5">1.5fr (Medium)</option>
+                <option value="1.8">1.8fr (Standard / Recommended)</option>
+                <option value="2">2fr (Prominent)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Columns Gap</label>
+              <select [(ngModel)]="footerConfig.columnsGap" class="hfm-input">
+                <option value="1.5rem">1.5rem (24px - Compact)</option>
+                <option value="2rem">2rem (32px - Standard / Recommended)</option>
+                <option value="2.5rem">2.5rem (40px - Spacious)</option>
+                <option value="3rem">3rem (48px - Extra Wide)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Max Container Width</label>
+              <select [(ngModel)]="footerConfig.containerWidth" class="hfm-input">
+                <option value="1200px">1200px (Compact)</option>
+                <option value="1280px">1280px (Standard / Recommended)</option>
+                <option value="1400px">1400px (Wide)</option>
+                <option value="100%">100% (Full Bleed)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Top Padding</label>
+              <select [(ngModel)]="footerConfig.paddingTop" class="hfm-input">
+                <option value="2.5rem">2.5rem (40px)</option>
+                <option value="3rem">3rem (48px)</option>
+                <option value="4rem">4rem (64px - Standard)</option>
+                <option value="5rem">5rem (80px - Spacious)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Bottom Padding</label>
+              <select [(ngModel)]="footerConfig.paddingBottom" class="hfm-input">
+                <option value="0">0 (Flush to Bottom Bar)</option>
+                <option value="1.5rem">1.5rem (24px)</option>
+                <option value="2rem">2rem (32px)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- FOOTER CONTACT & ADDRESS -->
-      <div class="hfm-card">
+      <!-- CARD 2: DYNAMIC FOOTER SECTIONS MANAGER (FULL WIDTH) -->
+      <div class="hfm-card full-width">
         <div class="card-title">
-          <div class="card-icon-badge">📍</div>
-          <div>
-            <h3>Contact Information</h3>
-            <p>Support contact details displayed in footer.</p>
+          <div class="card-icon-badge">⚡</div>
+          <div style="flex: 1;">
+            <h3>Dynamic Footer Sections Manager</h3>
+            <p>Create, reorder, and customize footer sections (Quick Links, Legal, Contact Us, Explore, Custom Links, etc.).</p>
+          </div>
+          <div class="actions-quick-bar">
+            <button type="button" class="btn-subcat-quick" (click)="addFooterSection('links')">
+              <i class="fa-solid fa-plus"></i> Add Section
+            </button>
+            <button type="button" class="btn-action-preset" (click)="quickAddFooterSectionPreset('quick-links')">
+              <i class="fa-solid fa-link"></i> + Quick Links
+            </button>
+            <button type="button" class="btn-action-preset" (click)="quickAddFooterSectionPreset('legal')">
+              <i class="fa-solid fa-scale-balanced"></i> + Legal
+            </button>
+            <button type="button" class="btn-action-preset" (click)="quickAddFooterSectionPreset('contact')">
+              <i class="fa-solid fa-address-book"></i> + Contact Us
+            </button>
+            <button type="button" class="btn-action-preset" (click)="quickAddFooterSectionPreset('help')">
+              <i class="fa-solid fa-circle-question"></i> + Help & FAQ
+            </button>
           </div>
         </div>
 
         <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Support Phone</label>
-            <input type="text" [(ngModel)]="footerConfig.phone" class="hfm-input" placeholder="+91 8218870579">
+          <div *ngIf="!footerConfig.sections || footerConfig.sections.length === 0" class="subcat-empty-state">
+            <p>No footer sections configured yet. Click <strong>"Add Section"</strong> or use the preset buttons above to add Quick Links, Legal, or Contact Us!</p>
           </div>
-          <div class="form-group">
-            <label class="form-label">Support Email</label>
-            <input type="email" [(ngModel)]="footerConfig.email" class="hfm-input" placeholder="contact@foodybhai.in">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Kitchen / Office Address</label>
-            <input type="text" [(ngModel)]="footerConfig.address" class="hfm-input" placeholder="226 Bhatwara, Meerut, UP 250002">
+
+          <div *ngIf="footerConfig.sections && footerConfig.sections.length > 0" class="footer-sections-list">
+            <ng-container *ngFor="let sec of footerConfig.sections; let secIdx = index">
+              
+              <!-- Section Header Block -->
+              <div class="footer-sec-block" [class.sec-disabled]="sec.enabled === false">
+                <div class="footer-sec-row">
+                  
+                  <!-- Reorder buttons -->
+                  <div class="reorder-handle">
+                    <button type="button" class="btn-reorder" [disabled]="secIdx === 0" (click)="moveFooterSection(secIdx, 'up')" title="Move section up">
+                      <i class="fa-solid fa-chevron-up"></i>
+                    </button>
+                    <button type="button" class="btn-reorder" [disabled]="secIdx === footerConfig.sections.length - 1" (click)="moveFooterSection(secIdx, 'down')" title="Move section down">
+                      <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                  </div>
+
+                  <!-- Section Title -->
+                  <div class="sec-field-title" style="flex: 1.5; min-width: 140px;">
+                    <label class="mini-label">Section Title</label>
+                    <input type="text" [(ngModel)]="sec.title" class="hfm-input" placeholder="e.g. Quick Links, Legal">
+                  </div>
+
+                  <!-- Section Type -->
+                  <div class="sec-field-type" style="width: 135px; min-width: 125px;">
+                    <label class="mini-label">Type</label>
+                    <select [(ngModel)]="sec.type" class="hfm-input">
+                      <option value="links">Navigation Links</option>
+                      <option value="contact">Contact Information</option>
+                      <option value="text">Informational Text</option>
+                    </select>
+                  </div>
+
+                  <!-- Items Drawer Toggle Button -->
+                  <div class="sec-field-items-toggle">
+                    <button type="button" 
+                            class="btn-sec-items-toggle" 
+                            [class.active]="expandedFooterSectionIndex === secIdx"
+                            (click)="toggleFooterSectionExpand(secIdx)">
+                      <i class="fa-solid fa-list-check"></i>
+                      <span>Items ({{ sec.items ? sec.items.length : 0 }})</span>
+                      <i class="fa-solid fa-chevron-down subcat-caret" [class.open]="expandedFooterSectionIndex === secIdx"></i>
+                    </button>
+                  </div>
+
+                  <!-- Underline Toggle -->
+                  <div class="sec-field-underline">
+                    <label class="mini-label">Underline</label>
+                    <label class="hfm-switch-sm" title="Show or hide title underline accent">
+                      <input type="checkbox" [checked]="sec.showUnderline !== false" (change)="sec.showUnderline = !sec.showUnderline">
+                      <span class="slider-sm"></span>
+                    </label>
+                  </div>
+
+                  <!-- Active Switch -->
+                  <div class="sec-field-enable">
+                    <label class="mini-label">Active</label>
+                    <label class="hfm-switch-sm" title="Show or hide this entire section">
+                      <input type="checkbox" [checked]="sec.enabled !== false" (change)="sec.enabled = !sec.enabled">
+                      <span class="slider-sm"></span>
+                    </label>
+                  </div>
+
+                  <!-- Particular Style Toggle -->
+                  <button type="button" 
+                          class="btn-part-style-toggle"
+                          [class.active]="expandedSectionStyleIndex === secIdx"
+                          (click)="toggleSectionStyle(secIdx)"
+                          title="Style this particular section">
+                    <i class="fa-solid fa-palette"></i>
+                    <span>Style</span>
+                  </button>
+
+                  <!-- Delete button -->
+                  <button type="button" class="btn-del-link" (click)="removeFooterSection(secIdx)" title="Delete section">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+
+                <!-- Expanded Items Drawer for this Section -->
+                <div *ngIf="expandedFooterSectionIndex === secIdx" class="subcategories-panel animate-fade-in" style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 14px 16px;">
+                  <div class="subcat-panel-header" style="margin-bottom: 12px;">
+                    <div class="subcat-panel-title">
+                      <i class="fa-solid fa-bars-staggered"></i>
+                      <span>Items inside "<strong>{{ sec.title }}</strong>" ({{ sec.items ? sec.items.length : 0 }})</span>
+                    </div>
+
+                    <div class="subcat-panel-actions">
+                      <button type="button" class="btn-subcat-quick" (click)="addFooterItem(secIdx, 'link')">
+                        <i class="fa-solid fa-plus"></i> Add Link
+                      </button>
+                      <button type="button" class="btn-subcat-quick" (click)="addFooterItem(secIdx, 'contact')">
+                        <i class="fa-solid fa-phone"></i> Add Contact Item
+                      </button>
+                      <button type="button" class="btn-subcat-add" (click)="addFooterItem(secIdx, 'app-download')">
+                        <i class="fa-solid fa-mobile-screen-button"></i> Add App Download
+                      </button>
+                    </div>
+                  </div>
+
+                  <div *ngIf="!sec.items || sec.items.length === 0" class="subcat-empty-state">
+                    <p>No items yet in this section. Click <strong>"Add Link"</strong> or <strong>"Add Contact Item"</strong> to add content!</p>
+                  </div>
+
+                  <!-- Items Table / List -->
+                  <div *ngIf="sec.items && sec.items.length > 0" class="subcat-items-list">
+                    <div *ngFor="let item of sec.items; let itIdx = index" class="footer-item-row" [class.subcat-row-disabled]="item.enabled === false">
+                      
+                      <!-- Item Reorder -->
+                      <div class="reorder-handle">
+                        <button type="button" class="btn-reorder" [disabled]="itIdx === 0" (click)="moveFooterItem(secIdx, itIdx, 'up')">
+                          <i class="fa-solid fa-chevron-up"></i>
+                        </button>
+                        <button type="button" class="btn-reorder" [disabled]="itIdx === sec.items.length - 1" (click)="moveFooterItem(secIdx, itIdx, 'down')">
+                          <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                      </div>
+
+                      <!-- Item Type -->
+                      <div class="item-field-type" style="width: 110px; min-width: 100px;">
+                        <label class="mini-label">Type</label>
+                        <select [(ngModel)]="item.type" class="hfm-input">
+                          <option value="link">Link</option>
+                          <option value="contact">Contact</option>
+                          <option value="app-download">App Download</option>
+                          <option value="text">Text Only</option>
+                        </select>
+                      </div>
+
+                      <!-- Icon -->
+                      <div class="item-field-icon" style="width: 115px; min-width: 100px;">
+                        <label class="mini-label">Icon / Emoji</label>
+                        <input type="text" [(ngModel)]="item.icon" class="hfm-input" placeholder="fa-solid fa-phone">
+                      </div>
+
+                      <!-- Label -->
+                      <div class="item-field-label" style="flex: 1.5; min-width: 130px;">
+                        <label class="mini-label">Label / Text</label>
+                        <input type="text" [(ngModel)]="item.label" class="hfm-input" placeholder="e.g. Menu, Privacy Policy">
+                      </div>
+
+                      <!-- URL / Target Route -->
+                      <div class="item-field-url" style="flex: 1.5; min-width: 130px;">
+                        <label class="mini-label">Target Route / URL / Tel</label>
+                        <input type="text" [(ngModel)]="item.url" class="hfm-input" placeholder="e.g. /menu, tel:8218870579">
+                      </div>
+
+                      <!-- Optional Badge -->
+                      <div class="item-field-badge" style="width: 70px; min-width: 60px;">
+                        <label class="mini-label">Badge</label>
+                        <input type="text" [(ngModel)]="item.badge" class="hfm-input" placeholder="NEW">
+                      </div>
+
+                      <!-- Open in New Tab -->
+                      <div class="item-field-tab" style="width: 65px; text-align: center;">
+                        <label class="mini-label">New Tab</label>
+                        <input type="checkbox" [(ngModel)]="item.openInNewTab" style="cursor: pointer; margin-top: 6px;">
+                      </div>
+
+                      <!-- Active switch -->
+                      <div class="subcat-field-enable">
+                        <label class="mini-label">Active</label>
+                        <label class="hfm-switch-sm" title="Item is visible">
+                          <input type="checkbox" [checked]="item.enabled !== false" (change)="item.enabled = !item.enabled">
+                          <span class="slider-sm"></span>
+                        </label>
+                      </div>
+
+                      <!-- Delete item -->
+                      <button type="button" class="btn-del-subcat" (click)="removeFooterItem(secIdx, itIdx)" title="Delete item">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Particular Style Drawer for this Section -->
+                <div *ngIf="expandedSectionStyleIndex === secIdx" class="particular-style-panel animate-fade-in" style="background: #f8fafc; border-top: 1.5px solid #cbd5e1; padding: 14px 16px;">
+                  <div class="particular-style-header">
+                    <div class="part-title">
+                      <i class="fa-solid fa-paintbrush"></i>
+                      <span>Particular Style for Section "<strong>{{ sec.title }}</strong>" (Overrides global footer styles)</span>
+                    </div>
+                    <button type="button" class="btn-close-part" (click)="expandedSectionStyleIndex = null">✕</button>
+                  </div>
+
+                  <div class="particular-style-grid">
+                    <div class="part-field">
+                      <label class="mini-label">Title Color</label>
+                      <div class="color-picker-group">
+                        <input type="color" [(ngModel)]="sec.titleColor" class="color-swatch-input">
+                        <input type="text" [(ngModel)]="sec.titleColor" class="hfm-input hex-input" placeholder="Default">
+                      </div>
+                    </div>
+
+                    <div class="part-field">
+                      <label class="mini-label">Title Font Size</label>
+                      <select [(ngModel)]="sec.titleFontSize" class="hfm-input">
+                        <option value="">Inherit Default</option>
+                        <option value="1.1rem">1.1rem (Small)</option>
+                        <option value="1.2rem">1.2rem (Standard)</option>
+                        <option value="1.3rem">1.3rem (Medium)</option>
+                        <option value="1.4rem">1.4rem (Large)</option>
+                      </select>
+                    </div>
+
+                    <div class="part-field">
+                      <label class="mini-label">Title Font Weight</label>
+                      <select [(ngModel)]="sec.titleFontWeight" class="hfm-input">
+                        <option value="">Inherit Default</option>
+                        <option value="600">Semi-Bold (600)</option>
+                        <option value="700">Bold (700)</option>
+                        <option value="800">Extra Bold (800)</option>
+                      </select>
+                    </div>
+
+                    <div class="part-field">
+                      <label class="mini-label">Underline Bar Color</label>
+                      <div class="color-picker-group">
+                        <input type="color" [(ngModel)]="sec.underlineColor" class="color-swatch-input">
+                        <input type="text" [(ngModel)]="sec.underlineColor" class="hfm-input hex-input" placeholder="#10b981">
+                      </div>
+                    </div>
+
+                    <div class="part-field">
+                      <label class="mini-label">Items Text Color</label>
+                      <div class="color-picker-group">
+                        <input type="color" [(ngModel)]="sec.itemsColor" class="color-swatch-input">
+                        <input type="text" [(ngModel)]="sec.itemsColor" class="hfm-input hex-input" placeholder="#a4b0be">
+                      </div>
+                    </div>
+
+                    <div class="part-field">
+                      <label class="mini-label">Column Width Span</label>
+                      <select [(ngModel)]="sec.columnSpan" class="hfm-input">
+                        <option [ngValue]="undefined">1 Column</option>
+                        <option [ngValue]="2">2 Columns Wide</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </ng-container>
           </div>
         </div>
       </div>
 
-      <!-- FOOTER SOCIAL & LEGAL -->
+      <!-- CARD 4: GLOBAL TYPOGRAPHY, COLORS & ACCENT STYLES -->
       <div class="hfm-card">
         <div class="card-title">
-          <div class="card-icon-badge">🌐</div>
+          <div class="card-icon-badge">🎨</div>
           <div>
-            <h3>Social Media & Copyright</h3>
-            <p>Connect links and copyright statement.</p>
+            <h3>Footer Colors & Typography</h3>
+            <p>Master color palette, title underline accent, and global fonts.</p>
           </div>
         </div>
 
         <div class="card-body">
-          <div class="form-group">
-            <label class="form-label">Instagram Profile URL</label>
-            <input type="url" [(ngModel)]="footerConfig.instagramUrl" class="hfm-input" placeholder="https://instagram.com/...">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Footer Background Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.bgColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.bgColor" class="hfm-input hex-input" placeholder="#071811">
+              </div>
+              <span class="form-hint">Tip: Rich dark tone (e.g. #071811) creates deep contrast.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Body / Link Text Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.textColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.textColor" class="hfm-input hex-input" placeholder="#a4b0be">
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Facebook Profile URL</label>
-            <input type="url" [(ngModel)]="footerConfig.facebookUrl" class="hfm-input" placeholder="https://facebook.com/...">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Headings / Titles Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.headingColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.headingColor" class="hfm-input hex-input" placeholder="#ffffff">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Title Underline / Accent Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.titleUnderlineColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.titleUnderlineColor" class="hfm-input hex-input" placeholder="#10b981">
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Twitter / X URL</label>
-            <input type="url" [(ngModel)]="footerConfig.twitterUrl" class="hfm-input" placeholder="https://twitter.com/...">
+
+          <div class="form-row">
+            <div class="toggle-row" style="margin-top: 10px;">
+              <label class="hfm-switch">
+                <input type="checkbox" [(ngModel)]="footerConfig.showTitleUnderline">
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-label">Show Heading Underline Accent Bar</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Links Hover Accent Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.hoverColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.hoverColor" class="hfm-input hex-input" placeholder="#10b981">
+              </div>
+            </div>
           </div>
+
+          <div class="card-divider"></div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Title Font Size</label>
+              <select [(ngModel)]="footerConfig.titleFontSize" class="hfm-input">
+                <option value="1.1rem">1.1rem (Compact)</option>
+                <option value="1.2rem">1.2rem (Standard / Recommended)</option>
+                <option value="1.3rem">1.3rem (Medium)</option>
+                <option value="1.4rem">1.4rem (Large)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Title Text Transform</label>
+              <select [(ngModel)]="footerConfig.titleTextTransform" class="hfm-input">
+                <option value="none">Normal (As Typed)</option>
+                <option value="uppercase">UPPERCASE</option>
+                <option value="capitalize">Capitalize Each Word</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 5: BOTTOM BAR & COPYRIGHT NOTICE -->
+      <div class="hfm-card">
+        <div class="card-title">
+          <div class="card-icon-badge">©️</div>
+          <div>
+            <h3>Bottom Bar & Copyright Notice</h3>
+            <p>Copyright notice, year token, and bottom line appearance.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="toggle-row" style="margin-bottom: 14px;">
+            <label class="hfm-switch">
+              <input type="checkbox" [(ngModel)]="footerConfig.showBottomBar">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label">Enable Bottom Copyright Bar</span>
+          </div>
+
           <div class="form-group">
-            <label class="form-label">Copyright Notice</label>
-            <input type="text" [(ngModel)]="footerConfig.copyrightText" class="hfm-input" placeholder="© 2026 Foody Bhai. All rights reserved.">
+            <label class="form-label">Copyright Notice Text</label>
+            <input type="text" [(ngModel)]="footerConfig.copyrightText" class="hfm-input" placeholder="© &#123;year&#125; FoodyBhai. All Rights Reserved.">
+            <span class="form-hint">Tip: Use <strong>&#123;year&#125;</strong> to dynamically insert the current year.</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Bottom Bar Background</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.bottomBarBg" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.bottomBarBg" class="hfm-input hex-input" placeholder="transparent">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Top Border Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.bottomBarBorderColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.bottomBarBorderColor" class="hfm-input hex-input" placeholder="rgba(255,255,255,0.1)">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Text Alignment</label>
+              <select [(ngModel)]="footerConfig.bottomBarAlign" class="hfm-input">
+                <option value="center">Centered (Recommended)</option>
+                <option value="left">Left Aligned</option>
+                <option value="space-between">Space Between</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Text Color</label>
+              <div class="color-picker-group">
+                <input type="color" [(ngModel)]="footerConfig.bottomBarTextColor" class="color-swatch-input">
+                <input type="text" [(ngModel)]="footerConfig.bottomBarTextColor" class="hfm-input hex-input" placeholder="#a4b0be">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1464,5 +2151,4 @@
       </button>
     </div>
   </div>
-
 </div>

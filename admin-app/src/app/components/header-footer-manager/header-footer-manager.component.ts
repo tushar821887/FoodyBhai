@@ -132,17 +132,102 @@ export interface HeaderConfig {
   dropdownColumns?: '1' | '2';
 }
 
+export interface FooterItem {
+  id: string;
+  label: string;
+  url?: string;
+  icon?: string;
+  type?: 'link' | 'contact' | 'app-download' | 'text';
+  badge?: string;
+  badgeBg?: string;
+  badgeColor?: string;
+  openInNewTab?: boolean;
+  enabled?: boolean;
+
+  // Particular item style
+  color?: string;
+  hoverColor?: string;
+  fontSize?: string;
+  fontWeight?: string;
+}
+
+export interface FooterSection {
+  id: string;
+  title: string;
+  enabled: boolean;
+  type?: 'links' | 'contact' | 'text';
+  showUnderline?: boolean;
+  items: FooterItem[];
+
+  // Particular section style
+  titleColor?: string;
+  titleFontSize?: string;
+  titleFontWeight?: string;
+  underlineColor?: string;
+  itemsColor?: string;
+  itemsHoverColor?: string;
+  itemsFontSize?: string;
+  itemsFontWeight?: string;
+  columnSpan?: number;
+}
+
+export interface FooterSocialLink {
+  id: string;
+  platform: 'facebook' | 'instagram' | 'twitter' | 'youtube' | 'whatsapp' | 'linkedin' | 'custom';
+  name: string;
+  url: string;
+  icon: string;
+  enabled: boolean;
+}
+
 export interface FooterConfig {
-  tagline: string;
-  aboutText: string;
-  phone: string;
-  email: string;
-  address: string;
-  copyrightText: string;
+  showBrandColumn: boolean;
+  logoUrl?: string;
+  logoAlt?: string;
+  logoHeight?: string;
+  logoShape?: 'circle' | 'rounded' | 'natural';
+  logoBorderColor?: string;
+  tagline?: string;
+  aboutText?: string;
   showSocial: boolean;
-  instagramUrl: string;
-  facebookUrl: string;
-  twitterUrl: string;
+  socialStyle?: 'circle' | 'pill' | 'square' | 'ghost';
+  socialLinks: FooterSocialLink[];
+
+  sections: FooterSection[];
+
+  columnsPerRow: '2' | '3' | '4' | '5' | 'auto';
+  columnsGap?: string;
+  containerWidth?: string;
+  brandColumnSpan?: '1' | '1.5' | '1.8' | '2';
+
+  bgColor: string;
+  textColor: string;
+  headingColor: string;
+  accentColor: string;
+  hoverColor: string;
+  showTitleUnderline: boolean;
+  titleUnderlineColor?: string;
+  titleFontSize?: string;
+  titleFontWeight?: string;
+  titleTextTransform?: 'none' | 'uppercase' | 'capitalize';
+  linksFontSize?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
+
+  showBottomBar: boolean;
+  copyrightText: string;
+  bottomBarBg?: string;
+  bottomBarTextColor?: string;
+  bottomBarBorderColor?: string;
+  bottomBarAlign?: 'center' | 'space-between';
+
+  // Legacy fallback fields
+  phone?: string;
+  email?: string;
+  address?: string;
+  instagramUrl?: string;
+  facebookUrl?: string;
+  twitterUrl?: string;
 }
 
 export const DEFAULT_HEADER_ACTION_ITEMS: HeaderActionItem[] = [
@@ -279,14 +364,97 @@ const DEFAULT_HEADER_CONFIG: HeaderConfig = {
   dropdownColumns: '1'
 };
 
-const DEFAULT_FOOTER_CONFIG: FooterConfig = {
+export const DEFAULT_FOOTER_SOCIAL_LINKS: FooterSocialLink[] = [
+  { id: 'soc_fb', platform: 'facebook', name: 'Facebook', url: 'https://facebook.com', icon: 'fa-brands fa-facebook-f', enabled: true },
+  { id: 'soc_ig', platform: 'instagram', name: 'Instagram', url: 'https://instagram.com', icon: 'fa-brands fa-instagram', enabled: true },
+  { id: 'soc_tw', platform: 'twitter', name: 'Twitter', url: 'https://twitter.com', icon: 'fa-brands fa-twitter', enabled: true }
+];
+
+export const DEFAULT_FOOTER_SECTIONS: FooterSection[] = [
+  {
+    id: 'sec_quick_links',
+    title: 'Quick Links',
+    enabled: true,
+    type: 'links',
+    showUnderline: true,
+    items: [
+      { id: 'it_home', label: 'Home', url: '/', enabled: true, type: 'link' },
+      { id: 'it_menu', label: 'Menu', url: '/menu', enabled: true, type: 'link' },
+      { id: 'it_about', label: 'About Us', url: '/about', enabled: true, type: 'link' },
+      { id: 'it_contact', label: 'Contact', url: '/contact', enabled: true, type: 'link' },
+      { id: 'it_app', label: 'Download Android App', url: '', icon: 'fa-solid fa-mobile-screen-button', enabled: true, type: 'app-download', color: '#10b981', fontWeight: '600' }
+    ]
+  },
+  {
+    id: 'sec_legal',
+    title: 'Legal',
+    enabled: true,
+    type: 'links',
+    showUnderline: true,
+    items: [
+      { id: 'it_privacy', label: 'Privacy Policy', url: '/privacy-policy', enabled: true, type: 'link' },
+      { id: 'it_terms', label: 'Terms & Conditions', url: '/terms', enabled: true, type: 'link' },
+      { id: 'it_disclaimer', label: 'Disclaimer', url: '/disclaimer', enabled: true, type: 'link' }
+    ]
+  },
+  {
+    id: 'sec_contact',
+    title: 'Contact Us',
+    enabled: true,
+    type: 'contact',
+    showUnderline: true,
+    items: [
+      { id: 'it_loc', label: '127, Bhatwara, Bagh Wali Gali, Meerut - 250002', icon: 'fa-solid fa-location-dot', enabled: true, type: 'contact' },
+      { id: 'it_phone', label: '8218870579', url: 'tel:8218870579', icon: 'fa-solid fa-phone', enabled: true, type: 'contact' },
+      { id: 'it_email', label: 'tusharmanusharma@gmail.com', url: 'mailto:tusharmanusharma@gmail.com', icon: 'fa-solid fa-envelope', enabled: true, type: 'contact' }
+    ]
+  }
+];
+
+export const DEFAULT_FOOTER_CONFIG: FooterConfig = {
+  showBrandColumn: true,
+  logoUrl: '/assets/images/logo.png',
+  logoAlt: 'Foody Bhai Logo',
+  logoHeight: '80px',
+  logoShape: 'natural',
+  logoBorderColor: '#ea580c',
   tagline: 'Ghar jaisa swaad, har baar!',
-  aboutText: "Meerut's favourite cloud kitchen delivering fresh, hygienic, and authentic home-style food right to your doorstep.",
+  aboutText: 'Your ultimate destination for discovering authentic, easy-to-follow, and delicious recipes. We make cooking at home simple and fun.',
+  showSocial: true,
+  socialStyle: 'circle',
+  socialLinks: DEFAULT_FOOTER_SOCIAL_LINKS,
+
+  sections: DEFAULT_FOOTER_SECTIONS,
+
+  columnsPerRow: '4',
+  columnsGap: '2rem',
+  containerWidth: '1280px',
+  brandColumnSpan: '1.8',
+
+  bgColor: '#071811',
+  textColor: '#a4b0be',
+  headingColor: '#ffffff',
+  accentColor: '#10b981',
+  hoverColor: '#10b981',
+  showTitleUnderline: true,
+  titleUnderlineColor: '#10b981',
+  titleFontSize: '1.2rem',
+  titleFontWeight: '700',
+  titleTextTransform: 'none',
+  linksFontSize: '14px',
+  paddingTop: '4rem',
+  paddingBottom: '0',
+
+  showBottomBar: true,
+  copyrightText: '© {year} FoodyBhai. All Rights Reserved.',
+  bottomBarBg: 'transparent',
+  bottomBarTextColor: '#a4b0be',
+  bottomBarBorderColor: 'rgba(255, 255, 255, 0.1)',
+  bottomBarAlign: 'center',
+
   phone: '+91 8218870579',
   email: 'contact@foodybhai.in',
   address: '226 Bhatwara, Budhana Gate, Meerut, Uttar Pradesh 250002',
-  copyrightText: '© 2026 Foody Bhai. All rights reserved.',
-  showSocial: true,
   instagramUrl: 'https://instagram.com',
   facebookUrl: 'https://facebook.com',
   twitterUrl: 'https://twitter.com'
@@ -318,6 +486,11 @@ export class HeaderFooterManagerComponent implements OnInit {
 
   // Header Actions style drawer state
   expandedActionStyleIndex: number | null = null;
+
+  // Footer state
+  footerPreviewMode: 'desktop' | 'mobile' = 'desktop';
+  expandedFooterSectionIndex: number | null = 0;
+  expandedSectionStyleIndex: number | null = null;
 
   toggleActionStyle(index: number) {
     this.expandedActionStyleIndex = this.expandedActionStyleIndex === index ? null : index;
@@ -714,7 +887,270 @@ export class HeaderFooterManagerComponent implements OnInit {
     return `${w} solid ${c}`;
   }
 
-  showToast(msg: string, type: 'success' | 'error' = 'success') {
+  // ==================== FOOTER MANAGER METHODS ====================
+  toggleFooterSectionExpand(index: number) {
+    this.expandedFooterSectionIndex = this.expandedFooterSectionIndex === index ? null : index;
+  }
+
+  toggleSectionStyle(index: number) {
+    this.expandedSectionStyleIndex = this.expandedSectionStyleIndex === index ? null : index;
+  }
+
+  addFooterSection(preset: 'links' | 'contact' | 'text' = 'links') {
+    if (!this.footerConfig.sections) {
+      this.footerConfig.sections = [];
+    }
+    const id = 'sec_' + Date.now();
+    let newSec: FooterSection;
+
+    if (preset === 'contact') {
+      newSec = {
+        id,
+        title: 'New Contact Section',
+        type: 'contact',
+        enabled: true,
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now() + '_1', label: '123 Main Street, City', icon: 'fa-solid fa-location-dot', enabled: true, type: 'contact' },
+          { id: 'it_' + Date.now() + '_2', label: '+91 8218870579', url: 'tel:8218870579', icon: 'fa-solid fa-phone', enabled: true, type: 'contact' }
+        ]
+      };
+    } else if (preset === 'text') {
+      newSec = {
+        id,
+        title: 'About Our Kitchen',
+        type: 'text',
+        enabled: true,
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now(), label: 'Freshly prepared home-style food delivered hot and fast.', enabled: true, type: 'text' }
+        ]
+      };
+    } else {
+      newSec = {
+        id,
+        title: 'New Section',
+        type: 'links',
+        enabled: true,
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now() + '_1', label: 'Menu Link', url: '/menu', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_2', label: 'About Link', url: '/about', enabled: true, type: 'link' }
+        ]
+      };
+    }
+
+    this.footerConfig.sections.push(newSec);
+    this.expandedFooterSectionIndex = this.footerConfig.sections.length - 1;
+    this.showToast('Footer section added!', 'success');
+  }
+
+  removeFooterSection(index: number) {
+    if (confirm('Delete this footer section and its links?')) {
+      this.footerConfig.sections.splice(index, 1);
+      if (this.expandedFooterSectionIndex === index) {
+        this.expandedFooterSectionIndex = null;
+      }
+      this.showToast('Footer section removed', 'success');
+    }
+  }
+
+  moveFooterSection(index: number, direction: 'up' | 'down') {
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= this.footerConfig.sections.length) return;
+    const temp = this.footerConfig.sections[index];
+    this.footerConfig.sections[index] = this.footerConfig.sections[targetIdx];
+    this.footerConfig.sections[targetIdx] = temp;
+    if (this.expandedFooterSectionIndex === index) {
+      this.expandedFooterSectionIndex = targetIdx;
+    }
+  }
+
+  addFooterItem(secIdx: number, type: 'link' | 'contact' | 'app-download' = 'link') {
+    const sec = this.footerConfig.sections[secIdx];
+    if (!sec) return;
+    if (!sec.items) sec.items = [];
+
+    const id = 'it_' + Date.now();
+    let newItem: FooterItem;
+
+    if (type === 'app-download') {
+      newItem = {
+        id,
+        label: 'Download Android App',
+        icon: 'fa-solid fa-mobile-screen-button',
+        url: '',
+        type: 'app-download',
+        color: '#10b981',
+        fontWeight: '600',
+        enabled: true
+      };
+    } else if (type === 'contact') {
+      newItem = {
+        id,
+        label: 'support@foodybhai.in',
+        url: 'mailto:support@foodybhai.in',
+        icon: 'fa-solid fa-envelope',
+        type: 'contact',
+        enabled: true
+      };
+    } else {
+      newItem = {
+        id,
+        label: 'Custom Link',
+        url: '/menu',
+        type: 'link',
+        enabled: true
+      };
+    }
+
+    sec.items.push(newItem);
+    this.showToast('Item added to section', 'success');
+  }
+
+  removeFooterItem(secIdx: number, itemIdx: number) {
+    const sec = this.footerConfig.sections[secIdx];
+    if (sec && sec.items) {
+      sec.items.splice(itemIdx, 1);
+    }
+  }
+
+  moveFooterItem(secIdx: number, itemIdx: number, direction: 'up' | 'down') {
+    const sec = this.footerConfig.sections[secIdx];
+    if (!sec || !sec.items) return;
+    const targetIdx = direction === 'up' ? itemIdx - 1 : itemIdx + 1;
+    if (targetIdx < 0 || targetIdx >= sec.items.length) return;
+    const temp = sec.items[itemIdx];
+    sec.items[itemIdx] = sec.items[targetIdx];
+    sec.items[targetIdx] = temp;
+  }
+
+  addFooterSocialLink() {
+    if (!this.footerConfig.socialLinks) {
+      this.footerConfig.socialLinks = [];
+    }
+    this.footerConfig.socialLinks.push({
+      id: 'soc_' + Date.now(),
+      platform: 'custom',
+      name: 'Social Page',
+      url: 'https://',
+      icon: 'fa-brands fa-globe',
+      enabled: true
+    });
+  }
+
+  removeFooterSocialLink(idx: number) {
+    if (this.footerConfig.socialLinks) {
+      this.footerConfig.socialLinks.splice(idx, 1);
+    }
+  }
+
+  quickAddFooterSectionPreset(preset: 'quick-links' | 'legal' | 'contact' | 'help') {
+    if (!this.footerConfig.sections) {
+      this.footerConfig.sections = [];
+    }
+    const id = 'sec_' + Date.now();
+
+    if (preset === 'quick-links') {
+      this.footerConfig.sections.push({
+        id,
+        title: 'Quick Links',
+        enabled: true,
+        type: 'links',
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now() + '_1', label: 'Home', url: '/', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_2', label: 'Menu', url: '/menu', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_3', label: 'About Us', url: '/about', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_4', label: 'Contact', url: '/contact', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_5', label: 'Download Android App', url: '', icon: 'fa-solid fa-mobile-screen-button', enabled: true, type: 'app-download', color: '#10b981', fontWeight: '600' }
+        ]
+      });
+    } else if (preset === 'legal') {
+      this.footerConfig.sections.push({
+        id,
+        title: 'Legal & Policies',
+        enabled: true,
+        type: 'links',
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now() + '_1', label: 'Privacy Policy', url: '/privacy-policy', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_2', label: 'Terms & Conditions', url: '/terms', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_3', label: 'Disclaimer', url: '/disclaimer', enabled: true, type: 'link' }
+        ]
+      });
+    } else if (preset === 'contact') {
+      this.footerConfig.sections.push({
+        id,
+        title: 'Contact Us',
+        enabled: true,
+        type: 'contact',
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now() + '_1', label: '127, Bhatwara, Bagh Wali Gali, Meerut - 250002', icon: 'fa-solid fa-location-dot', enabled: true, type: 'contact' },
+          { id: 'it_' + Date.now() + '_2', label: '8218870579', url: 'tel:8218870579', icon: 'fa-solid fa-phone', enabled: true, type: 'contact' },
+          { id: 'it_' + Date.now() + '_3', label: 'tusharmanusharma@gmail.com', url: 'mailto:tusharmanusharma@gmail.com', icon: 'fa-solid fa-envelope', enabled: true, type: 'contact' }
+        ]
+      });
+    } else if (preset === 'help') {
+      this.footerConfig.sections.push({
+        id,
+        title: 'Customer Care',
+        enabled: true,
+        type: 'links',
+        showUnderline: true,
+        items: [
+          { id: 'it_' + Date.now() + '_1', label: 'Order Tracking', url: '/orders', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_2', label: 'FAQs & Help', url: '/contact', enabled: true, type: 'link' },
+          { id: 'it_' + Date.now() + '_3', label: 'Refund Policy', url: '/terms', enabled: true, type: 'link' }
+        ]
+      });
+    }
+
+    this.expandedFooterSectionIndex = this.footerConfig.sections.length - 1;
+    this.showToast('Section preset added!', 'success');
+  }
+
+  getPreviewGridColumns(): string {
+    const cols = this.footerConfig.columnsPerRow || '4';
+    const brandSpan = this.footerConfig.brandColumnSpan || '1.8';
+    const showBrand = this.footerConfig.showBrandColumn !== false;
+
+    if (cols === 'auto') {
+      return 'repeat(auto-fit, minmax(200px, 1fr))';
+    }
+
+    const numCols = parseInt(cols, 10) || 4;
+    if (showBrand) {
+      const sectionCols = Math.max(1, numCols - 1);
+      return `minmax(240px, ${brandSpan}fr) repeat(${sectionCols}, 1fr)`;
+    } else {
+      return `repeat(${numCols}, 1fr)`;
+    }
+  }
+
+  getFormattedCopyrightPreview(): string {
+    const text = this.footerConfig.copyrightText || '© {year} FoodyBhai. All Rights Reserved.';
+    const year = new Date().getFullYear().toString();
+    return text.replace('{year}', year);
+  }
+
+  getVisibleFooterSections(): FooterSection[] {
+    if (!this.footerConfig.sections) return [];
+    return this.footerConfig.sections.filter(s => s.enabled !== false);
+  }
+
+  getVisibleFooterItems(sec: FooterSection): FooterItem[] {
+    if (!sec.items) return [];
+    return sec.items.filter(item => item.enabled !== false);
+  }
+
+  getVisibleSocialLinks(): FooterSocialLink[] {
+    if (!this.footerConfig.socialLinks) return [];
+    return this.footerConfig.socialLinks.filter(s => s.enabled !== false);
+  }
+
+    showToast(msg: string, type: 'success' | 'error' = 'success') {
     this.toastMessage = msg;
     this.toastType = type;
     setTimeout(() => {
