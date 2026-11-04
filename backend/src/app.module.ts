@@ -17,6 +17,7 @@ import { RecipesModule } from './recipes/recipes.module';
 import { SettingsModule } from './settings/settings.module';
 import { PagesModule } from './pages/pages.module';
 import { CouponsModule } from './coupons/coupons.module';
+import { TiffinModule } from './tiffin/tiffin.module';
 
 @Module({
   imports: [
@@ -73,7 +74,8 @@ import { CouponsModule } from './coupons/coupons.module';
     RecipesModule,
     SettingsModule,
     PagesModule,
-    CouponsModule
+    CouponsModule,
+    TiffinModule
   ],
 })
 export class AppModule {}

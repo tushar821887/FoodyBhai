@@ -278,4 +278,50 @@ export class ApiService {
     return this.http.delete<any>(this.apiUrl + '/coupons/' + id, this.getHeaders());
   }
 
+  // Tiffin & Thali Management
+  getTiffinPlans(all: boolean = true): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tiffin/plans${all ? '?all=true' : ''}`, this.getHeaders());
+  }
+
+  createTiffinPlan(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tiffin/plans`, data, this.getHeaders());
+  }
+
+  updateTiffinPlan(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/tiffin/plans/${id}`, data, this.getHeaders());
+  }
+
+  deleteTiffinPlan(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/tiffin/plans/${id}`, this.getHeaders());
+  }
+
+  toggleTiffinPlan(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/tiffin/plans/${id}/toggle`, {}, this.getHeaders());
+  }
+
+  seedTiffinPlans(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tiffin/plans/seed`, {}, this.getHeaders());
+  }
+
+  getTiffinOrders(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tiffin/orders`, this.getHeaders());
+  }
+
+  updateTiffinOrderStatus(id: string, status: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/tiffin/orders/${id}/status`, { status }, this.getHeaders());
+  }
+
+  // Tiffin Page CMS & Sections
+  getTiffinConfig(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/tiffin/config`, this.getHeaders());
+  }
+
+  updateTiffinConfig(config: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/tiffin/config`, config, this.getHeaders());
+  }
+
+  seedTiffinConfig(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tiffin/config/seed`, {}, this.getHeaders());
+  }
+
 }

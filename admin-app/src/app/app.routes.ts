@@ -19,6 +19,10 @@ export const routes: Routes = [
   { path: 'banner', component: OrdersPage, data: { view: 'banner' } },
   { path: 'theme', component: OrdersPage, data: { view: 'theme' } },
   { path: 'cms', component: OrdersPage, data: { view: 'cms' } },
+  { path: 'page-studio', component: OrdersPage, data: { view: 'cms' } },
+  { path: 'page-builder', component: OrdersPage, data: { view: 'cms' } },
+  { path: 'tiffin', component: OrdersPage, data: { view: 'tiffin' } },
+  { path: 'thalis', redirectTo: 'tiffin', pathMatch: 'full' },
   { path: 'header-footer', component: OrdersPage, data: { view: 'header-footer' } },
   { path: '**', redirectTo: 'dashboard' }
 ];

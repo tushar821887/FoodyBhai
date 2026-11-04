@@ -36,6 +36,12 @@
         <span>Menu</span>
       </a>
       
+      <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'tiffin'" [routerLink]="['/tiffin']" (click)="setView('tiffin')">
+        <i class="icon">🍱</i>
+        <span>Tiffin & Thalis</span>
+        <span style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: auto;">NEW</span>
+      </a>
+      
       <a *ngIf="!isAgent" class="nav-item" [class.active]="currentView === 'users'" [routerLink]="['/users']" (click)="setView('users')">
         <i class="icon">👥</i>
         <span>Users</span>
@@ -749,6 +755,7 @@
           <button class="tab-btn" [class.active]="menuTab === 'categories'" (click)="setMenuTab('categories')">Categories</button>
           <button class="tab-btn" [class.active]="menuTab === 'items'" (click)="setMenuTab('items')">Menu Items</button>
           <button class="tab-btn" [class.active]="menuTab === 'mapping'" (click)="setMenuTab('mapping')">Category Mapping</button>
+          <button class="tab-btn" (click)="setView('tiffin')" style="margin-left: auto; background: #fff7ed; color: #ea580c; border: 1.5px solid #fed7aa; font-weight: 700;">🍱 Manage Tiffin & Thalis →</button>
         </div>
 
         <!-- CATEGORIES TAB -->
@@ -2407,6 +2414,13 @@
     </ng-container>
 
     <!-- HEADER & FOOTER MANAGER VIEW -->
+    <!-- TIFFIN & THALIS MANAGER VIEW -->
+    <ng-container *ngIf="currentView === 'tiffin'">
+      <div class="studio-wrapper animate-fade-in">
+        <app-tiffin-manager (openCms)="setView('cms')"></app-tiffin-manager>
+      </div>
+    </ng-container>
+
     <ng-container *ngIf="currentView === 'header-footer'">
       <div class="studio-wrapper animate-fade-in">
         <app-header-footer-manager></app-header-footer-manager>

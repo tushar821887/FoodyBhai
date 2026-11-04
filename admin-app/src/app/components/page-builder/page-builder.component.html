@@ -216,7 +216,7 @@
             <textarea [(ngModel)]="selectedSection.subtitle" rows="3" placeholder="Supporting text..." class="cms-input"></textarea>
           </div>
 
-          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'promo_cta' || selectedSection.type === 'image_text' || selectedSection.type === 'banner' || selectedSection.type === 'categories' || selectedSection.type === 'popular_menu' || selectedSection.type === 'about_story'">
+          <div class="form-row-2col" *ngIf="selectedSection.type === 'hero' || selectedSection.type === 'promo_cta' || selectedSection.type === 'image_text' || selectedSection.type === 'banner' || selectedSection.type === 'categories' || selectedSection.type === 'popular_menu' || selectedSection.type === 'about_story' || $any(selectedSection).type === 'thalis' || $any(selectedSection).type === 'tiffin_plans' || $any(selectedSection).type === 'weekly_menu' || $any(selectedSection).type === 'tiffin_weekly' || $any(selectedSection).type === 'tiffin_steps' || $any(selectedSection).type === 'tiffin_addons'">
             <div class="form-group-cms">
               <label>Button Text</label>
               <input type="text" [(ngModel)]="selectedSection.buttonText" placeholder="e.g. Browse Full Menu" class="cms-input">
@@ -587,7 +587,136 @@
                 </div>
               </div>
 
+                            <!-- Thalis & Meal Plans Mockup Preview -->
+              <div *ngIf="$any(sec).type === 'thalis' || $any(sec).type === 'tiffin_plans'" style="margin: 1.5rem 0;">
+                <div style="display: inline-flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 40px; padding: 4px; gap: 4px; margin-bottom: 1.25rem;">
+                  <span style="padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; color: #64748b;">1-Time / Trial</span>
+                  <span style="padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; background: #ea580c; color: white;">Weekly (7 Days)</span>
+                  <span style="padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; color: #64748b;">Monthly (30 Days)</span>
+                </div>
+
+                <div style="display: grid; gap: 1rem;" [style.grid-template-columns]="previewMode === 'mobile' ? '1fr' : 'repeat(3, 1fr)'">
+                  <div *ngFor="let thali of [
+                    { title: 'Rozana Mini Thali', price: '₹499', tag: 'Light & Healthy', img: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=300&q=80' },
+                    { title: 'Ghar Jaisa Standard Thali', price: '₹649', tag: 'Most Popular', img: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=300&q=80', badge: 'MOST POPULAR' },
+                    { title: 'Deluxe Shahi Thali', price: '₹899', tag: 'Royal Feast', img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=300&q=80' }
+                  ]" style="background: white; border: 1px solid #ede2d8; border-radius: 14px; overflow: hidden; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative;">
+                    <div style="height: 110px; overflow: hidden; position: relative;">
+                      <img [src]="thali.img" style="width: 100%; height: 100%; object-fit: cover;">
+                      <span *ngIf="thali.badge" style="position: absolute; top: 6px; right: 6px; background: #ea580c; color: white; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 12px;">{{ thali.badge }}</span>
+                    </div>
+                    <div style="padding: 10px 12px;">
+                      <strong style="display: block; font-size: 0.9rem; color: #1e293b;">{{ thali.title }}</strong>
+                      <span style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 6px;">{{ thali.tag }}</span>
+                      <div style="display: flex; justify-content: space-between; align-items: center; background: #fff8f5; padding: 6px 8px; border-radius: 8px;">
+                        <span style="font-weight: 800; color: #ea580c; font-size: 0.95rem;">{{ thali.price }}</span>
+                        <span style="font-size: 0.7rem; color: #64748b;">/ 7 days</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Popular Menu Mockup Preview -->
+
+              <!-- Weekly Menu Mockup Preview -->
+              <div *ngIf="$any(sec).type === 'weekly_menu' || $any(sec).type === 'tiffin_weekly'" style="margin: 1.5rem 0;">
+                <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 1rem; justify-content: center;">
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #ea580c; color: white;">Mon (Today)</span>
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569;">Tue</span>
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569;">Wed</span>
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569;">Thu</span>
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569;">Fri</span>
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569;">Sat</span>
+                  <span style="padding: 6px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; background: #f1f5f9; color: #475569;">Sun</span>
+                </div>
+                <div style="display: grid; gap: 1rem;" [style.grid-template-columns]="previewMode === 'mobile' ? '1fr' : '1fr 1fr'">
+                  <div style="background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <strong style="color: #1e293b; font-size: 0.95rem;">☀️ Lunch Spread</strong>
+                      <span style="font-size: 0.7rem; color: #ea580c; font-weight: 700; background: #ffedd5; padding: 2px 8px; border-radius: 20px;">12:30 - 2 PM</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+                      🍛 <strong>Main:</strong> Shahi Paneer + Aloo Gobhi<br>
+                      🥣 <strong>Dal:</strong> Dal Tadka | 🫓 <strong>Breads:</strong> 4 Phulkas + Rice
+                    </div>
+                  </div>
+                  <div style="background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <strong style="color: #1e293b; font-size: 0.95rem;">🌙 Dinner Spread</strong>
+                      <span style="font-size: 0.7rem; color: #ea580c; font-weight: 700; background: #ffedd5; padding: 2px 8px; border-radius: 20px;">7:30 - 9:30 PM</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+                      🍲 <strong>Main:</strong> Mix Veg Curry<br>
+                      🥣 <strong>Dal:</strong> Moong Dal | 🫓 <strong>Breads:</strong> 4 Phulkas + Steamed Rice
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tiffin Steps Mockup Preview -->
+              <div *ngIf="$any(sec).type === 'tiffin_steps' || $any(sec).type === 'how_it_works'" style="margin: 1.5rem 0;">
+                <div style="display: grid; gap: 1rem;" [style.grid-template-columns]="previewMode === 'mobile' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'">
+                  <div *ngFor="let s of [
+                    { n: 1, ic: '🍱', t: 'Choose Plan', d: 'Rozana, Standard or Deluxe' },
+                    { n: 2, ic: '📅', t: 'Set Schedule', d: 'Lunch, Dinner or Both' },
+                    { n: 3, ic: '🛵', t: 'Daily Hot Delivery', d: 'In insulated dabbas' },
+                    { n: 4, ic: '⏸️', t: 'Flexible Pause', d: 'Pause or resume anytime' }
+                  ]" style="background: white; border: 1px solid #ede2d8; border-radius: 14px; padding: 1.25rem 0.75rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <div style="width: 26px; height: 26px; background: #ea580c; color: white; border-radius: 50%; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;">{{ s.n }}</div>
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">{{ s.ic }}</div>
+                    <strong style="display: block; font-size: 0.85rem; color: #1e293b;">{{ s.t }}</strong>
+                    <span style="font-size: 0.72rem; color: #64748b;">{{ s.d }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tiffin Trust Mockup Preview -->
+              <div *ngIf="$any(sec).type === 'tiffin_trust' || $any(sec).type === 'hygiene_standards'" style="margin: 1.5rem 0;">
+                <div style="display: grid; gap: 1rem;" [style.grid-template-columns]="previewMode === 'mobile' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'">
+                  <div *ngFor="let tr of [
+                    { ic: '💧', t: '100% RO Water', d: 'Purified water cooking' },
+                    { ic: '🧈', t: 'Desi Ghee Phulkas', d: 'Pure whole wheat' },
+                    { ic: '🌿', t: 'Zero Preservatives', d: 'Clean healthy food' },
+                    { ic: '🛵', t: 'Insulated Delivery', d: 'Delivered piping hot' }
+                  ]" style="background: #faf7f2; border: 1px solid #fed7aa; border-radius: 12px; padding: 1rem 0.5rem; text-align: center;">
+                    <div style="font-size: 1.6rem; margin-bottom: 4px;">{{ tr.ic }}</div>
+                    <strong style="display: block; font-size: 0.85rem; color: #1e293b;">{{ tr.t }}</strong>
+                    <span style="font-size: 0.72rem; color: #64748b;">{{ tr.d }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tiffin FAQ Mockup Preview -->
+              <div *ngIf="$any(sec).type === 'tiffin_faq'" style="margin: 1.5rem 0; text-align: left;">
+                <div style="display: flex; flex-direction: column; gap: 8px; max-width: 650px; margin: 0 auto;">
+                  <div *ngFor="let q of [
+                    'Can I pause or skip meals when traveling?',
+                    'What are the delivery timings in Meerut?',
+                    'Can I order a 1-day trial meal first?'
+                  ]" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; font-weight: 700; font-size: 0.85rem; color: #1e293b; display: flex; justify-content: space-between;">
+                    <span>{{ q }}</span>
+                    <span style="color: #ea580c;">+</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tiffin Addons Mockup Preview -->
+              <div *ngIf="$any(sec).type === 'tiffin_addons'" style="margin: 1.5rem 0;">
+                <div style="display: grid; gap: 1rem;" [style.grid-template-columns]="previewMode === 'mobile' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)'">
+                  <div *ngFor="let ad of [
+                    { ic: '🫓', n: '2 Extra Phulkas', p: '₹20' },
+                    { ic: '🥣', n: 'Fresh Curd / Raita', p: '₹25' },
+                    { ic: '🍮', n: 'Gulab Jamun (2Pcs)', p: '₹35' },
+                    { ic: '🍛', n: 'Extra Paneer Portion', p: '₹50' }
+                  ]" style="background: #faf7f2; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px; text-align: center;">
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">{{ ad.ic }}</div>
+                    <strong style="display: block; font-size: 0.82rem; color: #1e293b;">{{ ad.n }}</strong>
+                    <span style="color: #ea580c; font-weight: 800; font-size: 0.9rem;">{{ ad.p }}</span>
+                  </div>
+                </div>
+              </div>
+
               <div *ngIf="sec.type === 'popular_menu'" style="display: grid; gap: 1rem; margin: 1.5rem 0;"
                    [style.grid-template-columns]="previewMode === 'mobile' ? '1fr' : 'repeat(4, 1fr)'">
                 <div *ngFor="let dish of [

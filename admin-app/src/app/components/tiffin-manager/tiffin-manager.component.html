@@ -1,0 +1,737 @@
+<div class="tiffin-admin-container animate-fade-in">
+  
+  <!-- HEADER BANNER -->
+  <div class="settings-header-banner">
+    <div class="banner-text">
+      <h2>🍱 Tiffin & Thali Management</h2>
+      <p>Manage handcrafted thalis, meal prices, dabba items, and track customer subscriptions.</p>
+    </div>
+    <div class="banner-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <span>+</span> Add New Thali
+      </button>
+      <button type="button" class="btn btn-outline-light" (click)="goToPageStudio()" title="Customize Tiffin page sections, banner, and layout in Page Studio">
+        🎨 Customize in Page Studio
+      </button>
+    </div>
+  </div>
+
+  <!-- NAVIGATION TABS -->
+  <div class="tabs-header">
+    <button class="tab-btn" [class.active]="activeTab === 'plans'" (click)="activeTab = 'plans'">
+      🍱 Thalis & Meal Plans ({{ plans.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'menu'" (click)="activeTab = 'menu'">
+      🗓️ Weekly Menu Schedule (Mon - Sun)
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'orders'" (click)="activeTab = 'orders'; loadOrders()">
+      📋 Customer Subscriptions ({{ orders.length }})
+    </button>
+  </div>
+
+  <!-- ==================== TAB 1: THALIS & PLANS ==================== -->
+  <div *ngIf="activeTab === 'plans'">
+    
+    <!-- SEARCH & CONTROLS -->
+    <div class="controls-bar">
+      <div class="search-box">
+        <i class="icon">🔍</i>
+        <input type="text" placeholder="Search thali by name or description..." [(ngModel)]="searchQuery">
+      </div>
+
+      <div class="filter-group">
+        <select [(ngModel)]="dietaryFilter" class="filter-select">
+          <option value="all">All Dietary Types</option>
+          <option value="veg">Pure Veg 🌱</option>
+          <option value="non-veg">Non-Veg 🍗</option>
+          <option value="jain">Jain (No Onion Garlic) 🌾</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary ml-auto" (click)="openCreateModal()">
+        <span>+</span> Add Thali
+      </button>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading thalis & tiffin plans...</p>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div *ngIf="!isLoading && filteredPlans.length === 0" class="empty-state">
+      <div class="empty-icon">🍱</div>
+      <h3>No Thalis in Database</h3>
+      <p>Click "Add New Thali / Tiffin" or "Seed Thalis" to create and publish meals to the live website.</p>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+        <button class="btn btn-primary" (click)="openCreateModal()">+ Create First Thali</button>
+        <button class="btn btn-outline" (click)="seedDefaults()">🔄 Seed Standard Thalis</button>
+      </div>
+    </div>
+
+    <!-- PLANS GRID -->
+    <div *ngIf="!isLoading && filteredPlans.length > 0" class="plans-grid">
+      <div *ngFor="let plan of filteredPlans" class="plan-card" [class.inactive]="!plan.isActive">
+        
+        <!-- CARD IMAGE & BADGES -->
+        <div class="plan-img-wrapper">
+          <img [src]="plan.image" [alt]="plan.name" class="plan-img" (error)="plan.image = 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80'">
+          
+          <div class="dietary-badge" [class.veg]="plan.dietaryType === 'veg'">
+            {{ plan.dietaryType === 'veg' ? '🌱 Pure Veg' : plan.dietaryType }}
+          </div>
+
+          <div class="status-badge" [class.active]="plan.isActive" [class.draft]="!plan.isActive">
+            {{ plan.isActive ? '● Live' : '○ Hidden' }}
+          </div>
+
+          <div *ngIf="plan.isPopular" class="popular-tag">👑 POPULAR</div>
+        </div>
+
+        <!-- CARD BODY -->
+        <div class="plan-body">
+          <div class="plan-title-row">
+            <h3 class="plan-title">{{ plan.name }}</h3>
+            <span class="plan-rating" *ngIf="plan.rating">★ {{ plan.rating }} ({{ plan.reviewsCount || 50 }}+)</span>
+          </div>
+          <p class="plan-tagline" *ngIf="plan.tagline">{{ plan.tagline }}</p>
+
+          <!-- PRICING TIERS -->
+          <div class="price-cards-row">
+            <div class="price-pill">
+              <span class="price-label">Instant / 1-Day</span>
+              <span class="price-val">₹{{ plan.trialPrice }}</span>
+            </div>
+            <div class="price-pill">
+              <span class="price-label">Weekly (7D)</span>
+              <span class="price-val">₹{{ plan.weeklyPrice }}</span>
+            </div>
+            <div class="price-pill">
+              <span class="price-label">Monthly (30D)</span>
+              <span class="price-val">₹{{ plan.monthlyPrice }}</span>
+            </div>
+          </div>
+
+          <div class="effective-hint" *ngIf="plan.perMealPrice">
+            Effective: <strong>₹{{ plan.perMealPrice }}/meal</strong> • Free Delivery
+          </div>
+
+          <!-- ITEMS LIST -->
+          <div class="plan-items">
+            <strong>WHAT'S IN THE DABBA:</strong>
+            <ul>
+              <li *ngFor="let item of (plan.items || []).slice(0, 5)">
+                <span class="check-icon">✔</span> <span [innerHTML]="item"></span>
+              </li>
+              <li *ngIf="(plan.items || []).length > 5" class="more-items">
+                +{{ (plan.items || []).length - 5 }} more items...
+              </li>
+            </ul>
+          </div>
+
+          <!-- ACTIONS BAR -->
+          <div class="plan-card-actions">
+            <label class="toggle-switch" (click)="$event.stopPropagation()">
+              <input type="checkbox" [checked]="plan.isActive" (change)="toggleActive(plan, $event)">
+              <span class="slider"></span>
+              <span class="toggle-label">{{ plan.isActive ? 'Active' : 'Inactive' }}</span>
+            </label>
+
+            <div class="action-btn-group">
+              <button class="btn-icon btn-edit" (click)="openEditModal(plan)" title="Edit Thali">
+                ✏️ Edit
+              </button>
+              <button class="btn-icon btn-delete" (click)="deletePlan(plan, $event)" title="Delete Thali">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== TAB 2: WEEKLY ROTATING MENU ==================== -->
+  <div *ngIf="activeTab === 'menu'" class="weekly-menu-admin-container animate-fade-in">
+    
+    <!-- NOTIFICATIONS -->
+    <div class="alert alert-success animate-fade-in" *ngIf="menuSuccessMsg">
+      ✅ {{ menuSuccessMsg }}
+    </div>
+    <div class="alert alert-danger animate-fade-in" *ngIf="menuErrorMsg">
+      ⚠️ {{ menuErrorMsg }}
+    </div>
+
+    <!-- HEADER & ACTIONS BAR -->
+    <div class="weekly-top-bar">
+      <div>
+        <h3 class="weekly-bar-title">🗓️ Daily Rotating Kitchen Menu (Monday to Sunday)</h3>
+        <p class="weekly-bar-sub">Configure the handcrafted daily lunch & dinner items served each day. Changes appear live on the website.</p>
+      </div>
+      <div class="weekly-bar-actions">
+        <button type="button" class="btn btn-outline" (click)="resetToDefaultMenu()">
+          🔄 Restore Chef's Menu
+        </button>
+        <button type="button" class="btn btn-primary" [disabled]="isSavingMenu" (click)="saveWeeklyMenu()">
+          {{ isSavingMenu ? 'Saving Menu...' : '💾 Save Weekly Menu Live' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- DAYS SELECTOR TABS -->
+    <div class="days-selector-pills">
+      <button type="button" 
+              *ngFor="let day of daysOfWeek; let i = index"
+              class="day-select-pill" 
+              [class.active]="activeDayIndex === i"
+              [class.is-today]="isToday(i)"
+              (click)="activeDayIndex = i">
+        <span class="pill-short">{{ day.substring(0, 3) | uppercase }}</span>
+        <span class="pill-name">{{ day }}</span>
+        <span *ngIf="isToday(i)" class="pill-today-badge">TODAY</span>
+      </button>
+    </div>
+
+    <!-- DAY MENU EDITOR & LIVE PREVIEW -->
+    <div class="day-editor-layout" *ngIf="currentDayMenu">
+      
+      <!-- FORM INPUTS (LUNCH & DINNER) -->
+      <div class="day-forms-column">
+        
+        <!-- LUNCH FORM -->
+        <div class="slot-edit-panel lunch-panel">
+          <div class="slot-panel-header">
+            <div class="slot-panel-title">
+              <span class="slot-panel-icon">☀️</span>
+              <div>
+                <h4>Lunch Spread ({{ currentDayMenu.day }})</h4>
+                <span class="slot-panel-timing">Delivered hot between 12:30 PM - 02:00 PM</span>
+              </div>
+            </div>
+            <span class="badge badge-lunch">Lunch</span>
+          </div>
+
+          <div class="slot-form-grid" *ngIf="currentDayMenu.lunch">
+            <div class="form-group">
+              <label><span class="label-icon">🍲</span> Main Sabzi *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.lunch.main" placeholder="e.g. Shahi Paneer + Aloo Gobhi" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><span class="label-icon">🥣</span> Dal / Gravy *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.lunch.dal" placeholder="e.g. Dal Tadka / Homestyle Dal Fry" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><span class="label-icon">🫓</span> Breads & Rice *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.lunch.breadRice" placeholder="e.g. 4 Phulkas + Jeera Rice" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><span class="label-icon">🥗</span> Accompaniments *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.lunch.sides" placeholder="e.g. Fresh Salad & Achar, Boondi Raita" class="form-input">
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+              <label><span class="label-icon">💰</span> Meal Price (₹) *</label>
+              <input type="number" [(ngModel)]="currentDayMenu.lunch.price" placeholder="e.g. 99" class="form-input" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- DINNER FORM -->
+        <div class="slot-edit-panel dinner-panel">
+          <div class="slot-panel-header">
+            <div class="slot-panel-title">
+              <span class="slot-panel-icon">🌙</span>
+              <div>
+                <h4>Dinner Spread ({{ currentDayMenu.day }})</h4>
+                <span class="slot-panel-timing">Delivered hot between 07:30 PM - 09:30 PM</span>
+              </div>
+            </div>
+            <span class="badge badge-dinner">Dinner</span>
+          </div>
+
+          <div class="slot-form-grid" *ngIf="currentDayMenu.dinner">
+            <div class="form-group">
+              <label><span class="label-icon">🍲</span> Main Sabzi *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.dinner.main" placeholder="e.g. Mix Veg Curry / Kadhai Paneer" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><span class="label-icon">🥣</span> Dal / Gravy *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.dinner.dal" placeholder="e.g. Moong Dal / Panchmel Dal" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><span class="label-icon">🫓</span> Breads & Rice *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.dinner.breadRice" placeholder="e.g. 4 Phulkas + Steamed Rice" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label><span class="label-icon">🥗</span> Accompaniments *</label>
+              <input type="text" [(ngModel)]="currentDayMenu.dinner.sides" placeholder="e.g. Fresh Cut Salad & Mint Chutney" class="form-input">
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+              <label><span class="label-icon">💰</span> Meal Price (₹) *</label>
+              <input type="number" [(ngModel)]="currentDayMenu.dinner.price" placeholder="e.g. 89" class="form-input" min="0">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LIVE PREVIEW CARD (MATCHING USER SCREENSHOT) -->
+      <div class="day-preview-column">
+        <div class="preview-sticky-card">
+          <div class="preview-card-header">
+            <span class="preview-badge">LIVE WEBSITE PREVIEW</span>
+            <h5>{{ currentDayMenu.day }}'s Menu Display</h5>
+          </div>
+
+          <div class="preview-cards-wrapper">
+            
+            <!-- LUNCH PREVIEW CARD -->
+            <div class="preview-slot-box" *ngIf="currentDayMenu.lunch">
+              <div class="preview-slot-title">
+                <span class="preview-icon">☀️</span>
+                <strong>Lunch Spread</strong>
+                <span class="preview-price-tag" *ngIf="currentDayMenu.lunch.price">₹{{ currentDayMenu.lunch.price }}</span>
+                <span class="preview-time">12:30 PM - 02:00 PM</span>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.lunch.main">
+                <span class="item-emoji">🍲</span>
+                <div class="item-text">
+                  <span class="item-cat">MAIN SABZI</span>
+                  <span class="item-val">{{ currentDayMenu.lunch.main }}</span>
+                </div>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.lunch.dal">
+                <span class="item-emoji">🥣</span>
+                <div class="item-text">
+                  <span class="item-cat">DAL / GRAVY</span>
+                  <span class="item-val">{{ currentDayMenu.lunch.dal }}</span>
+                </div>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.lunch.breadRice">
+                <span class="item-emoji">🫓</span>
+                <div class="item-text">
+                  <span class="item-cat">BREADS & RICE</span>
+                  <span class="item-val">{{ currentDayMenu.lunch.breadRice }}</span>
+                </div>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.lunch.sides">
+                <span class="item-emoji">🥗</span>
+                <div class="item-text">
+                  <span class="item-cat">ACCOMPANIMENTS</span>
+                  <span class="item-val">{{ currentDayMenu.lunch.sides }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- DINNER PREVIEW CARD -->
+            <div class="preview-slot-box" *ngIf="currentDayMenu.dinner">
+              <div class="preview-slot-title">
+                <span class="preview-icon">🌙</span>
+                <strong>Dinner Spread</strong>
+                <span class="preview-price-tag" *ngIf="currentDayMenu.dinner.price">₹{{ currentDayMenu.dinner.price }}</span>
+                <span class="preview-time">07:30 PM - 09:30 PM</span>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.dinner.main">
+                <span class="item-emoji">🍲</span>
+                <div class="item-text">
+                  <span class="item-cat">MAIN SABZI</span>
+                  <span class="item-val">{{ currentDayMenu.dinner.main }}</span>
+                </div>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.dinner.dal">
+                <span class="item-emoji">🥣</span>
+                <div class="item-text">
+                  <span class="item-cat">DAL / GRAVY</span>
+                  <span class="item-val">{{ currentDayMenu.dinner.dal }}</span>
+                </div>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.dinner.breadRice">
+                <span class="item-emoji">🫓</span>
+                <div class="item-text">
+                  <span class="item-cat">BREADS & RICE</span>
+                  <span class="item-val">{{ currentDayMenu.dinner.breadRice }}</span>
+                </div>
+              </div>
+
+              <div class="preview-item-row" *ngIf="currentDayMenu.dinner.sides">
+                <span class="item-emoji">🥗</span>
+                <div class="item-text">
+                  <span class="item-cat">ACCOMPANIMENTS</span>
+                  <span class="item-val">{{ currentDayMenu.dinner.sides }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="preview-footer-action">
+            <button type="button" class="btn btn-primary btn-block" [disabled]="isSavingMenu" (click)="saveWeeklyMenu()">
+              {{ isSavingMenu ? 'Saving...' : '💾 Save Weekly Menu Live' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ==================== TAB 3: CUSTOMER SUBSCRIPTIONS ==================== -->
+  <div *ngIf="activeTab === 'orders'" class="orders-tab-container">
+    
+    <!-- STATS COUNTER PILLS -->
+    <div class="orders-stats-bar">
+      <button type="button" class="stat-pill" [class.active]="orderStatusFilter === 'all'" (click)="orderStatusFilter = 'all'">
+        <span class="stat-lbl">All Subscriptions</span>
+        <span class="stat-num">{{ orders.length }}</span>
+      </button>
+
+      <button type="button" class="stat-pill pill-active" [class.active]="orderStatusFilter === 'active'" (click)="orderStatusFilter = 'active'">
+        <span class="stat-dot dot-active"></span>
+        <span class="stat-lbl">Active</span>
+        <span class="stat-num">{{ activeOrdersCount }}</span>
+      </button>
+
+      <button type="button" class="stat-pill pill-paused" [class.active]="orderStatusFilter === 'paused'" (click)="orderStatusFilter = 'paused'">
+        <span class="stat-dot dot-paused"></span>
+        <span class="stat-lbl">Paused</span>
+        <span class="stat-num">{{ pausedOrdersCount }}</span>
+      </button>
+
+      <button type="button" class="stat-pill pill-completed" [class.active]="orderStatusFilter === 'completed'" (click)="orderStatusFilter = 'completed'">
+        <span class="stat-lbl">Completed</span>
+        <span class="stat-num">{{ completedOrdersCount }}</span>
+      </button>
+
+      <button type="button" class="stat-pill pill-cancelled" [class.active]="orderStatusFilter === 'cancelled'" (click)="orderStatusFilter = 'cancelled'">
+        <span class="stat-lbl">Cancelled</span>
+        <span class="stat-num">{{ cancelledOrdersCount }}</span>
+      </button>
+    </div>
+
+    <!-- SEARCH & CONTROLS -->
+    <div class="controls-bar" style="margin-top: 1rem; margin-bottom: 1.25rem;">
+      <div class="search-box">
+        <i class="icon">🔍</i>
+        <input type="text" placeholder="Search by customer, phone, order ID, or address..." [(ngModel)]="orderSearchQuery">
+      </div>
+
+      <div class="filter-group">
+        <button type="button" class="btn btn-secondary" [disabled]="isRefreshingOrders" (click)="loadOrders()">
+          <span *ngIf="!isRefreshingOrders">🔄 Refresh Subscriptions</span>
+          <span *ngIf="isRefreshingOrders">⏳ Loading...</span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="filteredOrders.length === 0" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>{{ orders.length === 0 ? 'No Subscriptions Yet' : 'No Subscriptions Found' }}</h3>
+      <p>{{ orders.length === 0 ? 'Customer trial bookings and daily subscriptions will appear here in real-time.' : 'No orders matched your search or status filter.' }}</p>
+    </div>
+
+    <div *ngIf="filteredOrders.length > 0" class="table-responsive">
+      <table class="admin-table orders-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Thali / Plan</th>
+            <th>Duration & Slot</th>
+            <th>Delivery Address</th>
+            <th>Amount</th>
+            <th>Live Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ord of filteredOrders">
+            <td>
+              <span class="order-id-badge">{{ ord.orderId }}</span>
+              <div class="text-muted text-xs">{{ ord.createdAt | date:'mediumDate' }}</div>
+              <div class="text-muted text-xs">{{ ord.createdAt | date:'shortTime' }}</div>
+            </td>
+            <td>
+              <strong style="color: #0f172a; font-size: 0.95rem;">{{ ord.customerName }}</strong>
+              <div>
+                <a [href]="'tel:' + ord.customerPhone" class="phone-link" style="color: #0284c7; text-decoration: none; font-weight: 600;">
+                  📞 {{ ord.customerPhone }}
+                </a>
+              </div>
+              <div class="text-xs text-muted" *ngIf="ord.customerEmail">{{ ord.customerEmail }}</div>
+            </td>
+            <td>
+              <strong style="color: #1e293b;">{{ ord.planName }}</strong>
+              <div class="text-xs" style="color: #ea580c; font-weight: 600;" *ngIf="ord.specialInstructions">
+                📝 Note: {{ ord.specialInstructions }}
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-duration" [ngClass]="'badge-' + ord.subscriptionType">{{ ord.subscriptionType | uppercase }}</span>
+              <div class="slot-text" style="font-weight: 700; color: #334155; margin-top: 4px;">
+                <span *ngIf="ord.mealSlot === 'lunch'">☀️ Lunch Only</span>
+                <span *ngIf="ord.mealSlot === 'dinner'">🌙 Dinner Only</span>
+                <span *ngIf="ord.mealSlot === 'both'">🍱 Both Lunch & Dinner</span>
+                <span *ngIf="ord.mealSlot !== 'lunch' && ord.mealSlot !== 'dinner' && ord.mealSlot !== 'both'">{{ ord.mealSlot | titlecase }}</span>
+              </div>
+              <div class="text-xs text-muted" *ngIf="ord.startDate">Starts: {{ ord.startDate }}</div>
+              <div class="text-xs text-muted" *ngIf="ord.totalMeals">{{ ord.totalMeals }} Total Meals</div>
+            </td>
+            <td>
+              <div class="address-text" style="font-weight: 600; color: #1e293b;">{{ ord.deliveryAddress?.street }}</div>
+              <div class="text-xs" style="color: #475569;">{{ ord.deliveryAddress?.area }}, {{ ord.deliveryAddress?.city }}</div>
+              <div class="text-xs text-muted" *ngIf="ord.deliveryAddress?.landmark">Landmark: {{ ord.deliveryAddress?.landmark }}</div>
+            </td>
+            <td>
+              <strong class="text-primary font-bold" style="font-size: 1.05rem; color: #ea580c;">₹{{ ord.totalAmount }}</strong>
+              <div class="text-xs text-muted" style="text-transform: uppercase; font-weight: 600;">
+                {{ ord.paymentMethod || 'COD' }}
+              </div>
+            </td>
+            <td>
+              <select [ngModel]="ord.status" (ngModelChange)="updateOrderStatus(ord, $event)" class="status-select" [ngClass]="'status-' + ord.status">
+                <option value="active">🟢 Active</option>
+                <option value="paused">⏸️ Paused</option>
+                <option value="completed">✔️ Completed</option>
+                <option value="cancelled">❌ Cancelled</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== CREATE / EDIT MODAL ==================== -->
+  <div class="modal-backdrop" *ngIf="isModalOpen" (click)="closeModal()">
+    <div class="modal-dialog modal-dialog-lg" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <div>
+          <h3>{{ isEditing ? 'Edit Thali / Tiffin' : 'Create New Thali / Tiffin' }}</h3>
+          <p class="modal-sub">Add or customize thali cards shown on FoodyBhai Tiffin page</p>
+        </div>
+        <button class="modal-close" (click)="closeModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div class="alert alert-danger" *ngIf="modalError">
+          {{ modalError }}
+        </div>
+
+        <!-- QUICK TEMPLATES (When creating new) -->
+        <div class="quick-templates-box" *ngIf="!isEditing">
+          <span class="template-label">⚡ Quick Fill Preset:</span>
+          <div class="template-btns">
+            <button type="button" class="btn-template" (click)="loadTemplate('mini')">
+              🍱 Mini Thali (₹499)
+            </button>
+            <button type="button" class="btn-template" (click)="loadTemplate('standard')">
+              👑 Standard Thali (₹649)
+            </button>
+            <button type="button" class="btn-template" (click)="loadTemplate('deluxe')">
+              ✨ Deluxe Shahi (₹899)
+            </button>
+          </div>
+        </div>
+
+        <!-- TITLE & DIETARY -->
+        <div class="form-row">
+          <div class="form-group col-7">
+            <label>Thali Title *</label>
+            <input type="text" [(ngModel)]="formModel.name" placeholder="e.g. Rozana Mini Thali" class="form-input">
+          </div>
+          <div class="form-group col-5">
+            <label>Dietary Type</label>
+            <select [(ngModel)]="formModel.dietaryType" class="form-input">
+              <option value="veg">🌱 Pure Veg</option>
+              <option value="non-veg">🍗 Non-Veg</option>
+              <option value="jain">🌾 Jain (No Onion/Garlic)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TAGLINE & SHORT DESC -->
+        <div class="form-group">
+          <label>Tagline (Subheading on Card)</label>
+          <input type="text" [(ngModel)]="formModel.tagline" placeholder="e.g. Light, healthy & pocket-friendly everyday meal" class="form-input">
+        </div>
+
+        <!-- DETAILED DESCRIPTION (RICH TEXT) -->
+        <div class="form-group">
+          <label>Detailed Description</label>
+          <app-rich-editor 
+            [(ngModel)]="formModel.description"
+            placeholder="Write an appetizing description for this thali..."
+            minHeight="120px"
+            maxHeight="220px"
+            [showTemplates]="false"
+            [showSourceView]="false">
+          </app-rich-editor>
+        </div>
+
+        <!-- PRICING TIERS -->
+        <div class="form-row">
+          <div class="form-group col-3">
+            <label>Instant / 1-Day (₹) *</label>
+            <input type="number" [(ngModel)]="formModel.trialPrice" placeholder="79" class="form-input">
+            <small class="form-hint">Used for Add to Cart</small>
+          </div>
+          <div class="form-group col-3">
+            <label>Weekly 7-Day (₹)</label>
+            <input type="number" [(ngModel)]="formModel.weeklyPrice" placeholder="499" class="form-input">
+          </div>
+          <div class="form-group col-3">
+            <label>Monthly 30-Day (₹)</label>
+            <input type="number" [(ngModel)]="formModel.monthlyPrice" placeholder="1899" class="form-input">
+          </div>
+          <div class="form-group col-3">
+            <label>Effective / Meal (₹)</label>
+            <input type="number" [(ngModel)]="formModel.perMealPrice" placeholder="65" class="form-input">
+            <small class="form-hint">e.g. Effective only ₹65/meal</small>
+          </div>
+        </div>
+
+        <!-- WHAT'S IN THE DABBA (CUSTOM RICH TEXT EDITOR) -->
+        <div class="form-group">
+          <label class="dabba-label">
+            🍱 What's in the Dabba (Rich Text Items List) *
+          </label>
+          <app-rich-editor 
+            [(ngModel)]="formModel.itemsHtml"
+            placeholder="List each meal item using bullet points (e.g. 4 Desi Ghee Phulkas, Dal Fry, Seasonal Sabzi...)"
+            minHeight="160px"
+            maxHeight="320px"
+            [showTemplates]="false"
+            [showSourceView]="false">
+          </app-rich-editor>
+          
+          <!-- LIVE ITEMS PREVIEW -->
+          <div class="items-preview-container" *ngIf="parsedItemsPreview.length > 0">
+            <div class="preview-header">
+              <span class="preview-title">Card Preview ({{ parsedItemsPreview.length }} items detected):</span>
+            </div>
+            <div class="preview-items-list">
+              <div class="preview-item-row" *ngFor="let it of parsedItemsPreview">
+                <span class="preview-check">✔</span>
+                <span [innerHTML]="it"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KEY FEATURES / USPS (CUSTOM RICH TEXT EDITOR) -->
+        <div class="form-group">
+          <label>Key Features / USPs (Rich Text or Bullet List)</label>
+          <app-rich-editor 
+            [(ngModel)]="formModel.featuresHtml"
+            placeholder="List key USPs (e.g. Pure Desi Ghee Phulkas, 100% RO Water, Zero Preservatives...)"
+            minHeight="120px"
+            maxHeight="240px"
+            [showTemplates]="false"
+            [showSourceView]="false">
+          </app-rich-editor>
+
+          <!-- LIVE FEATURES PREVIEW -->
+          <div class="items-preview-container" *ngIf="parsedFeaturesPreview.length > 0">
+            <div class="preview-header">
+              <span class="preview-title">Features Preview ({{ parsedFeaturesPreview.length }} tags):</span>
+            </div>
+            <div class="features-preview-pills">
+              <span class="feat-pill-preview" *ngFor="let f of parsedFeaturesPreview">
+                ✨ <span [innerHTML]="f"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE UPLOAD & URL -->
+        <div class="form-group">
+          <label>Thali Photo</label>
+          <div class="image-uploader-block">
+            <div class="upload-btn-wrap">
+              <label class="btn-file-upload">
+                📷 Choose Photo from Device
+                <input type="file" accept="image/*" (change)="onImageFileSelected($event)">
+              </label>
+              <span class="upload-or">or paste image URL:</span>
+            </div>
+            <input type="text" [(ngModel)]="formModel.image" placeholder="https://images.unsplash.com/..." class="form-input">
+            
+            <div class="image-preview-card" *ngIf="formModel.image">
+              <img [src]="formModel.image" alt="Preview" (error)="formModel.image = ''">
+              <span class="preview-badge">Live Preview</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RATING & REVIEWS -->
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Customer Rating (Stars)</label>
+            <input type="number" step="0.1" min="1" max="5" [(ngModel)]="formModel.rating" placeholder="4.8" class="form-input">
+          </div>
+          <div class="form-group col-6">
+            <label>Reviews Count</label>
+            <input type="number" [(ngModel)]="formModel.reviewsCount" placeholder="94" class="form-input">
+          </div>
+        </div>
+
+        <!-- TOGGLES -->
+        <div class="checkbox-row-modern">
+          <label class="custom-check-box">
+            <input type="checkbox" [(ngModel)]="formModel.isActive">
+            <div class="check-content">
+              <strong>Live on FoodyBhai</strong>
+              <span>Visible to customers immediately</span>
+            </div>
+          </label>
+
+          <label class="custom-check-box">
+            <input type="checkbox" [(ngModel)]="formModel.isPopular">
+            <div class="check-content">
+              <strong>👑 Most Popular</strong>
+              <span>Show gold crown badge</span>
+            </div>
+          </label>
+
+          <label class="custom-check-box">
+            <input type="checkbox" [(ngModel)]="formModel.isBestValue">
+            <div class="check-content">
+              <strong>⭐ Best Value</strong>
+              <span>Show best value tag</span>
+            </div>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary btn-save" [disabled]="isSaving" (click)="savePlan()">
+          {{ isSaving ? 'Saving...' : (isEditing ? 'Update Thali' : 'Publish Thali Live') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

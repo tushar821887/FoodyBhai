@@ -7,9 +7,55 @@ import { Setting, SettingDocument } from './schemas/setting.schema';
 export class SettingsService {
   constructor(@InjectModel(Setting.name) private settingModel: Model<SettingDocument>) {}
 
+  private ensureTiffinInConfig(val: any): any {
+    if (!val || typeof val !== 'object') return val;
+    if (Array.isArray(val.navLinks)) {
+      const hasTiffin = val.navLinks.some((l: any) => l.url === '/tiffin' || l.label?.toLowerCase() === 'tiffin');
+      if (!hasTiffin) {
+        const menuIdx = val.navLinks.findIndex((l: any) => l.url === '/menu' || l.label?.toLowerCase() === 'menu');
+        const insertIdx = menuIdx !== -1 ? menuIdx + 1 : 1;
+        val.navLinks.splice(insertIdx, 0, {
+          label: 'Tiffin',
+          url: '/tiffin',
+          exact: false,
+          badge: 'HOT',
+          badgeColor: '#10b981',
+          hasDropdown: false
+        });
+      }
+
+      const menuLink = val.navLinks.find((l: any) => l.url === '/menu' || l.label?.toLowerCase() === 'menu');
+      if (menuLink) {
+        if (!Array.isArray(menuLink.children)) {
+          menuLink.children = [];
+        }
+        const hasTiffinChild = menuLink.children.some((c: any) => c.url === '/tiffin');
+        if (!hasTiffinChild) {
+          menuLink.children.unshift({
+            label: 'Tiffin Service 🍱',
+            url: '/tiffin',
+            icon: '🍱',
+            description: 'Daily homemade thali subscriptions & trial meals',
+            badge: 'HOT',
+            badgeBg: '#10b981',
+            badgeColor: '#ffffff'
+          });
+        }
+      }
+    }
+    return val;
+  }
+
   async getSetting(key: string): Promise<any> {
     const setting = await this.settingModel.findOne({ key }).exec();
     if (setting && setting.value !== undefined && setting.value !== null) {
+      if (key === 'header_config') {
+        let val = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
+        val = this.ensureTiffinInConfig(val);
+        this.settingModel.updateOne({ key }, { value: val }).exec().catch(() => {});
+        return val;
+      }
+
       return setting.value;
     }
 
@@ -132,6 +178,14 @@ export class SettingsService {
               { label: 'Desserts & Sweets', url: '/menu?cat=desserts', icon: '🍨', description: 'Gulab jamun, rasmalai & ice cream' }
             ]
           },
+          { 
+            label: 'Tiffin', 
+            url: '/tiffin', 
+            exact: false, 
+            badge: 'HOT', 
+            badgeColor: '#10b981', 
+            hasDropdown: false 
+          },
           { label: 'About', url: '/about', exact: false },
           { label: 'Contact', url: '/contact', exact: false }
         ],
@@ -181,13 +235,88 @@ export class SettingsService {
         dropdownColumns: '1'
       },
       footer_config: {
+        showBrandColumn: true,
+        logoUrl: '/assets/images/logo.png',
+        logoAlt: 'Foody Bhai Logo',
+        logoHeight: '80px',
+        logoShape: 'natural',
+        logoBorderColor: '#ea580c',
         tagline: 'Ghar jaisa swaad, har baar!',
-        aboutText: 'Meerut\'s favourite cloud kitchen delivering fresh, hygienic, and authentic home-style food right to your doorstep.',
+        aboutText: 'Your ultimate destination for discovering authentic, easy-to-follow, and delicious recipes. We make cooking at home simple and fun.',
+        showSocial: true,
+        socialStyle: 'circle',
+        socialLinks: [
+          { id: 'soc_fb', platform: 'facebook', name: 'Facebook', url: 'https://facebook.com', icon: 'fa-brands fa-facebook-f', enabled: true },
+          { id: 'soc_ig', platform: 'instagram', name: 'Instagram', url: 'https://instagram.com', icon: 'fa-brands fa-instagram', enabled: true },
+          { id: 'soc_tw', platform: 'twitter', name: 'Twitter', url: 'https://twitter.com', icon: 'fa-brands fa-twitter', enabled: true }
+        ],
+        sections: [
+          {
+            id: 'sec_quick_links',
+            title: 'Quick Links',
+            enabled: true,
+            type: 'links',
+            showUnderline: true,
+            items: [
+              { id: 'it_home', label: 'Home', url: '/', enabled: true, type: 'link' },
+              { id: 'it_menu', label: 'Menu', url: '/menu', enabled: true, type: 'link' },
+              { id: 'it_tiffin', label: 'Tiffin Service', url: '/tiffin', enabled: true, type: 'link' },
+              { id: 'it_about', label: 'About Us', url: '/about', enabled: true, type: 'link' },
+              { id: 'it_contact', label: 'Contact', url: '/contact', enabled: true, type: 'link' },
+              { id: 'it_app', label: 'Download Android App', url: '', icon: 'fa-solid fa-mobile-screen-button', enabled: true, type: 'app-download', color: '#10b981', fontWeight: '600' }
+            ]
+          },
+          {
+            id: 'sec_legal',
+            title: 'Legal',
+            enabled: true,
+            type: 'links',
+            showUnderline: true,
+            items: [
+              { id: 'it_privacy', label: 'Privacy Policy', url: '/privacy-policy', enabled: true, type: 'link' },
+              { id: 'it_terms', label: 'Terms & Conditions', url: '/terms', enabled: true, type: 'link' },
+              { id: 'it_disclaimer', label: 'Disclaimer', url: '/disclaimer', enabled: true, type: 'link' }
+            ]
+          },
+          {
+            id: 'sec_contact',
+            title: 'Contact Us',
+            enabled: true,
+            type: 'contact',
+            showUnderline: true,
+            items: [
+              { id: 'it_loc', label: '127, Bhatwara, Bagh Wali Gali, Meerut - 250002', icon: 'fa-solid fa-location-dot', enabled: true, type: 'contact' },
+              { id: 'it_phone', label: '8218870579', url: 'tel:8218870579', icon: 'fa-solid fa-phone', enabled: true, type: 'contact' },
+              { id: 'it_email', label: 'tusharmanusharma@gmail.com', url: 'mailto:tusharmanusharma@gmail.com', icon: 'fa-solid fa-envelope', enabled: true, type: 'contact' }
+            ]
+          }
+        ],
+        columnsPerRow: '4',
+        columnsGap: '2rem',
+        containerWidth: '1280px',
+        brandColumnSpan: '1.8',
+        bgColor: '#071811',
+        textColor: '#a4b0be',
+        headingColor: '#ffffff',
+        accentColor: '#10b981',
+        hoverColor: '#10b981',
+        showTitleUnderline: true,
+        titleUnderlineColor: '#10b981',
+        titleFontSize: '1.2rem',
+        titleFontWeight: '700',
+        titleTextTransform: 'none',
+        linksFontSize: '14px',
+        paddingTop: '4rem',
+        paddingBottom: '0',
+        showBottomBar: true,
+        copyrightText: '© 2026 FoodyBhai. All Rights Reserved.',
+        bottomBarBg: 'transparent',
+        bottomBarTextColor: '#a4b0be',
+        bottomBarBorderColor: 'rgba(255, 255, 255, 0.1)',
+        bottomBarAlign: 'center',
         phone: '+91 8218870579',
         email: 'contact@foodybhai.in',
         address: '226 Bhatwara, Budhana Gate, Meerut, Uttar Pradesh 250002',
-        copyrightText: '© 2026 Foody Bhai. All rights reserved.',
-        showSocial: true,
         instagramUrl: 'https://instagram.com',
         facebookUrl: 'https://facebook.com',
         twitterUrl: 'https://twitter.com'
@@ -620,6 +749,9 @@ export class SettingsService {
     const settings = await this.settingModel.find().exec();
     const result: Record<string, any> = {};
     settings.forEach(s => result[s.key] = s.value);
+    if (result['header_config']) {
+      result['header_config'] = this.ensureTiffinInConfig(result['header_config']);
+    }
     return result;
   }
 }

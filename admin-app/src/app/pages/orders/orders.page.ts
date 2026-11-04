@@ -32,11 +32,12 @@ import { RichEditorComponent } from '../../components/rich-editor/rich-editor.co
 import { ThemeManagerComponent } from '../../components/theme-manager/theme-manager.component';
 import { PageBuilderComponent } from '../../components/page-builder/page-builder.component';
 import { HeaderFooterManagerComponent } from '../../components/header-footer-manager/header-footer-manager.component';
+import { TiffinManagerComponent } from '../../components/tiffin-manager/tiffin-manager.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent, HeaderFooterManagerComponent],
+  imports: [CommonModule, FormsModule, RouterModule, FilterStatusPipe, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent, HeaderFooterManagerComponent, TiffinManagerComponent],
   templateUrl: './orders.page.html',
   styleUrl: './orders.page.css'
 })
@@ -115,7 +116,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   baseOrders: Order[] = [];
   contacts: any[] = [];
   currentTab: string = 'pending';
-  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer' = 'dashboard';
+  currentView: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer' | 'tiffin' = 'dashboard';
   menuTab: 'categories' | 'items' | 'mapping' = 'categories';
 
   promoBanner: PromoBannerConfig = {
@@ -1038,13 +1039,14 @@ export class OrdersPage implements OnInit, OnDestroy {
   }
 
   syncViewFromRoute() {
+    const urlSegment = this.router.url.split('?')[0].replace(/^\//, '');
     const dataView = this.route.snapshot.data?.['view'];
-    let path = dataView || this.route.snapshot.routeConfig?.path;
-    if (!path) {
-      path = this.router.url.split('?')[0].replace(/^\//, '');
+    let path = urlSegment || dataView || this.route.snapshot.routeConfig?.path;
+    if (path === 'page-studio' || path === 'page-builder') {
+      path = 'cms';
     }
-    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer'> = [
-      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms', 'coupons', 'banner', 'header-footer'
+    const validViews: Array<'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer' | 'tiffin'> = [
+      'dashboard', 'history', 'agents', 'settings', 'menu', 'users', 'payments', 'cancel-requests', 'contacts', 'theme', 'cms', 'coupons', 'banner', 'header-footer', 'tiffin'
     ];
     let matchedView = validViews.find(v => v === path);
     if (!matchedView) {
@@ -1061,7 +1063,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
-  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer', updateRoute: boolean = true) {
+  setView(view: 'dashboard' | 'history' | 'agents' | 'settings' | 'menu' | 'users' | 'payments' | 'cancel-requests' | 'contacts' | 'theme' | 'cms' | 'coupons' | 'banner' | 'header-footer' | 'tiffin', updateRoute: boolean = true) {
     this.currentView = view;
     this.closeMobileMenu();
     if (updateRoute) {

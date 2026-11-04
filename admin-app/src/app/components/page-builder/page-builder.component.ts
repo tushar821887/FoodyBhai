@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { CmsService } from '../../services/cms.service';
 import { CmsPage, CmsSection, SectionType, CmsSectionItem } from '../../models/cms.model';
 import { RichEditorComponent } from '../rich-editor/rich-editor.component';
@@ -48,6 +49,7 @@ export class PageBuilderComponent implements OnInit {
   showAddSectionModal = false;
 
   private cmsService = inject(CmsService);
+  private route = inject(ActivatedRoute);
 
   get filteredSections(): CmsSection[] {
     if (!this.selectedPage || !this.selectedPage.sections) return [];
@@ -130,11 +132,13 @@ export class PageBuilderComponent implements OnInit {
   }
 
   ngOnInit() {
+    const querySlug = this.route.snapshot.queryParams?.['slug'];
+
     this.cmsService.pages$.subscribe(pages => {
       if (pages && pages.length > 0) {
         if (this.isSaving) return;
 
-        const currentSlug = this.selectedPage ? this.selectedPage.slug : undefined;
+        const currentSlug = this.selectedPage ? this.selectedPage.slug : querySlug;
         const currentSecId = this.selectedSection ? this.selectedSection.id : undefined;
 
         this.pages = JSON.parse(JSON.stringify(pages));
@@ -153,6 +157,15 @@ export class PageBuilderComponent implements OnInit {
           }
         } else {
           this.selectedSection = null;
+        }
+      }
+    });
+
+    this.route.queryParams.subscribe(params => {
+      if (params && params['slug'] && this.pages.length > 0) {
+        const found = this.pages.find(p => p.slug === params['slug']);
+        if (found && (!this.selectedPage || this.selectedPage.slug !== params['slug'])) {
+          this.selectPage(found);
         }
       }
     });
@@ -263,9 +276,9 @@ export class PageBuilderComponent implements OnInit {
       type: type,
       title: this.getDefaultTitleForType(type),
       subtitle: this.getDefaultSubtitleForType(type),
-      badge: type === 'hero' || type === 'promo_cta' ? 'HOT DEAL' : (type === 'about_story' ? 'OUR STORY' : undefined),
-      buttonText: type === 'hero' || type === 'promo_cta' || type === 'image_text' || type === 'banner' ? 'Explore Menu' : (type === 'categories' || type === 'popular_menu' ? 'Browse Full Menu' : undefined),
-      buttonLink: '/menu',
+      badge: type === 'hero' || type === 'promo_cta' ? 'HOT DEAL' : (type === 'about_story' ? 'OUR STORY' : ((type as string) === 'thalis' || (type as string) === 'tiffin_plans' ? 'INSTANT ORDER & SUBSCRIPTIONS' : ((type as string) === 'weekly_menu' || (type as string) === 'tiffin_weekly' ? "CHEF'S SPECIAL ROTATION" : ((type as string) === 'tiffin_steps' || (type as string) === 'how_it_works' ? 'HASSLE-FREE ORDERING' : ((type as string) === 'tiffin_trust' || (type as string) === 'hygiene_standards' ? '100% HOMESTYLE HYGIENE' : ((type as string) === 'tiffin_faq' ? 'GOT QUESTIONS?' : ((type as string) === 'tiffin_addons' ? 'EXTRA DELIGHTS' : undefined))))))),
+      buttonText: type === 'hero' || type === 'promo_cta' || type === 'image_text' || type === 'banner' ? 'Explore Menu' : (type === 'categories' || type === 'popular_menu' ? 'Browse Full Menu' : ((type as string) === 'thalis' || (type as string) === 'tiffin_plans' ? 'View All Tiffin Plans' : ((type as string) === 'weekly_menu' || (type as string) === 'tiffin_weekly' ? "Order Today's Special" : ((type as string) === 'tiffin_steps' || (type as string) === 'how_it_works' ? 'Choose Your Thali Plan' : ((type as string) === 'tiffin_addons' ? 'Explore All Add-ons' : undefined))))),
+      buttonLink: (type as string) === 'thalis' || (type as string) === 'tiffin_plans' ? '/tiffin' : '/menu',
       imageUrl: type === 'hero' || type === 'image_text' || type === 'about_story' || type === 'banner' ? 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80' : undefined,
       imagePosition: type === 'about_story' ? 'left' : 'right',
       items: this.getDefaultItemsForType(type),
@@ -384,6 +397,16 @@ export class PageBuilderComponent implements OnInit {
     switch(type) {
       case 'hero': return 'Delivering Meerut’s Most Flavorful Food';
       case 'about_story': return 'Welcome to FoodyBhai';
+      case 'thalis':
+      case 'tiffin_plans': return 'Our Handcrafted Thalis & Meal Plans';
+      case 'weekly_menu':
+      case 'tiffin_weekly': return "See What's Cooking This Week";
+      case 'tiffin_steps':
+      case 'how_it_works': return 'How FoodyBhai Tiffin Service Works';
+      case 'tiffin_trust':
+      case 'hygiene_standards': return 'Our Kitchen & Hygiene Standards';
+      case 'tiffin_faq': return 'Tiffin Service Frequently Asked Questions';
+      case 'tiffin_addons': return 'Add-ons & Meal Accompaniments';
       case 'categories': return 'Explore Categories';
       case 'popular_menu': return 'Popular Menu';
       case 'features': return 'Why Choose Foody Bhai';
@@ -402,6 +425,16 @@ export class PageBuilderComponent implements OnInit {
     switch(type) {
       case 'hero': return 'Authentic Indian curries, aromatic biryanis, and homestyle delights delivered to your home.';
       case 'about_story': return 'Your ultimate destination for discovering authentic, easy-to-follow recipes and hot meals.';
+      case 'thalis':
+      case 'tiffin_plans': return 'Select trial meal to test taste or subscribe for 7 or 30 days. Pause or cancel anytime with single click.';
+      case 'weekly_menu':
+      case 'tiffin_weekly': return "Every day brings a delightful surprise prepared fresh with authentic spices, desi ghee, and zero preservatives.";
+      case 'tiffin_steps':
+      case 'how_it_works': return 'Enjoy pure homestyle goodness in 4 effortless steps. No long lock-ins, pause or cancel anytime.';
+      case 'tiffin_trust':
+      case 'hygiene_standards': return 'Every meal is prepared in a certified clean kitchen with the utmost hygiene and love.';
+      case 'tiffin_faq': return 'Everything you need to know about deliveries, pausing meals, trial orders, and hygiene.';
+      case 'tiffin_addons': return 'Customize your daily box with warm desi ghee rotis, chilled raita, sweet dishes, and extra curries.';
       case 'categories': return 'Find exactly what you\'re craving by browsing our recipe categories.';
       case 'popular_menu': return 'Discover our most loved and highly-rated recipes from the community.';
       case 'features': return 'Four cornerstones that set our kitchen apart from the rest.';
