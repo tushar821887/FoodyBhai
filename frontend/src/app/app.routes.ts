@@ -7,6 +7,8 @@ export const routes: Routes = [
   { path: 'recipe/:slug', loadComponent: () => import('./pages/recipe-detail/recipe-detail').then(m => m.RecipeDetail) },
   { path: 'category/:slug', loadComponent: () => import('./pages/category/category').then(m => m.Category) },
   { path: 'menu', loadComponent: () => import('./pages/menu/menu').then(m => m.MenuComponent) },
+  { path: 'tiffin', loadComponent: () => import('./pages/tiffin/tiffin').then(m => m.TiffinComponent) },
+  { path: 'tiffin-service', redirectTo: 'tiffin', pathMatch: 'full' },
   { path: 'blog', loadComponent: () => import('./pages/blog/blog').then(m => m.Blog) },
   { path: 'blog/:slug', loadComponent: () => import('./pages/blog-detail/blog-detail').then(m => m.BlogDetail) },
   { path: 'about', loadComponent: () => import('./pages/about/about').then(m => m.About) },

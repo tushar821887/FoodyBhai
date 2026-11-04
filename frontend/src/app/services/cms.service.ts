@@ -17,7 +17,26 @@ export const DEFAULT_WEBSITE_PAGES: CmsPage[] = [];
   providedIn: 'root'
 })
 export class CmsService {
-  private pagesSubject = new BehaviorSubject<CmsPage[]>([]);
+  private isBrowser: boolean;
+
+  private getInitialPages(): CmsPage[] {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse cached pages', e);
+    }
+    return [];
+  }
+
+  private pagesSubject = new BehaviorSubject<CmsPage[]>(this.getInitialPages());
   public pages$: Observable<CmsPage[]> = this.pagesSubject.asObservable();
 
   private isPagesLoadingSubject = new BehaviorSubject<boolean>(true);
@@ -26,7 +45,6 @@ export class CmsService {
   private isBackendOfflineSubject = new BehaviorSubject<boolean>(false);
   public isBackendOffline$: Observable<boolean> = this.isBackendOfflineSubject.asObservable();
 
-  private isBrowser: boolean;
   private readonly PAGES_API_URL = `${environment.apiUrl}/pages`;
   private readonly SETTINGS_API_URL = `${environment.apiUrl}/settings/website_pages`;
 
@@ -55,7 +73,7 @@ export class CmsService {
         };
       }
       window.addEventListener('storage', (ev) => {
-        if (ev.key === 'foodybhai_cms_last_published') {
+        if (ev.key === 'foodybhai_cms_last_published' || ev.key === STORAGE_KEY) {
           this.fetchLivePages(true).subscribe();
         }
       });
@@ -89,8 +107,16 @@ export class CmsService {
         if (pages && pages.length > 0) {
           const fresh = JSON.parse(JSON.stringify(pages));
           this.pagesSubject.next(fresh);
+          if (this.isBrowser) {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+            } catch (e) {}
+          }
         } else {
-          this.pagesSubject.next([]);
+          // If live fetch returned empty, keep cached pages if available, or clear
+          if (this.pagesSubject.value.length === 0) {
+            this.pagesSubject.next([]);
+          }
         }
         this.isPagesLoadingSubject.next(false);
       }),
@@ -104,17 +130,21 @@ export class CmsService {
             if (pages && pages.length > 0) {
               const fresh = JSON.parse(JSON.stringify(pages));
               this.pagesSubject.next(fresh);
-            } else {
-              this.pagesSubject.next([]);
+              if (this.isBrowser) {
+                try {
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+                } catch (e) {}
+              }
             }
             this.isPagesLoadingSubject.next(false);
           }),
           catchError(() => {
-            // When backend is unreachable, mark offline and clear pages - no fake website fallbacks
-            this.isBackendOfflineSubject.next(true);
-            this.pagesSubject.next([]);
+            if (this.pagesSubject.value.length === 0) {
+              this.isBackendOfflineSubject.next(true);
+              this.pagesSubject.next([]);
+            }
             this.isPagesLoadingSubject.next(false);
-            return of([]);
+            return of(this.pagesSubject.value);
           })
         );
       })
@@ -126,11 +156,11 @@ export class CmsService {
   }
 
   getPageBySlug(slug: string): Observable<CmsPage | null> {
-    const cleanSlug = (slug || '').toLowerCase().trim().replace(/^\//, '');
+    const cleanSlug = (slug || '').toLowerCase().trim().replace(/^\//, '').replace(/\/$/, '');
     return this.pages$.pipe(
       map(pages => {
         const found = pages.find(p => {
-          const s = (p.slug || '').toLowerCase().trim().replace(/^\//, '');
+          const s = (p.slug || '').toLowerCase().trim().replace(/^\//, '').replace(/\/$/, '');
           return s === cleanSlug && p.isEnabled !== false;
         });
         return found || null;
@@ -149,20 +179,11 @@ export class CmsService {
       tap(() => {
         this.pagesSubject.next(pages);
         if (this.isBrowser) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
+            localStorage.setItem('foodybhai_cms_last_published', Date.now().toString());
+          } catch (e) {}
         }
-        this.http.put<any>(this.SETTINGS_API_URL, { value: pages }, { headers }).subscribe({ error: () => {} });
-      }),
-      catchError(err => {
-        console.warn('PUT /pages/bulk failed, falling back to settings API URL...', err);
-        return this.http.put<any>(this.SETTINGS_API_URL, { value: pages }, { headers }).pipe(
-          tap(() => {
-            this.pagesSubject.next(pages);
-            if (this.isBrowser) {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
-            }
-          })
-        );
       })
     );
   }

@@ -248,6 +248,14 @@ export class Header implements OnInit {
             { label: 'Desserts & Sweets', url: '/menu?cat=desserts', icon: '🍨', description: 'Gulab jamun, rasmalai & ice cream' }
           ]
         },
+        { 
+          label: 'Tiffin', 
+          url: '/tiffin', 
+          exact: false,
+          badge: 'HOT',
+          badgeColor: '#10b981',
+          hasDropdown: false
+        },
         { label: 'About', url: '/about', exact: false },
         { label: 'Contact', url: '/contact', exact: false }
       ],
@@ -341,6 +349,9 @@ export class Header implements OnInit {
             const parsed = typeof res.value === 'string' ? JSON.parse(res.value) : res.value;
             if (parsed && typeof parsed === 'object') {
               this.headerConfig = { ...this.headerConfig, ...parsed };
+              if (this.headerConfig.navLinks) {
+                this.headerConfig.navLinks = this.ensureTiffinLink(this.headerConfig.navLinks);
+              }
               try {
                 if (typeof localStorage !== 'undefined') {
                   localStorage.setItem('foodybhai_header_config', JSON.stringify(this.headerConfig));
@@ -350,6 +361,9 @@ export class Header implements OnInit {
           } catch {
             if (typeof res.value === 'object') {
               this.headerConfig = { ...this.headerConfig, ...res.value };
+              if (this.headerConfig.navLinks) {
+                this.headerConfig.navLinks = this.ensureTiffinLink(this.headerConfig.navLinks);
+              }
               try {
                 if (typeof localStorage !== 'undefined') {
                   localStorage.setItem('foodybhai_header_config', JSON.stringify(this.headerConfig));
@@ -545,8 +559,47 @@ export class Header implements OnInit {
     }
   }
 
+  ensureTiffinLink(links: HeaderNavLink[]): HeaderNavLink[] {
+    if (!Array.isArray(links)) return [];
+    const hasTiffin = links.some(l => l.url === '/tiffin' || l.label?.toLowerCase() === 'tiffin');
+    if (!hasTiffin) {
+      const menuIdx = links.findIndex(l => l.url === '/menu' || l.label?.toLowerCase() === 'menu');
+      const insertIdx = menuIdx !== -1 ? menuIdx + 1 : 1;
+      links.splice(insertIdx, 0, {
+        label: 'Tiffin',
+        url: '/tiffin',
+        exact: false,
+        badge: 'HOT',
+        badgeColor: '#10b981',
+        hasDropdown: false
+      });
+    }
+
+    const menuLink = links.find(l => l.url === '/menu' || l.label?.toLowerCase() === 'menu');
+    if (menuLink) {
+      if (!Array.isArray(menuLink.children)) {
+        menuLink.children = [];
+      }
+      const hasTiffinChild = menuLink.children.some(c => c.url === '/tiffin');
+      if (!hasTiffinChild) {
+        menuLink.children.unshift({
+          label: 'Tiffin Service 🍱',
+          url: '/tiffin',
+          icon: '🍱',
+          description: 'Daily homemade thali subscriptions & trial meals',
+          badge: 'HOT',
+          badgeBg: '#10b981',
+          badgeColor: '#ffffff'
+        });
+      }
+    }
+    return links;
+  }
+
   getVisibleNavLinks(): HeaderNavLink[] {
-    return (this.headerConfig?.navLinks || []).filter(l => l.enabled !== false);
+    let links = this.headerConfig?.navLinks || [];
+    links = this.ensureTiffinLink(links);
+    return links.filter(l => l.enabled !== false);
   }
 
   getVisibleActions(): HeaderActionItem[] {

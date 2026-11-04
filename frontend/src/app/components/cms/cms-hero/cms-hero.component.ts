@@ -9,58 +9,79 @@ import { CmsSection } from '../../../models/cms.model';
   imports: [CommonModule, RouterModule],
   template: `
     <section class="hero"
-             [class.is-light-text]="section.style.textColor === '#ffffff'"
-             [style.padding-top]="section.style.paddingTop || '3rem'"
-             [style.padding-bottom]="section.style.paddingBottom || '4rem'"
-             [style.background-color]="section.style.backgroundColor || 'transparent'"
-             [style.background]="section.style.backgroundGradient || section.style.backgroundColor || 'transparent'"
-             [style.color]="section.style.textColor || 'inherit'">
-      <div class="container hero-container" [style.max-width]="section.style.maxWidth || '1200px'">
+             [class.is-light-text]="section?.style?.textColor === '#ffffff'"
+             [style.padding-top]="section?.style?.paddingTop || '3rem'"
+             [style.padding-bottom]="section?.style?.paddingBottom || '4rem'"
+             [style.background-color]="section?.style?.backgroundColor || 'transparent'"
+             [style.background]="section?.style?.backgroundGradient || section?.style?.backgroundColor || 'transparent'"
+             [style.color]="section?.style?.textColor || 'inherit'">
+      <div class="container hero-container" 
+           [class.no-image]="!section?.imageUrl" 
+           [style.max-width]="section?.style?.maxWidth || '1200px'"
+           [style.text-align]="section?.style?.textAlign || (!section?.imageUrl ? 'center' : 'left')">
+        
         <div class="hero-content animate-fade-in">
           
           <!-- Badges (strictly from CMS) -->
-          <div class="hero-badges" *ngIf="section.badge || section.badge2">
-            <div class="badge delivery-badge" *ngIf="section.badge">
-              <i class="fa-solid fa-motorcycle"></i> {{ section.badge }}
+          <div class="hero-badges" *ngIf="section?.badge || section?.badge2">
+            <div class="badge delivery-badge" *ngIf="section?.badge">
+              <i *ngIf="!hasEmoji(section.badge)" class="fa-solid fa-sparkles"></i>
+              <span>{{ section.badge }}</span>
             </div>
-            <div class="badge delivery-badge area-badge" *ngIf="section.badge2">
-              <i class="fa-solid fa-location-dot"></i> {{ section.badge2 }}
+            <div class="badge delivery-badge area-badge" *ngIf="section?.badge2">
+              <i *ngIf="!hasEmoji(section.badge2)" class="fa-solid fa-location-dot"></i>
+              <span>{{ section.badge2 }}</span>
             </div>
           </div>
 
           <!-- Dynamic Title (strictly from CMS) -->
-          <h1 *ngIf="section.title"
+          <h1 *ngIf="section?.title"
               class="hero-title"
-              [style.color]="section.style.textColor || 'var(--secondary-color, #241814)'"
-              [style.font-size]="section.style.titleFontSize || '3.5rem'"
+              [style.color]="section?.style?.textColor || 'var(--secondary-color, #241814)'"
+              [style.font-size]="section?.style?.titleFontSize || '3.5rem'"
               [innerHTML]="section.title"></h1>
 
           <!-- Dynamic Subtitle (strictly from CMS) -->
-          <p *ngIf="section.subtitle"
+          <p *ngIf="section?.subtitle"
              class="hero-subtitle"
-             [style.color]="section.style.textColor ? (section.style.textColor === '#ffffff' ? 'rgba(255,255,255,0.85)' : section.style.textColor) : 'var(--text-light, #716661)'"
-             [style.font-size]="section.style.contentFontSize || '1.1rem'">
+             [style.color]="section?.style?.textColor ? (section?.style?.textColor === '#ffffff' ? 'rgba(255,255,255,0.85)' : section?.style?.textColor) : 'var(--text-light, #716661)'"
+             [style.font-size]="section?.style?.contentFontSize || '1.1rem'">
             {{ section.subtitle }}
           </p>
 
           <!-- Action Buttons (strictly from CMS) -->
-          <div class="hero-actions" *ngIf="section.buttonText || section.secondaryButtonText || section.zomatoLink || section.swiggyLink" style="flex-wrap: wrap; gap: 1rem;">
-            <a *ngIf="section.buttonText" [routerLink]="section.buttonLink || '/menu'" class="btn btn-primary btn-lg">
-              {{ section.buttonText }} <i class="fa-solid fa-arrow-right"></i>
-            </a>
-            <a *ngIf="section.secondaryButtonText" [routerLink]="section.secondaryButtonLink || '/page/offers'" class="btn btn-secondary btn-lg">
-              {{ section.secondaryButtonText }}
-            </a>
-            <a *ngIf="section.zomatoLink" [href]="section.zomatoLink" target="_blank" class="btn btn-lg btn-zomato">
+          <div class="hero-actions" *ngIf="section?.buttonText || section?.secondaryButtonText || section?.zomatoLink || section?.swiggyLink" style="flex-wrap: wrap; gap: 1rem;">
+            
+            <!-- Primary Button: Link or Anchor -->
+            <ng-container *ngIf="section?.buttonText">
+              <button *ngIf="isHashLink(section.buttonLink)" type="button" class="btn btn-primary btn-lg" (click)="scrollToAnchor(section.buttonLink)">
+                {{ section.buttonText }} <i class="fa-solid fa-arrow-down"></i>
+              </button>
+              <a *ngIf="!isHashLink(section.buttonLink)" [routerLink]="section.buttonLink || '/menu'" class="btn btn-primary btn-lg">
+                {{ section.buttonText }} <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </ng-container>
+
+            <!-- Secondary Button: Link or Anchor -->
+            <ng-container *ngIf="section?.secondaryButtonText">
+              <button *ngIf="isHashLink(section.secondaryButtonLink)" type="button" class="btn btn-secondary btn-lg" (click)="scrollToAnchor(section.secondaryButtonLink)">
+                {{ section.secondaryButtonText }}
+              </button>
+              <a *ngIf="!isHashLink(section.secondaryButtonLink)" [routerLink]="section.secondaryButtonLink || '/page/offers'" class="btn btn-secondary btn-lg">
+                {{ section.secondaryButtonText }}
+              </a>
+            </ng-container>
+
+            <a *ngIf="section?.zomatoLink" [href]="section.zomatoLink" target="_blank" class="btn btn-lg btn-zomato">
               <strong style="font-style: italic; font-weight: 800; font-size: 1.15rem; letter-spacing: 0.5px;">zomato</strong>
             </a>
-            <a *ngIf="section.swiggyLink" [href]="section.swiggyLink" target="_blank" class="btn btn-lg btn-swiggy">
+            <a *ngIf="section?.swiggyLink" [href]="section.swiggyLink" target="_blank" class="btn btn-lg btn-swiggy">
               <strong style="font-weight: 800; font-size: 1.15rem; letter-spacing: 0.5px;">SWIGGY</strong>
             </a>
           </div>
 
           <!-- Quick Stats (strictly from CMS items) -->
-          <div class="hero-stats" *ngIf="section.items && section.items.length > 0">
+          <div class="hero-stats" *ngIf="section?.items && section.items.length > 0">
             <div class="stat" *ngFor="let item of section.items">
               <span class="stat-number">
                 {{ item.title }}
@@ -72,15 +93,15 @@ import { CmsSection } from '../../../models/cms.model';
         </div>
 
         <!-- Hero Image Slice (strictly from CMS) -->
-        <div class="hero-image animate-fade-in" *ngIf="section.imageUrl" style="animation-delay: 0.2s">
-          <div class="img-wrapper" [style.border-radius]="section.style.borderRadius || '30px'">
-            <img [src]="section.imageUrl" [alt]="section.title || 'Foody Bhai'">
+        <div class="hero-image animate-fade-in" *ngIf="section?.imageUrl" style="animation-delay: 0.2s">
+          <div class="img-wrapper" [style.border-radius]="section?.style?.borderRadius || '30px'">
+            <img [src]="section.imageUrl" [alt]="section?.title || 'Foody Bhai'">
             
-            <div class="floating-card rating-card" *ngIf="section.ratingValue || section.ratingLabel">
+            <div class="floating-card rating-card" *ngIf="section?.ratingValue || section?.ratingLabel">
               <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 24px;"></i>
               <div>
-                <strong *ngIf="section.ratingValue" style="display: block; font-size: 18px; color: #1e293b;">{{ section.ratingValue }}</strong>
-                <span *ngIf="section.ratingLabel" style="font-size: 12px; color: #64748b;">{{ section.ratingLabel }}</span>
+                <strong *ngIf="section?.ratingValue" style="display: block; font-size: 18px; color: #1e293b;">{{ section.ratingValue }}</strong>
+                <span *ngIf="section?.ratingLabel" style="font-size: 12px; color: #64748b;">{{ section.ratingLabel }}</span>
               </div>
             </div>
           </div>
@@ -100,6 +121,23 @@ import { CmsSection } from '../../../models/cms.model';
       grid-template-columns: 1.1fr 0.9fr;
       gap: 3.5rem;
       align-items: center;
+    }
+    .hero-container.no-image {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero-container.no-image .hero-badges {
+      justify-content: center;
+    }
+    .hero-container.no-image .hero-actions {
+      justify-content: center;
+    }
+    .hero-container.no-image .hero-stats {
+      justify-content: center;
     }
     .hero-badges {
       display: flex;
@@ -246,4 +284,22 @@ import { CmsSection } from '../../../models/cms.model';
 })
 export class CmsHeroComponent {
   @Input() section!: CmsSection;
+
+  hasEmoji(str?: string): boolean {
+    if (!str) return false;
+    return /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(str);
+  }
+
+  isHashLink(link?: string): boolean {
+    return !!link && link.startsWith('#');
+  }
+
+  scrollToAnchor(link?: string) {
+    if (!link) return;
+    const id = link.replace(/^#/, '');
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 }

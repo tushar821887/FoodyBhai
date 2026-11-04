@@ -12,6 +12,12 @@ import { CmsHtmlComponent } from '../cms-html/cms-html.component';
 import { CmsAboutComponent } from '../cms-about/cms-about.component';
 import { CmsCategoriesComponent } from '../cms-categories/cms-categories.component';
 import { CmsPopularMenuComponent } from '../cms-popular-menu/cms-popular-menu.component';
+import { CmsThalisComponent } from '../cms-thalis/cms-thalis.component';
+import { CmsWeeklyMenuComponent } from '../cms-weekly-menu/cms-weekly-menu.component';
+import { CmsTiffinStepsComponent } from '../cms-tiffin-steps/cms-tiffin-steps.component';
+import { CmsTiffinTrustComponent } from '../cms-tiffin-trust/cms-tiffin-trust.component';
+import { CmsTiffinFaqComponent } from '../cms-tiffin-faq/cms-tiffin-faq.component';
+import { CmsTiffinAddonsComponent } from '../cms-tiffin-addons/cms-tiffin-addons.component';
 
 @Component({
   selector: 'app-dynamic-section-renderer',
@@ -47,6 +53,22 @@ export class DynamicSectionRendererComponent implements OnChanges {
     category: CmsCategoriesComponent,
     popular_menu: CmsPopularMenuComponent,
     menu: CmsPopularMenuComponent,
+    thalis: CmsThalisComponent,
+    thali: CmsThalisComponent,
+    tiffin_plans: CmsThalisComponent,
+    tiffin: CmsThalisComponent,
+    weekly_menu: CmsWeeklyMenuComponent,
+    tiffin_weekly: CmsWeeklyMenuComponent,
+    weekly: CmsWeeklyMenuComponent,
+    tiffin_steps: CmsTiffinStepsComponent,
+    how_it_works: CmsTiffinStepsComponent,
+    steps: CmsTiffinStepsComponent,
+    tiffin_trust: CmsTiffinTrustComponent,
+    hygiene_standards: CmsTiffinTrustComponent,
+    trust: CmsTiffinTrustComponent,
+    tiffin_faq: CmsTiffinFaqComponent,
+    tiffin_addons: CmsTiffinAddonsComponent,
+    addons: CmsTiffinAddonsComponent,
     features: CmsFeaturesComponent,
     rich_text: CmsTextComponent,
     image_text: CmsBannerComponent,
@@ -59,6 +81,8 @@ export class DynamicSectionRendererComponent implements OnChanges {
   };
 
   getComponent(type: string): Type<any> {
-    return this.componentMap[type] || CmsTextComponent;
+    if (!type) return CmsTextComponent;
+    const key = type.toString().toLowerCase().trim();
+    return this.componentMap[key] || this.componentMap[type] || CmsTextComponent;
   }
 }

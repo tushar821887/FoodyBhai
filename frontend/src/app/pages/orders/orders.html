@@ -16,6 +16,28 @@
 
 <section class="section">
   <div class="container animate-fade-in">
+
+    <!-- ORDERS TYPE NAV (FOOD ORDERS VS TIFFIN SUBSCRIPTIONS) -->
+    <div style="display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+      <button type="button" 
+              (click)="activeOrderType = 'food'" 
+              [style.color]="activeOrderType === 'food' ? '#ea580c' : '#64748b'"
+              [style.borderColor]="activeOrderType === 'food' ? '#ea580c' : 'transparent'"
+              style="background: transparent; border: none; border-bottom: 3px solid; padding: 8px 16px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+        <i class="fa-solid fa-utensils"></i> Restaurant Orders ({{ orders.length }})
+      </button>
+
+      <button type="button" 
+              (click)="activeOrderType = 'subscriptions'; loadSubscriptions()" 
+              [style.color]="activeOrderType === 'subscriptions' ? '#ea580c' : '#64748b'"
+              [style.borderColor]="activeOrderType === 'subscriptions' ? '#ea580c' : 'transparent'"
+              style="background: transparent; border: none; border-bottom: 3px solid; padding: 8px 16px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+        <i class="fa-solid fa-box-archive"></i> Tiffin Subscriptions ({{ subscriptions.length }})
+      </button>
+    </div>
+
+    <!-- FOOD ORDERS WRAPPER -->
+    <div *ngIf="activeOrderType === 'food'">
     <!-- Notification Permission Banner for Customer -->
     <div *ngIf="showNotificationPermissionPrompt" style="margin-bottom: 24px; background: var(--primary-light, #fff7ed); border: 1.5px solid var(--primary-border, #fed7aa); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; box-shadow: 0 4px 12px var(--primary-glow, rgba(234, 88, 12, 0.08));">
       <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 250px;">
@@ -313,8 +335,190 @@
         }
       </div>
     }
+    </div>
+
+    <!-- TIFFIN SUBSCRIPTIONS VIEW -->
+    <div *ngIf="activeOrderType === 'subscriptions'" class="subscriptions-tab-view animate-fade-in">
+      <div *ngIf="isLoadingSubscriptions" class="text-center" style="padding: 3rem;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #ea580c;"></i>
+        <p style="margin-top: 1rem; color: #64748b;">Loading your tiffin subscriptions...</p>
+      </div>
+
+      <div *ngIf="!isLoadingSubscriptions && subscriptions.length === 0" style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <div style="font-size: 48px; margin-bottom: 12px;">🍱</div>
+        <h3 style="color: #1e293b; font-size: 22px; font-weight: 800; margin-bottom: 8px;">No Active Tiffin Subscriptions</h3>
+        <p style="color: #64748b; font-size: 14.5px; max-width: 440px; margin: 0 auto 20px auto; line-height: 1.5;">
+          Subscribe to our handcrafted pure veg lunch or dinner meal plans in Meerut. Fresh, hot food delivered right on time!
+        </p>
+        <a routerLink="/tiffin" style="display: inline-flex; align-items: center; gap: 8px; background: #ea580c; color: white; padding: 12px 28px; border-radius: 50px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);">
+          Explore Tiffin Plans & Subscribe →
+        </a>
+      </div>
+
+      <div *ngIf="!isLoadingSubscriptions && subscriptions.length > 0" style="display: flex; flex-direction: column; gap: 18px;">
+        <div *ngFor="let sub of subscriptions" style="background: white; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); transition: all 0.2s;" [style.borderLeft]="sub.status === 'active' ? '5px solid #16a34a' : (sub.status === 'paused' ? '5px solid #f59e0b' : (sub.status === 'cancelled' ? '5px solid #dc2626' : '5px solid #64748b'))">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-family: monospace; font-weight: 800; color: #ea580c; background: #ffedd5; padding: 4px 10px; border-radius: 6px; font-size: 0.9rem;">{{ sub.orderId }}</span>
+              <span style="font-size: 0.82rem; color: #94a3b8;"><i class="fa-regular fa-clock"></i> {{ sub.createdAt | date:'mediumDate' }}</span>
+            </div>
+            
+            <div [style.background]="sub.status === 'active' ? '#dcfce7' : (sub.status === 'paused' ? '#fef3c7' : (sub.status === 'cancelled' ? '#fee2e2' : '#f1f5f9'))" [style.color]="sub.status === 'active' ? '#15803d' : (sub.status === 'paused' ? '#b45309' : (sub.status === 'cancelled' ? '#b91c1c' : '#475569'))" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 50px; font-size: 0.8rem; font-weight: 800;">
+              <span>{{ sub.status === 'active' ? '🟢 Active Delivery' : (sub.status === 'paused' ? '⏸️ Paused (On Hold)' : (sub.status === 'cancelled' ? '❌ Cancelled' : '✔️ Completed')) }}</span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 18px; font-size: 0.9rem;">
+            <div>
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Thali Plan</span>
+              <strong style="color: #0f172a; font-size: 1.05rem;">{{ sub.planName }}</strong>
+            </div>
+
+            <div>
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Duration</span>
+              <span style="display: inline-block; background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; margin-top: 2px;">
+                {{ sub.subscriptionType | uppercase }} ({{ sub.totalMeals || 'Daily' }} Meals)
+              </span>
+            </div>
+
+            <div>
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Delivery Slot</span>
+              <strong style="color: #1e293b;">
+                <span *ngIf="sub.mealSlot === 'lunch'">☀️ Lunch Only (12:30 - 2 PM)</span>
+                <span *ngIf="sub.mealSlot === 'dinner'">🌙 Dinner Only (7:30 - 9:30 PM)</span>
+                <span *ngIf="sub.mealSlot === 'both'">🍱 Both Lunch & Dinner</span>
+                <span *ngIf="sub.mealSlot !== 'lunch' && sub.mealSlot !== 'dinner' && sub.mealSlot !== 'both'">{{ sub.mealSlot | titlecase }}</span>
+              </strong>
+            </div>
+
+            <div>
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total Amount</span>
+              <strong style="color: #ea580c; font-size: 1.15rem;">₹{{ sub.totalAmount }}</strong>
+              <span style="font-size: 0.75rem; color: #64748b; margin-left: 4px;">({{ sub.paymentMethod | uppercase }})</span>
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Delivery Address in Meerut</span>
+              <span style="color: #334155; font-weight: 500;">📍 {{ sub.deliveryAddress?.street }}, {{ sub.deliveryAddress?.area }}, Meerut</span>
+              <span *ngIf="sub.deliveryAddress?.landmark" style="color: #64748b; font-size: 0.85rem;"> (Landmark: {{ sub.deliveryAddress?.landmark }})</span>
+            </div>
+
+            <div *ngIf="sub.startDate">
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Starts On</span>
+              <span style="color: #1e293b; font-weight: 600;">📅 {{ sub.startDate }}</span>
+            </div>
+
+            <div *ngIf="sub.specialInstructions">
+              <span style="display: block; font-size: 0.72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Special Instructions</span>
+              <span style="color: #64748b; font-style: italic;">"{{ sub.specialInstructions }}"</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+            <button *ngIf="sub.status === 'active'" (click)="togglePauseSubscription(sub)" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; background: #fef3c7; color: #b45309; border: 1.5px solid #fde68a;">
+              ⏸️ Pause Deliveries
+            </button>
+            <button *ngIf="sub.status === 'paused'" (click)="togglePauseSubscription(sub)" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; background: #dcfce7; color: #15803d; border: 1.5px solid #86efac;">
+              ▶️ Resume Deliveries
+            </button>
+            <button *ngIf="sub.status === 'active' || sub.status === 'paused'" (click)="openEditSubModal(sub)" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; background: white; color: #1e293b; border: 1.5px solid #cbd5e1;">
+              ✏️ Change Slot / Address
+            </button>
+            <button *ngIf="sub.status === 'active' || sub.status === 'paused'" (click)="cancelSubscription(sub)" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; background: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5;">
+              ❌ Cancel / Unsubscribe
+            </button>
+            <a *ngIf="sub.status === 'cancelled' || sub.status === 'completed'" routerLink="/tiffin" style="padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; background: #ea580c; color: white; display: inline-flex; align-items: center; gap: 6px;">
+              🔄 Re-subscribe
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 </section>
+
+<!-- Edit Subscription Modal for Orders Page -->
+<div class="modal-overlay" *ngIf="isEditSubModalOpen" (click)="closeEditSubModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+  <div class="modal-container" (click)="$event.stopPropagation()" style="background: white; border-radius: 20px; max-width: 540px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
+    
+    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <span style="font-size: 0.72rem; font-weight: 800; color: #ea580c; background: #ffedd5; padding: 3px 8px; border-radius: 6px;">✏️ EDIT SUBSCRIPTION</span>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 4px 0 2px 0;">Change Subscription #{{ editingSub?.orderId }}</h3>
+        <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Update your meal delivery slot, address, or special notes.</p>
+      </div>
+      <button type="button" (click)="closeEditSubModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 700;">✕</button>
+    </div>
+
+    <div style="padding: 1.5rem;" *ngIf="editingSub">
+      
+      <!-- Slot selection -->
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Delivery Meal Slot</label>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          <label style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; text-align: center; transition: all 0.2s;" [style.borderColor]="editMealSlot === 'lunch' ? '#ea580c' : '#e2e8f0'" [style.background]="editMealSlot === 'lunch' ? '#fff8f5' : 'white'">
+            <input type="radio" name="orderEditSlot" value="lunch" [(ngModel)]="editMealSlot" style="position: absolute; opacity: 0;">
+            <strong style="font-size: 0.82rem; color: #1e293b;">☀️ Lunch</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">12:30 - 2:00 PM</span>
+          </label>
+
+          <label style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; text-align: center; transition: all 0.2s;" [style.borderColor]="editMealSlot === 'dinner' ? '#ea580c' : '#e2e8f0'" [style.background]="editMealSlot === 'dinner' ? '#fff8f5' : 'white'">
+            <input type="radio" name="orderEditSlot" value="dinner" [(ngModel)]="editMealSlot" style="position: absolute; opacity: 0;">
+            <strong style="font-size: 0.82rem; color: #1e293b;">🌙 Dinner</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">7:30 - 9:30 PM</span>
+          </label>
+
+          <label style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; text-align: center; transition: all 0.2s;" [style.borderColor]="editMealSlot === 'both' ? '#ea580c' : '#e2e8f0'" [style.background]="editMealSlot === 'both' ? '#fff8f5' : 'white'">
+            <input type="radio" name="orderEditSlot" value="both" [(ngModel)]="editMealSlot" style="position: absolute; opacity: 0;">
+            <strong style="font-size: 0.82rem; color: #1e293b;">🍱 Both</strong>
+            <span style="font-size: 0.7rem; color: #64748b;">Lunch & Dinner</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Delivery Address in Meerut</label>
+        <div style="margin-bottom: 10px;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Street / Flat / House Address *</label>
+          <input type="text" [(ngModel)]="editStreet" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Area in Meerut *</label>
+            <select [(ngModel)]="editArea" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box; background: white;">
+              <option value="" disabled>Select area</option>
+              <option *ngFor="let a of areasInMeerut" [value]="a">{{ a }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Landmark (Optional)</label>
+            <input type="text" [(ngModel)]="editLandmark" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Special Instructions / Diet Note</label>
+          <input type="text" [(ngModel)]="editSpecialInstructions" placeholder="e.g. Less spicy, call on arrival" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;">
+        </div>
+      </div>
+
+    </div>
+
+    <div style="padding: 1.25rem 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc;">
+      <button type="button" (click)="closeEditSubModal()" style="padding: 9px 18px; border: 1.5px solid #cbd5e1; background: white; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancel</button>
+      <button type="button" [disabled]="isSavingEditSub" (click)="saveSubscriptionChanges()" style="padding: 9px 20px; background: #ea580c; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">
+        <span *ngIf="!isSavingEditSub">Save Changes</span>
+        <span *ngIf="isSavingEditSub">Saving Changes...</span>
+      </button>
+    </div>
+
+  </div>
+</div>
 
 <!-- Set Password Modal -->
 <div *ngIf="showSetPasswordModal" class="modal-overlay password-modal-overlay" (click)="closeSetPasswordModal()">

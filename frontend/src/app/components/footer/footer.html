@@ -1,55 +1,126 @@
-<footer class="footer">
-  <div class="container">
-    <div class="footer-content">
-      <div class="footer-col">
+<footer class="footer" 
+        [style.backgroundColor]="footerConfig.bgColor || '#071811'"
+        [style.color]="footerConfig.textColor || '#a4b0be'"
+        [style.paddingTop]="footerConfig.paddingTop || '4rem'"
+        [style.paddingBottom]="footerConfig.paddingBottom || '0'">
+  <div class="container" [style.maxWidth]="footerConfig.containerWidth || '1280px'">
+    <div class="footer-content" 
+         [style.gridTemplateColumns]="getGridTemplateColumns()"
+         [style.gap]="footerConfig.columnsGap || '2rem'">
+      
+      <!-- Brand Column -->
+      <div *ngIf="footerConfig.showBrandColumn !== false" class="footer-col footer-brand-col">
         <div class="footer-logo">
-          <img src="assets/images/logo.png" alt="Foody Bhai Logo" style="height: 100px; width: auto; object-fit: contain; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));">
+          <a routerLink="/">
+            <img [src]="footerConfig.logoUrl || 'assets/images/logo.png'" 
+                 [alt]="footerConfig.logoAlt || 'Foody Bhai Logo'" 
+                 [style.height]="footerConfig.logoHeight || '80px'"
+                 [style.borderColor]="footerConfig.logoBorderColor || ''"
+                 [ngClass]="'logo-shape-' + (footerConfig.logoShape || 'natural')"
+                 class="footer-brand-logo"
+                 onerror="this.src='assets/logo.png'">
+          </a>
         </div>
-        <p class="footer-desc">Your ultimate destination for discovering authentic, easy-to-follow, and delicious recipes. We make cooking at home simple and fun.</p>
-        <div class="social-links">
-          <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+        <p *ngIf="footerConfig.aboutText" class="footer-desc" [style.color]="footerConfig.textColor || '#a4b0be'">
+          {{ footerConfig.aboutText }}
+        </p>
+        <div *ngIf="footerConfig.showSocial !== false && getVisibleSocialLinks().length > 0" class="social-links">
+          <a *ngFor="let soc of getVisibleSocialLinks()" 
+             [href]="soc.url || '#'" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             [attr.aria-label]="soc.name"
+             [ngClass]="'social-btn-' + (footerConfig.socialStyle || 'circle')"
+             [style.--hover-color]="footerConfig.hoverColor || '#10b981'">
+            <i [class]="soc.icon"></i>
+          </a>
         </div>
       </div>
-      
-      <div class="footer-col">
-        <h4>Quick Links</h4>
-        <ul class="footer-links">
-          <li><a routerLink="/">Home</a></li>
-          <li><a routerLink="/menu">Menu</a></li>
-          <li><a routerLink="/about">About Us</a></li>
-          <li><a routerLink="/contact">Contact</a></li>
-          <li>
-            <a href="javascript:void(0)" (click)="appUpdateService.downloadOrUpdateApk()" style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-mobile-screen-button"></i>
-              <span>{{ appUpdateService.hasUpdate ? '🔄 Update App (v' + appUpdateService.latestVersion + ')' : '📱 Download Android App' }}</span>
+
+      <!-- Dynamic Sections (Quick Links, Legal, Contact Us, Custom) -->
+      <div *ngFor="let sec of getVisibleSections()" 
+           class="footer-col" 
+           [style.gridColumn]="sec.columnSpan ? ('span ' + sec.columnSpan) : ''">
+        
+        <h4 [style.color]="sec.titleColor || footerConfig.headingColor || '#ffffff'"
+            [style.fontSize]="sec.titleFontSize || footerConfig.titleFontSize || '1.2rem'"
+            [style.fontWeight]="sec.titleFontWeight || footerConfig.titleFontWeight || '700'"
+            [style.textTransform]="footerConfig.titleTextTransform || 'none'"
+            [class.has-underline]="sec.showUnderline !== false && footerConfig.showTitleUnderline !== false"
+            [style.--underline-color]="sec.underlineColor || footerConfig.titleUnderlineColor || footerConfig.accentColor || '#10b981'">
+          {{ sec.title }}
+        </h4>
+
+        <!-- Links Section -->
+        <ul *ngIf="sec.type === 'links' || !sec.type" class="footer-links">
+          <ng-container *ngFor="let item of getVisibleItems(sec)">
+            <!-- Special: App Download -->
+            <li *ngIf="item.type === 'app-download'">
+              <a href="javascript:void(0)" 
+                 (click)="appUpdateService.downloadOrUpdateApk()" 
+                 [style.color]="item.color || footerConfig.accentColor || '#10b981'"
+                 [style.fontWeight]="item.fontWeight || '600'"
+                 class="footer-app-download-link">
+                <i [class]="item.icon || 'fa-solid fa-mobile-screen-button'"></i>
+                <span>{{ appUpdateService.hasUpdate ? ('🔄 Update App (v' + appUpdateService.latestVersion + ')') : (item.label || '📱 Download Android App') }}</span>
+              </a>
+            </li>
+
+            <!-- Standard Link -->
+            <li *ngIf="item.type !== 'app-download'">
+              <a [routerLink]="isExternalUrl(item.url) ? null : item.url" 
+                 [attr.href]="isExternalUrl(item.url) ? item.url : null"
+                 [target]="item.openInNewTab ? '_blank' : '_self'"
+                 [style.color]="item.color || sec.itemsColor || footerConfig.textColor || '#a4b0be'"
+                 [style.fontSize]="item.fontSize || sec.itemsFontSize || footerConfig.linksFontSize || '14px'"
+                 [style.fontWeight]="item.fontWeight || sec.itemsFontWeight || 'normal'"
+                 [style.--hover-color]="item.hoverColor || sec.itemsHoverColor || footerConfig.hoverColor || '#10b981'">
+                <i *ngIf="item.icon" [class]="item.icon + ' item-inline-icon'"></i>
+                <span>{{ item.label }}</span>
+                <span *ngIf="item.badge" 
+                      class="footer-item-badge"
+                      [style.backgroundColor]="item.badgeBg || footerConfig.accentColor || '#10b981'"
+                      [style.color]="item.badgeColor || '#ffffff'">
+                  {{ item.badge }}
+                </span>
+              </a>
+            </li>
+          </ng-container>
+        </ul>
+
+        <!-- Contact Section -->
+        <ul *ngIf="sec.type === 'contact'" class="footer-contact">
+          <li *ngFor="let item of getVisibleItems(sec)"
+              [style.color]="item.color || sec.itemsColor || footerConfig.textColor || '#a4b0be'"
+              [style.fontSize]="item.fontSize || sec.itemsFontSize || footerConfig.linksFontSize || '14px'">
+            <i *ngIf="item.icon" [class]="item.icon" [style.color]="sec.underlineColor || footerConfig.titleUnderlineColor || footerConfig.accentColor || '#10b981'"></i>
+            <a *ngIf="item.url" 
+               [href]="item.url" 
+               [style.color]="item.color || sec.itemsColor || footerConfig.textColor || '#a4b0be'">
+              {{ item.label }}
             </a>
+            <span *ngIf="!item.url">{{ item.label }}</span>
           </li>
         </ul>
-      </div>
 
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <ul class="footer-links">
-          <li><a routerLink="/privacy-policy">Privacy Policy</a></li>
-          <li><a routerLink="/terms">Terms & Conditions</a></li>
-          <li><a routerLink="/disclaimer">Disclaimer</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>Contact Us</h4>
-        <ul class="footer-contact">
-          <li><i class="fa-solid fa-location-dot"></i> 127, Bhatwara, Bagh Wali Gali, Meerut - 250002</li>
-          <li><i class="fa-solid fa-phone"></i> 8218870579</li>
-          <li><i class="fa-solid fa-envelope"></i> tusharmanusharma@gmail.com</li>
-        </ul>
+        <!-- Text Section -->
+        <div *ngIf="sec.type === 'text'" class="footer-text-block">
+          <p *ngFor="let item of getVisibleItems(sec)"
+             [style.color]="item.color || sec.itemsColor || footerConfig.textColor || '#a4b0be'">
+            {{ item.label }}
+          </p>
+        </div>
       </div>
     </div>
     
-    <div class="footer-bottom">
-      <p>&copy; 2026 FoodyBhai. All Rights Reserved.</p>
+    <!-- Bottom Bar / Copyright -->
+    <div *ngIf="footerConfig.showBottomBar !== false" 
+         class="footer-bottom"
+         [style.backgroundColor]="footerConfig.bottomBarBg || 'transparent'"
+         [style.borderTopColor]="footerConfig.bottomBarBorderColor || 'rgba(255,255,255,0.1)'"
+         [style.color]="footerConfig.bottomBarTextColor || footerConfig.textColor || '#a4b0be'"
+         [style.textAlign]="footerConfig.bottomBarAlign || 'center'">
+      <p>{{ getFormattedCopyright() }}</p>
     </div>
   </div>
 </footer>

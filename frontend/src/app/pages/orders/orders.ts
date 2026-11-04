@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CartService } from '../../services/cart.service';
+import { TiffinService } from '../../services/tiffin.service';
 
 @Component({
   selector: 'app-orders',
@@ -17,6 +18,37 @@ import { CartService } from '../../services/cart.service';
 })
 export class OrdersComponent implements OnInit, OnDestroy {
   orders: any[] = [];
+  activeOrderType: 'food' | 'subscriptions' = 'food';
+
+  // Subscriptions
+  subscriptions: any[] = [];
+  isLoadingSubscriptions = false;
+  editingSub: any = null;
+  isEditSubModalOpen = false;
+  editMealSlot: 'lunch' | 'dinner' | 'both' = 'both';
+  editStreet = '';
+  editArea = '';
+  editLandmark = '';
+  editSpecialInstructions = '';
+  isSavingEditSub = false;
+
+  areasInMeerut = [
+    'Shastri Nagar',
+    'Saket',
+    'Budhana Gate / Bhatwara',
+    'Mangal Pandey Nagar',
+    'Ganga Nagar',
+    'Modipuram',
+    'Pallavpuram',
+    'Sadar Bazaar',
+    'Begum Bridge Road',
+    'Medical College Road',
+    'Roorkee Road',
+    'Delhi Road',
+    'Jagriti Vihar',
+    'Civil Lines',
+    'Other Area in Meerut'
+  ];
 
   filterDate: string = 'all';
   filterStatus: string = 'all';
@@ -100,6 +132,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   constructor(
     private orderService: OrderService,
+    private tiffinService: TiffinService,
     public authService: AuthService,
     private cdr: ChangeDetectorRef,
     private router: Router,
@@ -199,12 +232,128 @@ export class OrdersComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Auto-track if query param ?track= is provided
+    // Auto-track or switch tab if query params provided
     this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab === 'subscriptions') {
+        this.activeOrderType = 'subscriptions';
+      }
       const trackId = params['track'];
       if (trackId) {
         this.guestTrackInput = trackId;
         this.trackGuestOrder();
+      }
+    });
+
+    this.loadSubscriptions();
+  }
+
+  loadSubscriptions(): void {
+    this.isLoadingSubscriptions = true;
+    const user = this.authService.getCurrentUser();
+    const rawPhone = user?.phone || (typeof localStorage !== 'undefined' ? localStorage.getItem('foodybhai_user_phone') : '');
+    const phone = rawPhone ? rawPhone.toString().trim() : '';
+    const email = user?.email || (typeof localStorage !== 'undefined' ? localStorage.getItem('foodybhai_user_email') : '');
+
+    this.tiffinService.getMyOrders(phone || undefined, email || undefined).subscribe({
+      next: (subs) => {
+        this.subscriptions = subs || [];
+        this.isLoadingSubscriptions = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load tiffin subscriptions:', err);
+        this.subscriptions = [];
+        this.isLoadingSubscriptions = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  togglePauseSubscription(sub: any) {
+    const nextStatus = sub.status === 'paused' ? 'active' : 'paused';
+    const subId = sub._id || sub.orderId;
+    this.tiffinService.updateOrderStatus(subId, nextStatus).subscribe({
+      next: () => {
+        sub.status = nextStatus;
+        this.showNotification(`Subscription ${nextStatus === 'active' ? 'resumed' : 'paused'} successfully!`, 'success');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.showNotification('Failed to update subscription status.', 'error');
+      }
+    });
+  }
+
+  cancelSubscription(sub: any) {
+    const confirmCancel = confirm(
+      'Are you sure you want to cancel your tiffin subscription?\n\nTip: You can pause deliveries instead if you are temporarily unavailable or going out of town.'
+    );
+    if (!confirmCancel) return;
+
+    const subId = sub._id || sub.orderId;
+    this.tiffinService.updateOrderStatus(subId, 'cancelled').subscribe({
+      next: () => {
+        sub.status = 'cancelled';
+        this.showNotification('Subscription cancelled successfully.', 'info');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.showNotification('Failed to cancel subscription.', 'error');
+      }
+    });
+  }
+
+  openEditSubModal(sub: any) {
+    this.editingSub = sub;
+    this.editMealSlot = sub.mealSlot || 'both';
+    this.editStreet = sub.deliveryAddress?.street || '';
+    this.editArea = sub.deliveryAddress?.area || '';
+    this.editLandmark = sub.deliveryAddress?.landmark || '';
+    this.editSpecialInstructions = sub.specialInstructions || '';
+    this.isEditSubModalOpen = true;
+  }
+
+  closeEditSubModal() {
+    this.isEditSubModalOpen = false;
+    this.editingSub = null;
+  }
+
+  saveSubscriptionChanges() {
+    if (!this.editingSub) return;
+    if (!this.editStreet.trim() || !this.editArea) {
+      alert('Please provide street address and area in Meerut.');
+      return;
+    }
+
+    this.isSavingEditSub = true;
+    const subId = this.editingSub._id || this.editingSub.orderId;
+    const updates = {
+      mealSlot: this.editMealSlot,
+      deliveryAddress: {
+        street: this.editStreet.trim(),
+        area: this.editArea,
+        landmark: this.editLandmark.trim() || undefined,
+        city: this.editingSub.deliveryAddress?.city || 'Meerut',
+        pincode: this.editingSub.deliveryAddress?.pincode || '250002'
+      },
+      specialInstructions: this.editSpecialInstructions.trim() || undefined
+    };
+
+    this.tiffinService.updateOrderDetails(subId, updates).subscribe({
+      next: () => {
+        this.isSavingEditSub = false;
+        this.editingSub.mealSlot = this.editMealSlot;
+        this.editingSub.deliveryAddress = updates.deliveryAddress;
+        this.editingSub.specialInstructions = updates.specialInstructions;
+        this.closeEditSubModal();
+        this.showNotification('Subscription details updated successfully!', 'success');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isSavingEditSub = false;
+        this.showNotification('Failed to save subscription changes.', 'error');
+        this.cdr.detectChanges();
       }
     });
   }

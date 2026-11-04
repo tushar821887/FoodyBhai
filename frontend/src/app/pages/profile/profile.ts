@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
+import { TiffinService } from '../../services/tiffin.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Router, RouterModule } from '@angular/router';
@@ -16,6 +17,7 @@ import { AppUpdateService } from '../../services/app-update.service';
   styleUrl: './profile.css'
 })
 export class Profile implements OnInit {
+  public tiffinService = inject(TiffinService);
   user: any = null;
   orders: any[] = [];
   
@@ -24,6 +26,39 @@ export class Profile implements OnInit {
   completedOrders = 0;
   cancelledOrders = 0;
   pendingOrders = 0;
+
+  // Tiffin Subscriptions
+  subscriptions: any[] = [];
+  isLoadingSubscriptions = true;
+  activeSubscriptionsCount = 0;
+
+  // Edit Subscription Modal
+  isEditSubModalOpen = false;
+  editingSub: any = null;
+  editMealSlot: 'lunch' | 'dinner' | 'both' = 'both';
+  editStreet = '';
+  editArea = '';
+  editLandmark = '';
+  editSpecialInstructions = '';
+  isSavingEditSub = false;
+
+  areasInMeerut = [
+    'Shastri Nagar',
+    'Saket',
+    'Budhana Gate / Bhatwara',
+    'Mangal Pandey Nagar',
+    'Ganga Nagar',
+    'Modipuram',
+    'Pallavpuram',
+    'Sadar Bazaar',
+    'Begum Bridge Road',
+    'Medical College Road',
+    'Roorkee Road',
+    'Delhi Road',
+    'Jagriti Vihar',
+    'Civil Lines',
+    'Other Area in Meerut'
+  ];
 
   // Edit Mode
   isEditing = false;
@@ -62,13 +97,18 @@ export class Profile implements OnInit {
       next: (u) => {
         this.user = u;
         this.initEditData();
+        this.loadSubscriptions();
         this.cdr.detectChanges();
       },
       error: () => {
         this.initEditData();
+        this.loadSubscriptions();
         this.cdr.detectChanges();
       }
     });
+
+    // Initial subscriptions load from stored user
+    this.loadSubscriptions();
 
     this.orderService.getOrderHistory().subscribe({
       next: (orders) => {
@@ -162,6 +202,116 @@ export class Profile implements OnInit {
         this.isSavingPassword = false;
         this.passwordMsg = err?.error?.message || 'Failed to set password.';
         this.passwordMsgIsError = true;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  loadSubscriptions() {
+    this.isLoadingSubscriptions = true;
+    const rawPhone = this.user?.phone || (typeof localStorage !== 'undefined' ? localStorage.getItem('foodybhai_user_phone') : '');
+    const phone = rawPhone ? rawPhone.toString().trim() : '';
+    const email = this.user?.email || (typeof localStorage !== 'undefined' ? localStorage.getItem('foodybhai_user_email') : '');
+
+    this.tiffinService.getMyOrders(phone || undefined, email || undefined).subscribe({
+      next: (subs) => {
+        this.subscriptions = subs || [];
+        this.activeSubscriptionsCount = this.subscriptions.filter(s => s.status === 'active').length;
+        this.isLoadingSubscriptions = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load tiffin subscriptions:', err);
+        this.subscriptions = [];
+        this.activeSubscriptionsCount = 0;
+        this.isLoadingSubscriptions = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  togglePauseSubscription(sub: any) {
+    const nextStatus = sub.status === 'paused' ? 'active' : 'paused';
+    const subId = sub._id || sub.orderId;
+    this.tiffinService.updateOrderStatus(subId, nextStatus).subscribe({
+      next: () => {
+        sub.status = nextStatus;
+        this.activeSubscriptionsCount = this.subscriptions.filter(s => s.status === 'active').length;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        alert('Failed to update subscription status. Please try again.');
+      }
+    });
+  }
+
+  cancelSubscription(sub: any) {
+    const confirmCancel = confirm(
+      'Are you sure you want to cancel your tiffin subscription?\n\nTip: You can pause deliveries instead if you are temporarily unavailable or going out of town.'
+    );
+    if (!confirmCancel) return;
+
+    const subId = sub._id || sub.orderId;
+    this.tiffinService.updateOrderStatus(subId, 'cancelled').subscribe({
+      next: () => {
+        sub.status = 'cancelled';
+        this.activeSubscriptionsCount = this.subscriptions.filter(s => s.status === 'active').length;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        alert('Failed to cancel subscription. Please try again.');
+      }
+    });
+  }
+
+  openEditSubModal(sub: any) {
+    this.editingSub = sub;
+    this.editMealSlot = sub.mealSlot || 'both';
+    this.editStreet = sub.deliveryAddress?.street || '';
+    this.editArea = sub.deliveryAddress?.area || '';
+    this.editLandmark = sub.deliveryAddress?.landmark || '';
+    this.editSpecialInstructions = sub.specialInstructions || '';
+    this.isEditSubModalOpen = true;
+  }
+
+  closeEditSubModal() {
+    this.isEditSubModalOpen = false;
+    this.editingSub = null;
+  }
+
+  saveSubscriptionChanges() {
+    if (!this.editingSub) return;
+    if (!this.editStreet.trim() || !this.editArea) {
+      alert('Please provide street address and area in Meerut.');
+      return;
+    }
+
+    this.isSavingEditSub = true;
+    const subId = this.editingSub._id || this.editingSub.orderId;
+    const updates = {
+      mealSlot: this.editMealSlot,
+      deliveryAddress: {
+        street: this.editStreet.trim(),
+        area: this.editArea,
+        landmark: this.editLandmark.trim() || undefined,
+        city: this.editingSub.deliveryAddress?.city || 'Meerut',
+        pincode: this.editingSub.deliveryAddress?.pincode || '250002'
+      },
+      specialInstructions: this.editSpecialInstructions.trim() || undefined
+    };
+
+    this.tiffinService.updateOrderDetails(subId, updates).subscribe({
+      next: () => {
+        this.isSavingEditSub = false;
+        this.editingSub.mealSlot = this.editMealSlot;
+        this.editingSub.deliveryAddress = updates.deliveryAddress;
+        this.editingSub.specialInstructions = updates.specialInstructions;
+        this.closeEditSubModal();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isSavingEditSub = false;
+        alert('Failed to save subscription changes. Please try again.');
         this.cdr.detectChanges();
       }
     });

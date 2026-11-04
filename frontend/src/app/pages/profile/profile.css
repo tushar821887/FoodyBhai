@@ -893,3 +893,229 @@
 .btn-app-open:hover {
   background: #e2e8f0;
 }
+
+/* ==================== PROFILE TIFFIN SUBSCRIPTIONS ==================== */
+.profile-subs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-sub-item {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.sub-border-active {
+  border-left: 4px solid #16a34a;
+}
+
+.sub-border-paused {
+  border-left: 4px solid #f59e0b;
+  background: #fffdf5;
+}
+
+.sub-border-cancelled {
+  border-left: 4px solid #dc2626;
+  background: #fffafa;
+  opacity: 0.85;
+}
+
+.profile-sub-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.sub-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sub-id-pill {
+  font-family: monospace;
+  font-weight: 800;
+  color: #ea580c;
+  background: #ffedd5;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.sub-date-text {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.sub-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.tag-active {
+  background: #dcfce7;
+  color: #15803d;
+}
+.tag-active .status-indicator {
+  background: #16a34a;
+  box-shadow: 0 0 6px #16a34a;
+}
+
+.tag-paused {
+  background: #fef3c7;
+  color: #b45309;
+}
+.tag-paused .status-indicator {
+  background: #f59e0b;
+}
+
+.tag-completed {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.tag-cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.tag-cancelled .status-indicator {
+  background: #dc2626;
+}
+
+.profile-sub-body {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  font-size: 0.88rem;
+  margin-bottom: 14px;
+}
+
+.sub-col-wide {
+  grid-column: span 2;
+}
+
+.sub-cell-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.sub-cell-val {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.sub-duration-tag {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sub-price-val {
+  color: #ea580c;
+  font-size: 1rem;
+}
+
+.sub-address-val {
+  color: #334155;
+  font-weight: 500;
+}
+
+.sub-note-val {
+  color: #64748b;
+  font-style: italic;
+}
+
+.profile-sub-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-sub-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+}
+
+.btn-action-pause {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.btn-action-pause:hover {
+  background: #fde68a;
+}
+
+.btn-action-resume {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+.btn-action-resume:hover {
+  background: #bbf7d0;
+}
+
+.btn-action-edit {
+  background: white;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+.btn-action-edit:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn-action-cancel {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+.btn-action-cancel:hover {
+  background: #fecaca;
+}
+
+.btn-action-resub {
+  background: #ea580c;
+  color: white;
+}
+.btn-action-resub:hover {
+  background: #c2410c;
+}

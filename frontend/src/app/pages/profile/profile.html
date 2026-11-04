@@ -222,6 +222,115 @@
               <span>Total Spent</span>
             </div>
           </div>
+
+          <div class="stat-card shadow-sm stat-subs" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 1.5px solid #fed7aa;">
+            <div class="stat-icon" style="color: #ea580c; background: rgba(234, 88, 12, 0.15);"><i class="fa-solid fa-box-archive"></i></div>
+            <div class="stat-info">
+              <h4 style="color: #ea580c;">{{ activeSubscriptionsCount }}</h4>
+              <span style="color: #9a3412; font-weight: 600;">Active Tiffins</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIFFIN SUBSCRIPTIONS WIDGET -->
+        <div class="modern-card shadow-sm subs-card" id="subscriptions" style="margin-bottom: 24px;">
+          <div class="card-header d-flex justify-between align-center">
+            <h3><i class="fa-solid fa-box-archive" style="color: #ea580c;"></i> My Tiffin Subscriptions ({{ subscriptions.length }})</h3>
+            <a routerLink="/tiffin" class="btn-text-link">+ New Subscription</a>
+          </div>
+
+          <div class="card-body">
+            <!-- Loading -->
+            <div *ngIf="isLoadingSubscriptions" class="text-center" style="padding: 24px 0;">
+              <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px; color: #ea580c;"></i>
+              <p style="color: #64748b; margin-top: 8px; font-size: 13.5px;">Loading your tiffin subscriptions...</p>
+            </div>
+
+            <!-- Empty state -->
+            <div *ngIf="!isLoadingSubscriptions && subscriptions.length === 0" class="empty-state-mini" style="text-align: center; padding: 30px 15px;">
+              <div style="font-size: 40px; margin-bottom: 8px;">🍱</div>
+              <h4 style="color: #1e293b; font-size: 16px; font-weight: 700; margin-bottom: 4px;">No Tiffin Subscriptions Yet</h4>
+              <p style="color: #64748b; font-size: 13px; max-width: 380px; margin: 0 auto 16px auto;">
+                Get delicious, homestyle pure veg meals delivered daily to your home or office in Meerut.
+              </p>
+              <a routerLink="/tiffin" class="btn-primary-glow" style="display: inline-block; padding: 9px 20px; font-size: 13px; border-radius: 50px; background: #ea580c; color: white; text-decoration: none; font-weight: 700;">
+                Explore Tiffin Plans →
+              </a>
+            </div>
+
+            <!-- Subscriptions List -->
+            <div *ngIf="!isLoadingSubscriptions && subscriptions.length > 0" class="profile-subs-list">
+              <div *ngFor="let sub of subscriptions" class="profile-sub-item" [ngClass]="'sub-border-' + sub.status">
+                
+                <div class="profile-sub-top">
+                  <div class="sub-meta-left">
+                    <span class="sub-id-pill">{{ sub.orderId }}</span>
+                    <span class="sub-date-text">{{ sub.createdAt | date:'mediumDate' }}</span>
+                  </div>
+                  <div class="sub-status-tag" [ngClass]="'tag-' + sub.status">
+                    <span class="status-indicator"></span>
+                    <span>{{ sub.status === 'active' ? 'Active Delivery' : (sub.status === 'paused' ? 'Paused (On Hold)' : (sub.status === 'cancelled' ? 'Cancelled' : 'Completed')) }}</span>
+                  </div>
+                </div>
+
+                <div class="profile-sub-body">
+                  <div class="sub-col">
+                    <span class="sub-cell-label">Thali Plan</span>
+                    <strong class="sub-cell-val">{{ sub.planName }}</strong>
+                  </div>
+                  <div class="sub-col">
+                    <span class="sub-cell-label">Duration</span>
+                    <span class="sub-duration-tag">{{ sub.subscriptionType | uppercase }}</span>
+                  </div>
+                  <div class="sub-col">
+                    <span class="sub-cell-label">Meal Slot</span>
+                    <span class="sub-slot-val">
+                      <span *ngIf="sub.mealSlot === 'lunch'">☀️ Lunch Only</span>
+                      <span *ngIf="sub.mealSlot === 'dinner'">🌙 Dinner Only</span>
+                      <span *ngIf="sub.mealSlot === 'both'">🍱 Both Lunch & Dinner</span>
+                      <span *ngIf="sub.mealSlot !== 'lunch' && sub.mealSlot !== 'dinner' && sub.mealSlot !== 'both'">{{ sub.mealSlot | titlecase }}</span>
+                    </span>
+                  </div>
+                  <div class="sub-col">
+                    <span class="sub-cell-label">Total Amount</span>
+                    <strong class="sub-price-val">₹{{ sub.totalAmount }} ({{ sub.paymentMethod | uppercase }})</strong>
+                  </div>
+                  <div class="sub-col sub-col-wide">
+                    <span class="sub-cell-label">Delivery Address</span>
+                    <span class="sub-address-val">📍 {{ sub.deliveryAddress?.street }}, {{ sub.deliveryAddress?.area }}, Meerut</span>
+                  </div>
+                  <div class="sub-col" *ngIf="sub.startDate">
+                    <span class="sub-cell-label">Starting Date</span>
+                    <span class="sub-date-val">{{ sub.startDate }}</span>
+                  </div>
+                  <div class="sub-col" *ngIf="sub.specialInstructions">
+                    <span class="sub-cell-label">Note</span>
+                    <span class="sub-note-val">"{{ sub.specialInstructions }}"</span>
+                  </div>
+                </div>
+
+                <div class="profile-sub-actions">
+                  <button *ngIf="sub.status === 'active'" (click)="togglePauseSubscription(sub)" class="btn-sub-btn btn-action-pause">
+                    ⏸️ Pause Deliveries
+                  </button>
+                  <button *ngIf="sub.status === 'paused'" (click)="togglePauseSubscription(sub)" class="btn-sub-btn btn-action-resume">
+                    ▶️ Resume Deliveries
+                  </button>
+                  <button *ngIf="sub.status === 'active' || sub.status === 'paused'" (click)="openEditSubModal(sub)" class="btn-sub-btn btn-action-edit">
+                    ✏️ Change Slot / Address
+                  </button>
+                  <button *ngIf="sub.status === 'active' || sub.status === 'paused'" (click)="cancelSubscription(sub)" class="btn-sub-btn btn-action-cancel">
+                    ❌ Unsubscribe
+                  </button>
+                  <a *ngIf="sub.status === 'cancelled' || sub.status === 'completed'" routerLink="/tiffin" class="btn-sub-btn btn-action-resub">
+                    🔄 Re-subscribe
+                  </a>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
         </div>
 
         <!-- ORDER CHARTS -->
@@ -293,6 +402,87 @@
         </div>
 
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== EDIT SUBSCRIPTION MODAL ==================== -->
+  <div class="modal-backdrop-custom animate-fade-in" *ngIf="isEditSubModalOpen" (click)="closeEditSubModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="modal-dialog-custom animate-scale-up" (click)="$event.stopPropagation()" style="background: white; border-radius: 20px; max-width: 540px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
+      
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <span style="font-size: 0.72rem; font-weight: 800; color: #ea580c; background: #ffedd5; padding: 3px 8px; border-radius: 6px;">✏️ EDIT SUBSCRIPTION</span>
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 4px 0 2px 0;">Change Subscription #{{ editingSub?.orderId }}</h3>
+          <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Update your meal delivery slot, address, or special notes.</p>
+        </div>
+        <button type="button" (click)="closeEditSubModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 700;">✕</button>
+      </div>
+
+      <div style="padding: 1.5rem;" *ngIf="editingSub">
+        
+        <!-- Slot selection -->
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Delivery Meal Slot</label>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <label style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; text-align: center; transition: all 0.2s;" [style.borderColor]="editMealSlot === 'lunch' ? '#ea580c' : '#e2e8f0'" [style.background]="editMealSlot === 'lunch' ? '#fff8f5' : 'white'">
+              <input type="radio" name="editSlot" value="lunch" [(ngModel)]="editMealSlot" style="position: absolute; opacity: 0;">
+              <strong style="font-size: 0.82rem; color: #1e293b;">☀️ Lunch</strong>
+              <span style="font-size: 0.7rem; color: #64748b;">12:30 - 2:00 PM</span>
+            </label>
+
+            <label style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; text-align: center; transition: all 0.2s;" [style.borderColor]="editMealSlot === 'dinner' ? '#ea580c' : '#e2e8f0'" [style.background]="editMealSlot === 'dinner' ? '#fff8f5' : 'white'">
+              <input type="radio" name="editSlot" value="dinner" [(ngModel)]="editMealSlot" style="position: absolute; opacity: 0;">
+              <strong style="font-size: 0.82rem; color: #1e293b;">🌙 Dinner</strong>
+              <span style="font-size: 0.7rem; color: #64748b;">7:30 - 9:30 PM</span>
+            </label>
+
+            <label style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; text-align: center; transition: all 0.2s;" [style.borderColor]="editMealSlot === 'both' ? '#ea580c' : '#e2e8f0'" [style.background]="editMealSlot === 'both' ? '#fff8f5' : 'white'">
+              <input type="radio" name="editSlot" value="both" [(ngModel)]="editMealSlot" style="position: absolute; opacity: 0;">
+              <strong style="font-size: 0.82rem; color: #1e293b;">🍱 Both</strong>
+              <span style="font-size: 0.7rem; color: #64748b;">Lunch & Dinner</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Address -->
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px;">Delivery Address in Meerut</label>
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Street / Flat / House Address *</label>
+            <input type="text" [(ngModel)]="editStreet" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Area in Meerut *</label>
+              <select [(ngModel)]="editArea" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box; background: white;">
+                <option value="" disabled>Select area</option>
+                <option *ngFor="let a of areasInMeerut" [value]="a">{{ a }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Landmark (Optional)</label>
+              <input type="text" [(ngModel)]="editLandmark" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 4px;">Special Instructions / Diet Note</label>
+            <input type="text" [(ngModel)]="editSpecialInstructions" placeholder="e.g. Less spicy, call on arrival" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+        </div>
+
+      </div>
+
+      <div style="padding: 1.25rem 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc;">
+        <button type="button" (click)="closeEditSubModal()" style="padding: 9px 18px; border: 1.5px solid #cbd5e1; background: white; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancel</button>
+        <button type="button" [disabled]="isSavingEditSub" (click)="saveSubscriptionChanges()" style="padding: 9px 20px; background: #ea580c; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">
+          <span *ngIf="!isSavingEditSub">Save Changes</span>
+          <span *ngIf="isSavingEditSub">Saving Changes...</span>
+        </button>
+      </div>
+
     </div>
   </div>
 </div>

@@ -312,6 +312,9 @@
                     <a routerLink="/orders" class="dropdown-item" (click)="closeAccountDropdown($event)">
                       <i class="fa-regular fa-folder-open"></i> My Orders
                     </a>
+                    <a routerLink="/profile" [fragment]="'subscriptions'" class="dropdown-item" (click)="closeAccountDropdown($event)">
+                      <i class="fa-solid fa-box-archive" style="color: #ea580c;"></i> My Subscriptions
+                    </a>
                     <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
                       <i class="fa-regular fa-address-book"></i> My Addresses
                     </a>
@@ -415,6 +418,10 @@
     <div class="nav-icon-wrap"><i class="fa-solid fa-book-open"></i></div>
     <span>Menu</span>
   </a>
+  <a routerLink="/tiffin" routerLinkActive="active" class="nav-item">
+    <div class="nav-icon-wrap"><i class="fa-solid fa-bowl-food"></i></div>
+    <span>Tiffin</span>
+  </a>
   <a routerLink="/cart" routerLinkActive="active" class="nav-item cart-nav-item">
     <div class="nav-icon-wrap">
       <i class="fa-solid fa-cart-shopping"></i>
@@ -442,6 +449,9 @@
           </a>
           <a routerLink="/orders" class="dropdown-item" (click)="closeAccountDropdown($event)">
             <i class="fa-regular fa-folder-open"></i> My Orders
+          </a>
+          <a routerLink="/profile" [fragment]="'subscriptions'" class="dropdown-item" (click)="closeAccountDropdown($event)">
+            <i class="fa-solid fa-box-archive" style="color: #ea580c;"></i> My Subscriptions
           </a>
           <a routerLink="/addresses" class="dropdown-item" (click)="closeAccountDropdown($event)">
             <i class="fa-regular fa-address-book"></i> Addresses
