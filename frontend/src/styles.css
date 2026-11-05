@@ -294,3 +294,26 @@ img {
   font-size: 2.75rem;
   margin-bottom: 1.25rem;
 }
+
+/* ========================================================
+   Mobile Account Dropdown Overlay - Global Visibility Fixes
+   ======================================================== */
+body.account-dropdown-open app-header {
+  z-index: 2500 !important;
+}
+
+body.account-dropdown-open .blinkit-cart-bar-wrapper {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: translateY(40px) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s !important;
+}
+
+body.account-dropdown-open .ai-copilot-trigger {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: scale(0.6) translateY(20px) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s !important;
+}

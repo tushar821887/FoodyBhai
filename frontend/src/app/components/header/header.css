@@ -7,6 +7,11 @@
   z-index: 1000;
 }
 
+:host-context(body.account-dropdown-open),
+body.account-dropdown-open :host {
+  z-index: 2500 !important;
+}
+
 .header {
   position: relative;
   width: 100%;

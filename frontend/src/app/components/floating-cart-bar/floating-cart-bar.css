@@ -8,6 +8,16 @@
   display: none;
   justify-content: center;
   pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s ease;
+}
+
+/* Auto-hide floating cart bar whenever the account menu is open */
+:host-context(body.account-dropdown-open) .blinkit-cart-bar-wrapper,
+body.account-dropdown-open .blinkit-cart-bar-wrapper {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: translateY(40px) !important;
 }
 
 /* Display on mobile viewports */
