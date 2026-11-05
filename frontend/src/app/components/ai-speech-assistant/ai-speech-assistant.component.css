@@ -3,7 +3,7 @@
   position: fixed;
   bottom: 86px;
   right: 20px;
-  z-index: 9990;
+  z-index: 900; /* Stays below navigation modals and dropdowns */
   display: flex;
   align-items: center;
   gap: 10px;
@@ -17,6 +17,16 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   font-family: inherit;
+}
+
+/* Auto-hide floating AI button whenever mobile account menu or overlays are open */
+:host-context(body.account-dropdown-open) .ai-copilot-trigger,
+body.account-dropdown-open .ai-copilot-trigger {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transform: scale(0.6) translateY(20px) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s !important;
 }
 
 .ai-copilot-trigger:hover {
@@ -665,7 +675,7 @@
 }
 
 /* --- Mobile Responsiveness --- */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .ai-copilot-backdrop {
     padding: 0;
     align-items: flex-end;
@@ -683,11 +693,15 @@
   }
   .ai-copilot-trigger {
     bottom: 74px;
-    right: 14px;
+    left: 14px;
+    right: auto;
     padding: 7px 14px 7px 8px;
+    z-index: 900;
   }
   .ai-copilot-trigger.has-floating-cart {
     bottom: calc(130px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    right: auto;
   }
   .ai-trigger-sub { display: none; }
 }

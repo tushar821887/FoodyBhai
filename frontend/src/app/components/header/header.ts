@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -165,7 +165,7 @@ export interface PromoBannerConfig {
   templateUrl: './header.html',
   styleUrl: './header.css'
 })
-export class Header implements OnInit {
+export class Header implements OnInit, OnDestroy {
   isScrolled = false;
   isMenuOpen = false;
   isAuthModalOpen = false;
@@ -786,6 +786,7 @@ export class Header implements OnInit {
       event.preventDefault();
     }
     this.isAccountDropdownOpen = !this.isAccountDropdownOpen;
+    this.syncBodyAccountClass();
   }
 
   closeAccountDropdown(event?: Event) {
@@ -793,11 +794,24 @@ export class Header implements OnInit {
       event.stopPropagation();
     }
     this.isAccountDropdownOpen = false;
+    this.syncBodyAccountClass();
+  }
+
+  private syncBodyAccountClass() {
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('account-dropdown-open', this.isAccountDropdownOpen);
+    }
   }
 
   logout() {
     this.authService.logout();
     this.closeAccountDropdown();
     this.closeMenu();
+  }
+
+  ngOnDestroy() {
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('account-dropdown-open');
+    }
   }
 }
