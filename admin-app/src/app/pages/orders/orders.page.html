@@ -176,12 +176,15 @@
         <div class="stat-title">Ready</div>
         <div class="stat-value">{{ (baseOrders | filterStatus:'ready').length }}</div>
       </div>
-      <div class="stat-card" style="background: #fffbeb; border: 1px solid #fde68a;">
-        <div class="stat-title" style="color: #92400e;">Store Rating</div>
+      <div class="stat-card" style="background: #fffbeb; border: 1.5px solid #fde68a; cursor: pointer; transition: transform 0.2s;" (click)="viewRatedOrders()" title="Click to view all customer reviews and ratings in Order History">
+        <div class="stat-title" style="color: #92400e; display: flex; justify-content: space-between; align-items: center;">
+          <span>Store Rating</span>
+          <span style="font-size: 11px; color: #b45309; text-decoration: underline;">View Reviews →</span>
+        </div>
         <div class="stat-value" style="display: flex; align-items: baseline; gap: 8px; color: #b45309;">
           {{ restaurantStats?.averageRating || '0.0' }} <span style="font-size: 20px; color: #f59e0b;">⭐</span>
         </div>
-        <div style="font-size: 12px; color: #92400e; margin-top: 5px; opacity: 0.8;">Based on {{ restaurantStats?.totalReviews || 0 }} reviews</div>
+        <div style="font-size: 12px; color: #92400e; margin-top: 5px; opacity: 0.85; font-weight: 600;">Based on {{ restaurantStats?.totalReviews || 0 }} customer reviews</div>
       </div>
     </div>
 
@@ -438,7 +441,7 @@
     
     <!-- HISTORY VIEW -->
     <ng-container *ngIf="currentView === 'history'">
-      <div class="settings-container animate-fade-in" style="max-width: 1000px; margin: 0 auto; padding-top: 20px;">
+      <div class="settings-container animate-fade-in" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
         <div class="settings-header-banner" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-bottom: 20px; border-radius: 12px; padding: 25px; color: white;">
           <h2 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 700;">Order History</h2>
           <p style="margin: 0; opacity: 0.9; font-size: 15px;">View and filter all previous orders.</p>
@@ -446,55 +449,76 @@
 
         <!-- Filters -->
         <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-          <div style="flex: 1.5; min-width: 280px;">
+          <div style="flex: 1.8; min-width: 320px;">
             <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 16px;">Order Statistics</h4>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <div style="flex: 1; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+              <div style="flex: 1; min-width: 95px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 <span style="color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Total Orders</span>
                 <span style="font-size: 24px; font-weight: 800; color: #10b981; margin-top: 4px;">{{ filteredHistoryOrders.length }}</span>
               </div>
-              <div style="flex: 1; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+              <div style="flex: 1; min-width: 95px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 <span style="color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Grand Total</span>
                 <span style="font-size: 24px; font-weight: 800; color: #10b981; margin-top: 4px;">₹{{ filteredHistoryTotalAmount }}</span>
+              </div>
+              <div style="flex: 1.2; min-width: 120px; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1.5px solid #fde68a; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.2s;" (click)="filterByRatedOnly()" title="Click to filter by rated orders">
+                <span style="color: #92400e; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                  Customer Rating <span style="font-size: 12px;">★</span>
+                </span>
+                <span style="font-size: 24px; font-weight: 800; color: #b45309; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                  {{ historyAverageRating }} <span style="font-size: 18px; color: #f59e0b;">⭐</span>
+                </span>
+                <small style="font-size: 11px; color: #b45309; margin-top: 2px; font-weight: 600;">{{ historyRatedCount }} reviews</small>
               </div>
             </div>
           </div>
           
           <div style="flex: 2; display: flex; flex-wrap: wrap; gap: 15px;">
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 130px;">
               <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Date Filter</label>
-              <select [(ngModel)]="historyFilterDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+              <select [(ngModel)]="historyFilterDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 13.5px;">
                 <option value="all">All Time</option>
                 <option value="weekly">Weekly (Last 7 Days)</option>
                 <option value="monthly">Monthly (Last 30 Days)</option>
               </select>
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 130px;">
               <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Order Status</label>
-              <select [(ngModel)]="historyFilterStatus" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+              <select [(ngModel)]="historyFilterStatus" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 13.5px;">
                 <option value="all">All Statuses</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 130px;">
+              <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Rating</label>
+              <select [(ngModel)]="historyFilterRating" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 13.5px; font-weight: 600; color: #b45309;">
+                <option value="all">All Ratings</option>
+                <option value="rated">⭐ Rated Only ({{ historyTotalRatedCount }})</option>
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars & Up</option>
+                <option value="3">⭐⭐⭐ 3 Stars & Up</option>
+                <option value="low">⚠️ 1 - 2 Stars (Low)</option>
+                <option value="unrated">Not Rated</option>
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 130px;">
               <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Payment Method</label>
-              <select [(ngModel)]="historyFilterPayment" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+              <select [(ngModel)]="historyFilterPayment" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 13.5px;">
                 <option value="all">All Methods</option>
                 <option value="online">Online Payment</option>
                 <option value="cod">Cash on Delivery (COD)</option>
               </select>
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 130px;">
               <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Delivery Agent</label>
-              <select [(ngModel)]="historyFilterAgent" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+              <select [(ngModel)]="historyFilterAgent" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 13.5px;">
                 <option value="all">All Agents</option>
                 <option *ngFor="let a of agents" [value]="a.phone">{{ a.name }}</option>
               </select>
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex: 1; min-width: 130px;">
               <label style="display: block; font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 6px;">Order Type</label>
-              <select [(ngModel)]="historyFilterType" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;">
+              <select [(ngModel)]="historyFilterType" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white; font-size: 13.5px;">
                 <option value="all">All Types</option>
                 <option value="delivery">🛵 Delivery</option>
                 <option value="pickup">🚶 Self Pickup</option>
@@ -505,7 +529,7 @@
 
         <!-- Order List -->
         <div style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-          <div style="max-height: 500px; overflow-y: auto; position: relative;">
+          <div style="max-height: 520px; overflow-y: auto; position: relative;">
           <div *ngIf="filteredHistoryOrders.length === 0" style="text-align: center; padding: 40px; color: #64748b;">
             <div style="font-size: 32px; margin-bottom: 10px;">📋</div>
             <div>No orders match your filters.</div>
@@ -522,6 +546,7 @@
                 <th style="padding: 15px;">Payment Method</th>
                 <th style="padding: 15px;">Delivery Agent</th>
                 <th style="padding: 15px;">Status</th>
+                <th style="padding: 15px;">Rating</th>
                 <th style="padding: 15px; text-align: right;">Action</th>
               </tr>
             </thead>
@@ -548,6 +573,21 @@
                 <td style="padding: 15px;">
                   <span [style.background]="getStatusBadge(order.status).color + '20'" [style.color]="getStatusBadge(order.status).color" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; text-transform: uppercase;">
                     {{ getStatusBadge(order.status).label }}
+                  </span>
+                </td>
+                <td style="padding: 15px;">
+                  <div *ngIf="order.rating && order.rating > 0" style="display: flex; flex-direction: column; gap: 3px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <span style="background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid #fde68a; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;">
+                        <span>⭐</span> {{ order.rating }}.0
+                      </span>
+                    </div>
+                    <small *ngIf="order.review" style="color: #64748b; font-size: 11.5px; font-style: italic; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" [title]="order.review">
+                      "{{ order.review }}"
+                    </small>
+                  </div>
+                  <span *ngIf="!order.rating || order.rating === 0" style="color: #94a3b8; font-size: 12px; font-style: italic;">
+                    —
                   </span>
                 </td>
                 <td style="padding: 15px; text-align: right;">
@@ -3423,6 +3463,30 @@
           [src]="getEmbeddedMapUrl(selectedHistoryOrder?.deliveryDetails?.address)" 
           allowfullscreen>
         </iframe>
+      </div>
+
+      <!-- Customer Feedback & Rating -->
+      <div *ngIf="selectedHistoryOrder?.rating && selectedHistoryOrder?.rating > 0" style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 16px; margin-bottom: 25px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">⭐</span>
+            <strong style="color: #92400e; font-size: 15px;">Customer Feedback & Rating</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span *ngFor="let star of [1,2,3,4,5]" [style.color]="star <= selectedHistoryOrder.rating ? '#f59e0b' : '#cbd5e1'" style="font-size: 18px;">★</span>
+            <span style="font-weight: 800; color: #b45309; font-size: 15px; margin-left: 6px;">{{ selectedHistoryOrder.rating }}.0 / 5.0</span>
+          </div>
+        </div>
+        <div *ngIf="selectedHistoryOrder?.review" style="background: white; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px; font-size: 13.5px; color: #78350f; font-style: italic; line-height: 1.5;">
+          "{{ selectedHistoryOrder.review }}"
+        </div>
+        <div *ngIf="!selectedHistoryOrder?.review" style="font-size: 12.5px; color: #92400e; opacity: 0.85; margin-top: 4px;">
+          Customer gave {{ selectedHistoryOrder.rating }} stars without a written review.
+        </div>
+      </div>
+      <div *ngIf="!selectedHistoryOrder?.rating || selectedHistoryOrder?.rating === 0" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: #64748b; font-size: 13px;">
+        <span style="font-size: 18px; opacity: 0.6;">⭐</span>
+        <span>No customer rating or review has been submitted for this order yet.</span>
       </div>
 
       <!-- Items List -->

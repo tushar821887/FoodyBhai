@@ -860,6 +860,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   historyFilterPayment: string = 'all';
   historyFilterAgent: string = 'all';
   historyFilterType: string = 'all';
+  historyFilterRating: string = 'all';
   showOrderDetailsModal: boolean = false;
   selectedHistoryOrder: any = null;
 
@@ -912,11 +913,51 @@ export class OrdersPage implements OnInit, OnDestroy {
       });
     }
 
+    // Rating Filter
+    if (this.historyFilterRating !== 'all') {
+      result = result.filter(o => {
+        const r = Number(o.rating || 0);
+        if (this.historyFilterRating === 'rated') return r > 0;
+        if (this.historyFilterRating === '5') return r === 5;
+        if (this.historyFilterRating === '4') return r >= 4;
+        if (this.historyFilterRating === '3') return r >= 3;
+        if (this.historyFilterRating === 'low') return r > 0 && r <= 2;
+        if (this.historyFilterRating === 'unrated') return !o.rating || r === 0;
+        return true;
+      });
+    }
+
     return result;
   }
 
   get filteredHistoryTotalAmount() {
     return this.filteredHistoryOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  }
+
+  get historyRatedCount(): number {
+    return this.filteredHistoryOrders.filter(o => o.rating && Number(o.rating) > 0).length;
+  }
+
+  get historyTotalRatedCount(): number {
+    return this.baseOrders.filter(o => o.rating && Number(o.rating) > 0).length;
+  }
+
+  get historyAverageRating(): string {
+    const rated = this.filteredHistoryOrders.filter(o => o.rating && Number(o.rating) > 0);
+    if (rated.length === 0) {
+      return this.restaurantStats?.averageRating ? Number(this.restaurantStats.averageRating).toFixed(1) : '0.0';
+    }
+    const avg = rated.reduce((sum, o) => sum + Number(o.rating), 0) / rated.length;
+    return avg.toFixed(1);
+  }
+
+  filterByRatedOnly() {
+    this.historyFilterRating = this.historyFilterRating === 'rated' ? 'all' : 'rated';
+  }
+
+  viewRatedOrders() {
+    this.historyFilterRating = 'rated';
+    this.setView('history');
   }
 
   // --- PAYMENTS VIEW LOGIC ---
