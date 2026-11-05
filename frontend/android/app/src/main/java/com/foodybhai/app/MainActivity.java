@@ -12,6 +12,7 @@ import com.getcapacitor.BridgeWebViewClient;
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(UpiLauncherPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Ensure Capacitor WebView intercepts custom payment schemes and Android intents
@@ -49,6 +50,9 @@ public class MainActivity extends BridgeActivity {
             try {
                 Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                if (intent.getAction() == null) {
+                    intent.setAction(Intent.ACTION_VIEW);
+                }
 
                 if (intent.resolveActivity(getPackageManager()) != null) {
                     startActivity(intent);
@@ -60,6 +64,15 @@ public class MainActivity extends BridgeActivity {
                         view.loadUrl(fallbackUrl);
                         return true;
                     }
+
+                    // Fallback to generic UPI chooser
+                    String cleanUrl = url.replaceFirst("^intent://", "upi://").replaceAll("#Intent;.*$", "");
+                    Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl));
+                    fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Intent chooser = Intent.createChooser(fallbackIntent, "Pay via UPI App");
+                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(chooser);
+                    return true;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -76,7 +89,6 @@ public class MainActivity extends BridgeActivity {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
                 if (url.startsWith("upi://")) {
-                    // If generic upi://, present chooser so Android doesn't default to WhatsApp
                     Intent chooser = Intent.createChooser(intent, "Pay via UPI App");
                     chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(chooser);

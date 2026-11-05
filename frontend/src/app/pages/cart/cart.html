@@ -546,102 +546,170 @@
           </div>
         </div>
 
-        <!-- Online: QR section -->
+        <!-- Online: QR & UPI section -->
         @if (paymentMethod === 'online') {
-          <div class="qr-section animate-fade-in" style="user-select: none;">
-            <div style="background: #fff0f1; border: 1px solid #ffd1d5; border-radius: 12px; padding: 10px 15px; margin-bottom: 15px;">
-              <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: 700;">Exact Amount to Pay</div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">₹{{ currentTotal }}</div>
-              <div style="font-size: 0.75rem; color: #666;">Locked & verified for this order</div>
+          <div class="qr-section animate-fade-in">
+            <!-- Exact Amount Card -->
+            <div class="amount-lock-card">
+              <div class="amount-lock-info">
+                <span class="amount-lock-label">Exact Amount to Pay</span>
+                <span class="amount-lock-value">₹{{ currentTotal }}</span>
+              </div>
+              <div class="amount-lock-badge">
+                <i class="fa-solid fa-shield-halved me-1"></i> Verified & Locked
+              </div>
             </div>
 
-            @if (hasCustomUploadedQr) {
-              <div class="qr-mode-selector mb-3" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 10px;">
-                <button type="button" 
-                        style="flex: 1; padding: 8px 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                        [style.background]="selectedQrMode === 'dynamic' ? '#ffffff' : 'transparent'"
-                        [style.color]="selectedQrMode === 'dynamic' ? 'var(--primary-color)' : '#64748b'"
-                        [style.boxShadow]="selectedQrMode === 'dynamic' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'"
-                        (click)="selectedQrMode = 'dynamic'">
-                  <i class="fa-solid fa-bolt"></i> Dynamic QR (₹{{ currentTotal }})
-                </button>
-                <button type="button" 
-                        style="flex: 1; padding: 8px 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                        [style.background]="selectedQrMode === 'uploaded' ? '#ffffff' : 'transparent'"
-                        [style.color]="selectedQrMode === 'uploaded' ? 'var(--primary-color)' : '#64748b'"
-                        [style.boxShadow]="selectedQrMode === 'uploaded' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'"
-                        (click)="selectedQrMode = 'uploaded'">
-                  <i class="fa-solid fa-image"></i> Uploaded Store QR
-                </button>
-              </div>
-            }
-
-            <div class="qr-wrapper">
-              @if (selectedQrMode === 'uploaded' && qrImageUrl) {
-                <img [src]="qrImageUrl" alt="Store Payment QR Code" class="qr-image">
-              } @else if (dynamicQrUrl) {
-                <img [src]="dynamicQrUrl" alt="Payment QR Code" class="qr-image">
-              } @else {
-                <div class="qr-placeholder">
-                  <i class="fa-solid fa-qrcode"></i>
-                  <p>QR code not set. Please contact the restaurant.</p>
-                </div>
-              }
+            <!-- Mobile View Switcher: Pay via App vs Scan QR -->
+            <div class="online-mode-tabs mb-3">
+              <button type="button" 
+                      class="online-mode-tab" 
+                      [class.active]="onlineViewMode === 'quick_pay'" 
+                      (click)="onlineViewMode = 'quick_pay'">
+                <i class="fa-solid fa-mobile-screen-button me-1"></i> Pay via UPI App
+              </button>
+              <button type="button" 
+                      class="online-mode-tab" 
+                      [class.active]="onlineViewMode === 'qr_code'" 
+                      (click)="onlineViewMode = 'qr_code'">
+                <i class="fa-solid fa-qrcode me-1"></i> Scan / Show QR
+              </button>
             </div>
 
-            <!-- Direct Pay Button / UPI App Selector Trigger -->
-            <button type="button" 
-                    class="btn-upi-selector-trigger w-100 mb-3" 
-                    (click)="openUpiAppsModal()">
-              <div class="upi-trigger-content">
-                <div class="upi-trigger-left">
-                  <div class="upi-trigger-icon">
-                    <i class="fa-solid fa-bolt"></i>
-                  </div>
-                  <div class="upi-trigger-text">
-                    <span class="upi-trigger-title">Pay via UPI App</span>
-                    <span class="upi-trigger-subtitle">GPay, PhonePe, Paytm, BHIM & more</span>
-                  </div>
-                </div>
-                <div class="upi-trigger-right">
-                  <span class="upi-app-pill gpay-pill">GPay</span>
-                  <span class="upi-app-pill phonepe-pill">PhonePe</span>
-                  <span class="upi-app-pill paytm-pill">Paytm</span>
-                  <i class="fa-solid fa-chevron-right chevron-icon"></i>
-                </div>
-              </div>
-            </button>
+            <!-- TAB 1: 1-Tap UPI Apps (Recommended for Mobile / APK) -->
+            @if (onlineViewMode === 'quick_pay') {
+              <div class="quick-pay-container animate-fade-in">
+                <p class="quick-pay-title">
+                  <i class="fa-solid fa-bolt text-warning me-1"></i> 1-Tap Payment — Select your UPI app:
+                </p>
 
-            <!-- If user has chosen a UPI app -->
-            @if (selectedUpiApp) {
-              <div class="selected-upi-card mb-3 animate-fade-in">
-                <div class="selected-upi-header">
-                  <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-circle-check text-success"></i>
-                    <span class="selected-upi-label">Chosen: <strong>{{ selectedUpiApp.name }}</strong></span>
+                <div class="quick-pay-grid">
+                  @for (app of topUpiApps; track app.id) {
+                    <button type="button" 
+                            class="quick-pay-btn" 
+                            [class.active-app]="selectedUpiApp?.id === app.id"
+                            (click)="onAppSelected(app, $event)">
+                      <div class="quick-pay-icon" [style.background]="app.bgColor">
+                        @if (app.id === 'gpay') {
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M23.49 12.28c0-.85-.07-1.46-.22-2.1H12v4.03h6.58c-.14.99-.8 2.27-2.07 3.12v2.54h3.32c1.97-1.81 3.66-4.59 3.66-7.59z" fill="#4285F4"/><path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.32-2.54c-.9.63-2.12 1.09-3.61 1.09-3.23 0-6.02-2.18-7.01-5.18H2.53v2.63C4.54 21.1 8.01 24 12 24z" fill="#34A853"/><path d="M4.99 14.46c-.26-.77-.41-1.6-.41-2.46s.15-1.69.41-2.46V6.91H2.53C1.71 8.54 1.25 10.37 1.25 12.28s.46 3.74 1.28 5.37l2.46-3.19z" fill="#FBBC05"/><path d="M12 4.75c1.77 0 3.03.77 3.71 1.41l2.7-2.65C16.8 1.94 14.54 1 12 1 8.01 1 4.54 3.9 2.53 7.89l2.46 2.65c.99-3 3.78-5.79 7.01-5.79z" fill="#EA4335"/></svg>
+                        } @else if (app.id === 'phonepe') {
+                          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#5f259f"/><path d="M19.5 8H13c-.6 0-1 .4-1 1v14c0 .6.4 1 1 1s1-.4 1-1v-4.5h4.5c3.6 0 6.5-2.9 6.5-6.5S22.6 8 19.5 8zm-.5 8.5H14v-6h5c2.2 0 4 1.8 4 4s-1.8 4-4 4z" fill="#ffffff"/><path d="M11 12.5h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+                        } @else if (app.id === 'paytm') {
+                          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#002970"/><path d="M7 16l4-7h5l-4 7h-5zm6 0l4-7h5l-4 7h-5z" fill="#00b9f5"/><path d="M19 16h4c1.7 0 3 1.3 3 3v0c0 1.7-1.3 3-3 3h-4v-6z" fill="#00b9f5"/></svg>
+                        } @else {
+                          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="#00843d"/><path d="M8 8h10l6 8-6 8H8l6-8-6-8z" fill="#ff9933"/><path d="M14 12h6l3 4-3 4h-6l3-4-3-4z" fill="#ffffff"/></svg>
+                        }
+                      </div>
+                      <span class="quick-pay-name">{{ app.name }}</span>
+                    </button>
+                  }
+                </div>
+
+                <!-- More UPI apps trigger -->
+                <button type="button" class="btn-more-upi-apps" (click)="openUpiAppsModal()">
+                  <i class="fa-solid fa-ellipsis-vertical me-2"></i> View All UPI Apps (CRED, Amazon Pay, Any)
+                  <i class="fa-solid fa-chevron-right ms-auto"></i>
+                </button>
+
+                <!-- Chosen App Status if already tapped -->
+                @if (selectedUpiApp) {
+                  <div class="selected-upi-card mt-3 animate-fade-in">
+                    <div class="selected-upi-header">
+                      <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-success"></i>
+                        <span class="selected-upi-label">Chosen: <strong>{{ selectedUpiApp.name }}</strong></span>
+                      </div>
+                      <button type="button" class="btn-change-upi" (click)="openUpiAppsModal()">
+                        Change <i class="fa-solid fa-arrows-rotate ms-1"></i>
+                      </button>
+                    </div>
+                    <button type="button" (click)="onAppSelected(selectedUpiApp, $event)" class="btn-open-chosen-app">
+                      <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Pay ₹{{ currentTotal }} in {{ selectedUpiApp.name }}
+                    </button>
                   </div>
-                  <button type="button" class="btn-change-upi" (click)="openUpiAppsModal()">
-                    Change <i class="fa-solid fa-arrows-rotate ms-1"></i>
+                }
+
+                <div class="quick-pay-footer-hint mt-3">
+                  <span>Paying from another phone?</span>
+                  <button type="button" class="link-switch-tab" (click)="onlineViewMode = 'qr_code'">
+                    Show QR Code <i class="fa-solid fa-arrow-right ms-1"></i>
                   </button>
                 </div>
-                <a [href]="getAppUpiLink(selectedUpiApp.id)" 
-                   (click)="onAppSelected(selectedUpiApp, $event)" 
-                   class="btn-open-chosen-app">
-                  <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Open {{ selectedUpiApp.name }} (₹{{ currentTotal }})
-                </a>
               </div>
             }
 
-            <div class="upi-id-box" (click)="copyUpiId()" style="cursor: pointer;" title="Tap to copy UPI ID">
-              <i class="fa-solid fa-at"></i>
+            <!-- TAB 2: QR Code view -->
+            @if (onlineViewMode === 'qr_code') {
+              <div class="qr-code-container animate-fade-in">
+                @if (hasCustomUploadedQr) {
+                  <div class="qr-mode-selector mb-3">
+                    <button type="button" 
+                            class="qr-mode-pill"
+                            [class.active]="selectedQrMode === 'dynamic'"
+                            (click)="selectedQrMode = 'dynamic'">
+                      <i class="fa-solid fa-bolt me-1"></i> Dynamic QR (₹{{ currentTotal }})
+                    </button>
+                    <button type="button" 
+                            class="qr-mode-pill"
+                            [class.active]="selectedQrMode === 'uploaded'"
+                            (click)="selectedQrMode = 'uploaded'">
+                      <i class="fa-solid fa-image me-1"></i> Store QR
+                    </button>
+                  </div>
+                }
+
+                <!-- Clickable QR Card -->
+                <div class="qr-wrapper clickable-qr" (click)="onQrCodeClick()" title="Tap QR code to pay directly via UPI app">
+                  @if (currentQrDisplayUrl) {
+                    <img [src]="currentQrDisplayUrl" (error)="onQrError()" alt="Store Payment QR Code" class="qr-image">
+                  } @else {
+                    <div class="qr-placeholder">
+                      <i class="fa-solid fa-qrcode"></i>
+                      <p>QR code not set. Please contact restaurant.</p>
+                    </div>
+                  }
+                  <div class="qr-tap-badge">
+                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Tap QR to Pay Directly
+                  </div>
+                </div>
+
+                <!-- QR Action Buttons: Save to Photos & Copy UPI -->
+                <div class="qr-action-buttons">
+                  <button type="button" class="btn-qr-action btn-save-photo" (click)="downloadQrCode()">
+                    <i class="fa-solid fa-download me-1"></i> Save QR to Photos
+                  </button>
+                  <button type="button" class="btn-qr-action btn-copy-upi-action" (click)="copyUpiId()">
+                    <i class="fa-regular fa-copy me-1"></i> Copy UPI ID
+                  </button>
+                </div>
+
+                <!-- Guidance for mobile users -->
+                <div class="qr-guide-box mt-3">
+                  <div class="qr-guide-item">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                    <span><strong>Paying on this phone?</strong> Tap the QR above or switch to <strong>Pay via UPI App</strong>.</span>
+                  </div>
+                  <div class="qr-guide-item">
+                    <i class="fa-solid fa-image"></i>
+                    <span><strong>Using Scan from Gallery?</strong> Tap <strong>Save QR to Photos</strong>, then open PhonePe/GPay → Scan QR → select the saved photo.</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Unified UPI ID Box -->
+            <div class="upi-id-box mt-3" (click)="copyUpiId()" style="cursor: pointer;" title="Tap to copy UPI ID">
+              <i class="fa-solid fa-at text-muted"></i>
+              <span class="upi-id-label">UPI ID:</span>
               <span class="upi-id-text">{{ effectiveUpiId }}</span>
-              <button type="button" class="upi-copy-btn" (click)="copyUpiId(); $event.stopPropagation()">
+              <button type="button" class="upi-copy-btn" (click)="copyUpiId(); $event.stopPropagation()" title="Copy UPI ID">
                 <i class="fa-regular fa-copy"></i>
               </button>
             </div>
+
             <p class="qr-note">
-              <i class="fa-solid fa-circle-info"></i>
-              Amount is fixed to ₹{{ currentTotal }}. After paying, tap "I've Paid — Place Order" below.
+              <i class="fa-solid fa-circle-info me-1"></i>
+              Amount is fixed to <strong>₹{{ currentTotal }}</strong>. After paying, tap <strong>"I've Paid — Place Order"</strong> below.
             </p>
           </div>
         }

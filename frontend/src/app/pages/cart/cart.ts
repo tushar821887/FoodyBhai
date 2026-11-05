@@ -3,11 +3,17 @@ import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { CartService, CartItem } from '../../services/cart.service';
 import { OrderService } from '../../services/order.service';
 import { AuthService, Address } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { Subscription } from 'rxjs';
+
+export interface UpiLauncherPlugin {
+  openUpi(options: { url: string; packageName?: string }): Promise<void>;
+}
+const UpiLauncher = registerPlugin<UpiLauncherPlugin>('UpiLauncher');
 
 export interface UpiAppInfo {
   id: string;
@@ -73,6 +79,14 @@ export class CartComponent implements OnInit, OnDestroy {
   qrImageUrl = '';
   upiId = '';
   selectedQrMode: 'dynamic' | 'uploaded' = 'dynamic';
+  onlineViewMode: 'quick_pay' | 'qr_code' = 'quick_pay';
+  qrLoadFailed = false;
+
+  get isMobile(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (Capacitor.isNativePlatform()) return true;
+    return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  }
 
   get hasCustomUploadedQr(): boolean {
     return !!(this.qrImageUrl && !this.qrImageUrl.includes('wikimedia.org'));
@@ -85,11 +99,29 @@ export class CartComponent implements OnInit, OnDestroy {
   get upiPaymentString(): string {
     const upi = this.effectiveUpiId;
     const amount = Number(this.currentTotal).toFixed(2);
-    return `upi://pay?pa=${upi}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder`;
+    const tr = 'FB' + Date.now();
+    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
   }
 
   get dynamicQrUrl(): string {
     return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(this.upiPaymentString)}`;
+  }
+
+  get currentQrDisplayUrl(): string {
+    if (this.selectedQrMode === 'uploaded' && this.qrImageUrl) {
+      return this.qrImageUrl;
+    }
+    if (this.qrLoadFailed) {
+      return `https://quickchart.io/qr?text=${encodeURIComponent(this.upiPaymentString)}&size=300`;
+    }
+    return this.dynamicQrUrl;
+  }
+
+  onQrError() {
+    if (!this.qrLoadFailed) {
+      this.qrLoadFailed = true;
+      this.cdr.detectChanges();
+    }
   }
 
   // --- UPI Apps Selector ---
@@ -161,6 +193,10 @@ export class CartComponent implements OnInit, OnDestroy {
     }
   ];
 
+  get topUpiApps(): UpiAppInfo[] {
+    return this.upiApps.filter(app => ['gpay', 'phonepe', 'paytm', 'bhim'].includes(app.id));
+  }
+
   openUpiAppsModal() {
     this.showUpiAppsModal = true;
     this.cdr.detectChanges();
@@ -185,31 +221,58 @@ export class CartComponent implements OnInit, OnDestroy {
     switch (appId) {
       case 'gpay':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;action=android.intent.action.VIEW;end`
           : `tez://upi/pay?${query}`;
       case 'phonepe':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;action=android.intent.action.VIEW;end`
           : `phonepe://pay?${query}`;
       case 'paytm':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;action=android.intent.action.VIEW;end`
           : `paytmmp://pay?${query}`;
       case 'bhim':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=in.org.npci.upiapp;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=in.org.npci.upiapp;action=android.intent.action.VIEW;end`
           : `upi://pay?${query}`;
       case 'cred':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=com.dreamplug.androidapp;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.dreamplug.androidapp;action=android.intent.action.VIEW;end`
           : `credpay://pay?${query}`;
       case 'amazonpay':
-        return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=in.amazon.mShop.android.shopping;end`
-          : `upi://pay?${query}`;
+        return `intent://pay?${query}#Intent;scheme=upi;package=in.amazon.mShop.android.shopping;action=android.intent.action.VIEW;end`;
       case 'any':
       default:
         return `upi://pay?${query}`;
+    }
+  }
+
+  async launchUpi(url: string, packageName?: string) {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await UpiLauncher.openUpi({ url, packageName });
+        return;
+      } catch (err) {
+        console.warn('Native UpiLauncher error, falling back to web navigation:', err);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const cleanUpi = url.startsWith('intent://') 
+          ? url.replace(/^intent:\/\//, 'upi://').replace(/#Intent;.*$/, '') 
+          : url;
+
+        const a = document.createElement('a');
+        a.href = cleanUpi;
+        a.target = '_self';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (e) {
+        window.location.href = url;
+      }
     }
   }
 
@@ -224,15 +287,45 @@ export class CartComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     const link = this.getAppUpiLink(app.id);
-    if (typeof window !== 'undefined' && link) {
-      setTimeout(() => {
-        try {
-          window.location.href = link;
-        } catch (e) {
-          console.error('Failed to open UPI link', e);
-        }
-      }, 50);
+    this.launchUpi(link, app.packageName);
+  }
+
+  onQrCodeClick() {
+    this.showToast(`Opening UPI apps to pay ₹${this.currentTotal}...`, 'info');
+    this.launchUpi(this.upiPaymentString);
+  }
+
+  downloadQrCode() {
+    const url = this.currentQrDisplayUrl;
+    if (!url) {
+      this.showToast('QR code is not available.', 'error');
+      return;
     }
+
+    const filename = `foodybhai-qr-₹${this.currentTotal}.png`;
+    fetch(url)
+      .then(res => res.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        this.showToast('✅ QR code saved! In your UPI app, tap "Scan QR" → "Upload from Gallery".', 'success');
+      })
+      .catch(() => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        this.showToast('✅ QR opened! In your UPI app, use Scan from Gallery.', 'success');
+      });
   }
 
   copyUpiId() {
@@ -592,6 +685,8 @@ export class CartComponent implements OnInit, OnDestroy {
     this.paymentMethod = 'online';
     this.selectedQrMode = 'dynamic';
     this.codConfirmed = false;
+    this.onlineViewMode = this.isMobile ? 'quick_pay' : 'qr_code';
+    this.qrLoadFailed = false;
     this.showPaymentModal = true;
     this.cdr.detectChanges();
   }
