@@ -1,5 +1,6 @@
 package com.foodybhai.admin;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -9,13 +10,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
+import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
@@ -34,7 +39,7 @@ public class OrderForegroundService extends Service {
 
     private static final String TAG = "OrderForegroundService";
     public static final String CHANNEL_STANDBY = "foodybhai_monitor_standby";
-    public static final String CHANNEL_ALARM = "foodybhai_order_alerts_v2";
+    public static final String CHANNEL_ALARM = "foodybhai_order_alerts_v3";
 
     public static final int NOTIF_STANDBY_ID = 1001;
     public static final int NOTIF_ALARM_ID = 1002;
@@ -42,6 +47,7 @@ public class OrderForegroundService extends Service {
     public static final String ACTION_START_SERVICE = "com.foodybhai.admin.START_SERVICE";
     public static final String ACTION_STOP_ALARM = "com.foodybhai.admin.STOP_ALARM";
     public static final String ACTION_SILENCE = "com.foodybhai.admin.SILENCE";
+    public static final String ACTION_WATCHDOG_CHECK = "com.foodybhai.admin.WATCHDOG_CHECK";
 
     public static final String PREFS_NAME = "FoodyBhaiAdminPrefs";
     public static final String KEY_API_URL = "apiUrl";
@@ -50,8 +56,10 @@ public class OrderForegroundService extends Service {
     private static OrderForegroundService instance;
 
     private MediaPlayer mediaPlayer;
+    private Ringtone fallbackRingtone;
     private Vibrator vibrator;
     private PowerManager.WakeLock wakeLock;
+    private PowerManager.WakeLock standbyWakeLock;
 
     private boolean isRinging = false;
     private String currentAlertOrderId = "";
@@ -72,7 +80,9 @@ public class OrderForegroundService extends Service {
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         createNotificationChannels();
         startInForegroundStandby();
+        acquireStandbyWakeLock();
         startMonitoring();
+        scheduleWatchdogAlarm();
         Log.i(TAG, "OrderForegroundService created and monitoring started");
     }
 
@@ -84,9 +94,41 @@ public class OrderForegroundService extends Service {
                 stopAlarm();
             } else if (ACTION_SILENCE.equals(action)) {
                 silenceCurrentAlarm();
+            } else if (ACTION_WATCHDOG_CHECK.equals(action)) {
+                // Watchdog fired via AlarmManager: poll pending orders in background thread
+                new Thread(() -> {
+                    try {
+                        checkPendingOrdersEndpoint();
+                    } catch (Exception ignored) {}
+                }, "FoodyBhai-Watchdog-Worker").start();
+                scheduleWatchdogAlarm();
             }
+        } else {
+            scheduleWatchdogAlarm();
         }
         return START_STICKY;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.i(TAG, "App task removed from recents. Keeping OrderForegroundService alive and scheduling restart watchdog.");
+        try {
+            Intent restartIntent = new Intent(getApplicationContext(), OrderForegroundService.class);
+            restartIntent.setPackage(getPackageName());
+            int piFlags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
+            PendingIntent pi = PendingIntent.getService(getApplicationContext(), 101, restartIntent, piFlags);
+            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (am != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    am.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 1500, pi);
+                } else {
+                    am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 1500, pi);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed in onTaskRemoved: " + e.getMessage());
+        }
+        super.onTaskRemoved(rootIntent);
     }
 
     @Override
@@ -98,9 +140,54 @@ public class OrderForegroundService extends Service {
     public void onDestroy() {
         stopMonitoring();
         stopAlarm();
+        releaseStandbyWakeLock();
         instance = null;
         super.onDestroy();
         Log.i(TAG, "OrderForegroundService destroyed");
+    }
+
+    private void acquireStandbyWakeLock() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && (standbyWakeLock == null || !standbyWakeLock.isHeld())) {
+                standbyWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FoodyBhai:StandbyMonitorWakeLock");
+                standbyWakeLock.setReferenceCounted(false);
+                standbyWakeLock.acquire();
+                Log.i(TAG, "Standby PARTIAL_WAKE_LOCK acquired for 24/7 background monitoring");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not acquire Standby WakeLock: " + e.getMessage());
+        }
+    }
+
+    private void releaseStandbyWakeLock() {
+        try {
+            if (standbyWakeLock != null && standbyWakeLock.isHeld()) {
+                standbyWakeLock.release();
+                standbyWakeLock = null;
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void scheduleWatchdogAlarm() {
+        try {
+            Intent intent = new Intent(this, OrderForegroundService.class);
+            intent.setAction(ACTION_WATCHDOG_CHECK);
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
+            PendingIntent pi = PendingIntent.getService(this, 102, intent, flags);
+            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            if (am != null) {
+                // 25 seconds interval to stay alert without battery drain
+                long triggerAt = SystemClock.elapsedRealtime() + 25000;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    am.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAt, pi);
+                } else {
+                    am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAt, pi);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not schedule watchdog alarm: " + e.getMessage());
+        }
     }
 
     private void createNotificationChannels() {
@@ -131,7 +218,6 @@ public class OrderForegroundService extends Service {
             alarmChannel.setVibrationPattern(new long[]{0, 1000, 500, 1000, 500});
             alarmChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 
-            // Audio attributes for the alarm channel
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_ALARM)
@@ -162,7 +248,6 @@ public class OrderForegroundService extends Service {
             .setContentIntent(pendingIntent);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Android 14+ requires foreground service types
             int type = 0;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 type = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC | ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
@@ -207,7 +292,7 @@ public class OrderForegroundService extends Service {
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
                     conn.setRequestProperty("Accept", "text/event-stream");
-                    conn.setReadTimeout(0); // Infinite read timeout for SSE stream
+                    conn.setReadTimeout(45000); // 45s timeout detects dead connections quickly
                     conn.setConnectTimeout(15000);
                     conn.connect();
 
@@ -239,7 +324,7 @@ public class OrderForegroundService extends Service {
         }, "FoodyBhai-SSE-Thread");
         sseThread.start();
 
-        // Thread 2: Fast Polling Fallback (Checks /orders/pending-alert every 5 seconds)
+        // Thread 2: Fast Polling Fallback (Checks /orders/pending-alert every 6 seconds)
         pollThread = new Thread(() -> {
             while (isRunning) {
                 try {
@@ -249,7 +334,7 @@ public class OrderForegroundService extends Service {
                 }
 
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(6000);
                 } catch (InterruptedException ignored) {
                     break;
                 }
@@ -274,6 +359,11 @@ public class OrderForegroundService extends Service {
         try {
             JSONObject event = new JSONObject(rawJson);
             String type = event.optString("type");
+            if ("ping".equalsIgnoreCase(type)) {
+                // Heartbeat keep-alive from server; connection is healthy
+                return;
+            }
+
             JSONObject data = event.optJSONObject("data");
 
             if ("new_order".equals(type) && data != null) {
@@ -403,7 +493,7 @@ public class OrderForegroundService extends Service {
                     PowerManager.ON_AFTER_RELEASE,
                     "FoodyBhai:NewOrderAlarmWakeLock"
                 );
-                wakeLock.acquire(60000); // Hold wake lock for up to 60 seconds
+                wakeLock.acquire(90000); // Hold wake lock for up to 90 seconds
             }
         } catch (Exception e) {
             Log.w(TAG, "Could not acquire WakeLock: " + e.getMessage());
@@ -424,8 +514,9 @@ public class OrderForegroundService extends Service {
             intent.putExtra("from_order_alert", true);
             intent.putExtra("order_id", orderId);
             startActivity(intent);
+            Log.i(TAG, "startActivity(MainActivity) dispatched successfully");
         } catch (Exception e) {
-            Log.w(TAG, "Direct startActivity failed: " + e.getMessage());
+            Log.w(TAG, "Direct startActivity failed (may be restricted by background start rules): " + e.getMessage());
         }
     }
 
@@ -471,7 +562,7 @@ public class OrderForegroundService extends Service {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
-            .setFullScreenIntent(fullScreenPendingIntent, true) // <--- CRITICAL: Full-screen wake
+            .setFullScreenIntent(fullScreenPendingIntent, true) // Full-screen wake
             .setContentIntent(fullScreenPendingIntent)
             .addAction(R.mipmap.ic_launcher, "Accept Order", acceptPendingIntent)
             .addAction(android.R.drawable.ic_lock_silent_mode, "Silence Ring", silencePendingIntent);
@@ -481,22 +572,79 @@ public class OrderForegroundService extends Service {
 
     private void startLoopingAudio() {
         try {
-            if (mediaPlayer == null) {
-                mediaPlayer = MediaPlayer.create(this, R.raw.order_alert);
-                if (mediaPlayer != null) {
+            stopAudio();
+
+            // Ensure alarm audio stream has high volume
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                int curVol = am.getStreamVolume(AudioManager.STREAM_ALARM);
+                if (curVol < maxVol / 2) {
+                    am.setStreamVolume(AudioManager.STREAM_ALARM, maxVol, 0);
+                }
+            }
+
+            try {
+                mediaPlayer = new MediaPlayer();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_ALARM)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build());
-                    mediaPlayer.setLooping(true); // <--- CONTINUOUS LOOP UNTIL ACCEPTED!
-                    mediaPlayer.start();
+                } else {
+                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
                 }
-            } else if (!mediaPlayer.isPlaying()) {
-                mediaPlayer.setLooping(true);
-                mediaPlayer.start();
+
+                AssetFileDescriptor afd = getResources().openRawResourceFd(R.raw.order_alert);
+                if (afd != null) {
+                    mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                    afd.close();
+                    mediaPlayer.setLooping(true);
+                    mediaPlayer.prepare();
+                    mediaPlayer.start();
+                    Log.i(TAG, "MediaPlayer order alert started looping via STREAM_ALARM");
+                    return;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "MediaPlayer raw resource failed, trying MediaPlayer.create: " + e.getMessage());
+                try {
+                    mediaPlayer = MediaPlayer.create(this, R.raw.order_alert);
+                    if (mediaPlayer != null) {
+                        mediaPlayer.setLooping(true);
+                        mediaPlayer.start();
+                        Log.i(TAG, "MediaPlayer.create started looping successfully");
+                        return;
+                    }
+                } catch (Exception ex) {
+                    Log.w(TAG, "MediaPlayer.create failed: " + ex.getMessage());
+                }
             }
+
+            // Fallback to loud system Alarm ringtone if custom file failed
+            try {
+                Uri alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                if (alertUri == null) {
+                    alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+                }
+                if (alertUri != null) {
+                    fallbackRingtone = RingtoneManager.getRingtone(this, alertUri);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && fallbackRingtone != null) {
+                        fallbackRingtone.setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .build());
+                    }
+                    if (fallbackRingtone != null) {
+                        fallbackRingtone.play();
+                        Log.i(TAG, "RingtoneManager alarm sound playing as fallback");
+                    }
+                }
+            } catch (Exception ringtoneEx) {
+                Log.e(TAG, "Ringtone fallback failed: " + ringtoneEx.getMessage());
+            }
+
         } catch (Exception e) {
-            Log.e(TAG, "Failed to start audio playback: " + e.getMessage());
+            Log.e(TAG, "Failed to start audio playback: " + e.getMessage(), e);
         }
     }
 
@@ -542,7 +690,7 @@ public class OrderForegroundService extends Service {
         }
     }
 
-    private void stopMediaAndVibrator() {
+    private void stopAudio() {
         try {
             if (mediaPlayer != null) {
                 if (mediaPlayer.isPlaying()) {
@@ -553,6 +701,18 @@ public class OrderForegroundService extends Service {
             }
         } catch (Exception ignored) {}
 
+        try {
+            if (fallbackRingtone != null) {
+                if (fallbackRingtone.isPlaying()) {
+                    fallbackRingtone.stop();
+                }
+                fallbackRingtone = null;
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void stopMediaAndVibrator() {
+        stopAudio();
         try {
             if (vibrator != null) {
                 vibrator.cancel();

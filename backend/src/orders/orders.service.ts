@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { Subject, Observable } from 'rxjs';
+import { Subject, Observable, interval, merge } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { SettingsService } from '../settings/settings.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -16,7 +17,11 @@ export class OrdersService {
   private orderEvents$ = new Subject<{ type: string; data: any }>();
 
   getOrderEvents(): Observable<{ type: string; data: any }> {
-    return this.orderEvents$.asObservable();
+    // Send periodic ping every 20s to prevent reverse proxies (Nginx/Hostinger/Cloudflare) and mobile carriers from killing idle SSE stream
+    const ping$ = interval(20000).pipe(
+      map(() => ({ type: 'ping', data: { time: Date.now() } }))
+    );
+    return merge(this.orderEvents$.asObservable(), ping$);
   }
 
   emitOrderEvent(type: string, data: any) {

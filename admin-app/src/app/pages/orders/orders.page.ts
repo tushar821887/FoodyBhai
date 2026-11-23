@@ -594,6 +594,9 @@ export class OrdersPage implements OnInit, OnDestroy {
         this.eventSource.onmessage = (event) => {
           try {
             const payload = JSON.parse(event.data);
+            if (payload && payload.type === 'ping') {
+              return;
+            }
             console.log('⚡ Instant live order event received:', payload);
             if (payload && payload.type === 'new_order') {
               this.manuallySilenced = false;

@@ -32,6 +32,7 @@
             android:name=".OrderForegroundService"
             android:enabled="true"
             android:exported="false"
+            android:stopWithTask="false"
             android:foregroundServiceType="dataSync|mediaPlayback" />
 
         <!-- Notification Action Broadcast Receiver -->

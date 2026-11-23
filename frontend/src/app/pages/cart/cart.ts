@@ -93,14 +93,14 @@ export class CartComponent implements OnInit, OnDestroy {
   }
   
   get effectiveUpiId(): string {
-    return this.upiId || '8218870579@ptyes';
+    return (this.upiId || '8218870579@ptyes').trim();
   }
 
   get upiPaymentString(): string {
     const upi = this.effectiveUpiId;
     const amount = Number(this.currentTotal).toFixed(2);
     const tr = 'FB' + Date.now();
-    return `upi://pay?pa=${encodeURIComponent(upi)}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
+    return `upi://pay?pa=${upi}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
   }
 
   get dynamicQrUrl(): string {
@@ -211,7 +211,8 @@ export class CartComponent implements OnInit, OnDestroy {
     const upi = this.effectiveUpiId;
     const amount = Number(this.currentTotal).toFixed(2);
     const tr = 'FB' + Date.now();
-    return `pa=${encodeURIComponent(upi)}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
+    // Do NOT percent-encode '@' in UPI ID as it breaks PhonePe and Paytm VPA parser!
+    return `pa=${upi}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
   }
 
   getAppUpiLink(appId: string): string {
@@ -221,26 +222,26 @@ export class CartComponent implements OnInit, OnDestroy {
     switch (appId) {
       case 'gpay':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;action=android.intent.action.VIEW;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`
           : `tez://upi/pay?${query}`;
       case 'phonepe':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;action=android.intent.action.VIEW;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;end`
           : `phonepe://pay?${query}`;
       case 'paytm':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;action=android.intent.action.VIEW;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;end`
           : `paytmmp://pay?${query}`;
       case 'bhim':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=in.org.npci.upiapp;action=android.intent.action.VIEW;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=in.org.npci.upiapp;end`
           : `upi://pay?${query}`;
       case 'cred':
         return isAndroid
-          ? `intent://pay?${query}#Intent;scheme=upi;package=com.dreamplug.androidapp;action=android.intent.action.VIEW;end`
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.dreamplug.androidapp;end`
           : `credpay://pay?${query}`;
       case 'amazonpay':
-        return `intent://pay?${query}#Intent;scheme=upi;package=in.amazon.mShop.android.shopping;action=android.intent.action.VIEW;end`;
+        return `intent://pay?${query}#Intent;scheme=upi;package=in.amazon.mShop.android.shopping;end`;
       case 'any':
       default:
         return `upi://pay?${query}`;
@@ -259,17 +260,18 @@ export class CartComponent implements OnInit, OnDestroy {
 
     if (typeof window !== 'undefined') {
       try {
+        const isAndroid = /android/i.test(navigator.userAgent);
+        if (isAndroid && url.startsWith('intent://')) {
+          // On Android mobile browser (Chrome/Samsung), intent:// URLs directly launch the targeted app!
+          window.location.href = url;
+          return;
+        }
+
         const cleanUpi = url.startsWith('intent://') 
           ? url.replace(/^intent:\/\//, 'upi://').replace(/#Intent;.*$/, '') 
           : url;
 
-        const a = document.createElement('a');
-        a.href = cleanUpi;
-        a.target = '_self';
-        a.rel = 'noopener';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        window.location.href = cleanUpi;
       } catch (e) {
         window.location.href = url;
       }
@@ -277,14 +279,15 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   onAppSelected(app: UpiAppInfo, event?: Event) {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
     this.selectedUpiApp = app;
     this.showUpiAppsModal = false;
     this.showToast(`Opening ${app.name}... Please complete payment and tap "I've Paid".`, 'info');
     this.cdr.detectChanges();
+
+    if (Capacitor.isNativePlatform() && event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
 
     const link = this.getAppUpiLink(app.id);
     this.launchUpi(link, app.packageName);

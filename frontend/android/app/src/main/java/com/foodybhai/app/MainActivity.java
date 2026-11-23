@@ -54,10 +54,10 @@ public class MainActivity extends BridgeActivity {
                     intent.setAction(Intent.ACTION_VIEW);
                 }
 
-                if (intent.resolveActivity(getPackageManager()) != null) {
+                try {
                     startActivity(intent);
                     return true;
-                } else {
+                } catch (android.content.ActivityNotFoundException ex) {
                     // Try fallback URL if app is not installed
                     String fallbackUrl = intent.getStringExtra("browser_fallback_url");
                     if (fallbackUrl != null && !fallbackUrl.isEmpty()) {
@@ -85,23 +85,26 @@ public class MainActivity extends BridgeActivity {
             url.startsWith("phonepe://") || url.startsWith("paytmmp://") || 
             url.startsWith("credpay://")) {
             try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
                 if (url.startsWith("upi://")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     Intent chooser = Intent.createChooser(intent, "Pay via UPI App");
                     chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(chooser);
-                } else if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
                 } else {
-                    // Fallback to generic UPI if specific app protocol isn't found
-                    String upiFallback = url.replaceFirst("^[a-z]+://", "upi://");
-                    Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(upiFallback));
-                    fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    Intent chooser = Intent.createChooser(fallbackIntent, "Pay via UPI App");
-                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(chooser);
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } catch (android.content.ActivityNotFoundException ex) {
+                        // Fallback to generic UPI if specific app protocol isn't found
+                        String upiFallback = url.replaceFirst("^[a-z]+://", "upi://");
+                        Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(upiFallback));
+                        fallbackIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Intent chooser = Intent.createChooser(fallbackIntent, "Pay via UPI App");
+                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(chooser);
+                    }
                 }
                 return true;
             } catch (Exception e) {

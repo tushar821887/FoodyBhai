@@ -1,7 +1,9 @@
 package com.foodybhai.app;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -9,6 +11,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "UpiLauncher")
 public class UpiLauncherPlugin extends Plugin {
+
+    private static final String TAG = "UpiLauncher";
 
     @PluginMethod
     public void openUpi(PluginCall call) {
@@ -20,48 +24,51 @@ public class UpiLauncherPlugin extends Plugin {
             return;
         }
 
-        try {
-            Intent intent;
-            if (url.startsWith("intent://")) {
-                intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-            } else {
-                intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (intent.getAction() == null) {
-                intent.setAction(Intent.ACTION_VIEW);
+        // Clean up URI for direct app launch (e.g. upi://pay?pa=...&am=...)
+        String cleanUpi = url.startsWith("intent://")
+            ? url.replaceFirst("^intent://", "upi://").replaceAll("#Intent;.*$", "")
+            : (url.startsWith("upi://") ? url : url.replaceFirst("^[a-z]+://", "upi://"));
+
+        // 1. Try launching targeted app directly by package name (GPay, PhonePe, Paytm, etc.)
+        if (packageName != null && !packageName.trim().isEmpty()) {
+            try {
+                Intent targetedIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(cleanUpi));
+                targetedIntent.setPackage(packageName.trim());
+                targetedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(targetedIntent);
+                Log.i(TAG, "Launched targeted UPI app directly: " + packageName);
+                call.resolve();
+                return;
+            } catch (ActivityNotFoundException e) {
+                Log.w(TAG, "Targeted app " + packageName + " not installed, trying intent scheme");
+            } catch (Exception e) {
+                Log.w(TAG, "Direct launch failed for " + packageName + ": " + e.getMessage());
             }
 
-            if (packageName != null && !packageName.trim().isEmpty()) {
-                intent.setPackage(packageName.trim());
-                if (getContext().getPackageManager().resolveActivity(intent, 0) != null) {
-                    getContext().startActivity(intent);
+            // Also try parsing the intent:// uri if present
+            if (url.startsWith("intent://")) {
+                try {
+                    Intent parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                    parsedIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    getContext().startActivity(parsedIntent);
+                    Log.i(TAG, "Launched via Intent.parseUri: " + packageName);
                     call.resolve();
                     return;
-                }
+                } catch (Exception ignored) {}
             }
+        }
 
-            // Fallback to system UPI chooser with clean upi:// uri
-            String cleanUpi = url.startsWith("intent://")
-                ? url.replaceFirst("^intent://", "upi://").replaceAll("#Intent;.*$", "")
-                : (url.startsWith("upi://") ? url : url.replaceFirst("^[a-z]+://", "upi://"));
-
+        // 2. Fallback to System Chooser for all installed UPI apps
+        try {
             Intent chooserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(cleanUpi));
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             Intent chooser = Intent.createChooser(chooserIntent, "Pay via UPI App");
             chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getContext().startActivity(chooser);
             call.resolve();
-        } catch (Exception e) {
-            try {
-                String cleanUpi = url.replaceFirst("^intent://", "upi://").replaceAll("#Intent;.*$", "");
-                Intent fallback = new Intent(Intent.ACTION_VIEW, Uri.parse(cleanUpi));
-                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getContext().startActivity(Intent.createChooser(fallback, "Pay via UPI App"));
-                call.resolve();
-            } catch (Exception ex) {
-                call.reject("Could not launch UPI app: " + ex.getMessage());
-            }
+        } catch (Exception ex) {
+            Log.e(TAG, "Chooser failed: " + ex.getMessage());
+            call.reject("Could not launch UPI app: " + ex.getMessage());
         }
     }
 }

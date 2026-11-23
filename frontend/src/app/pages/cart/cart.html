@@ -585,10 +585,11 @@
 
                 <div class="quick-pay-grid">
                   @for (app of topUpiApps; track app.id) {
-                    <button type="button" 
-                            class="quick-pay-btn" 
-                            [class.active-app]="selectedUpiApp?.id === app.id"
-                            (click)="onAppSelected(app, $event)">
+                    <a [href]="getAppUpiLink(app.id)"
+                       class="quick-pay-btn" 
+                       [class.active-app]="selectedUpiApp?.id === app.id"
+                       (click)="onAppSelected(app, $event)"
+                       target="_self">
                       <div class="quick-pay-icon" [style.background]="app.bgColor">
                         @if (app.id === 'gpay') {
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M23.49 12.28c0-.85-.07-1.46-.22-2.1H12v4.03h6.58c-.14.99-.8 2.27-2.07 3.12v2.54h3.32c1.97-1.81 3.66-4.59 3.66-7.59z" fill="#4285F4"/><path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.32-2.54c-.9.63-2.12 1.09-3.61 1.09-3.23 0-6.02-2.18-7.01-5.18H2.53v2.63C4.54 21.1 8.01 24 12 24z" fill="#34A853"/><path d="M4.99 14.46c-.26-.77-.41-1.6-.41-2.46s.15-1.69.41-2.46V6.91H2.53C1.71 8.54 1.25 10.37 1.25 12.28s.46 3.74 1.28 5.37l2.46-3.19z" fill="#FBBC05"/><path d="M12 4.75c1.77 0 3.03.77 3.71 1.41l2.7-2.65C16.8 1.94 14.54 1 12 1 8.01 1 4.54 3.9 2.53 7.89l2.46 2.65c.99-3 3.78-5.79 7.01-5.79z" fill="#EA4335"/></svg>
@@ -601,7 +602,7 @@
                         }
                       </div>
                       <span class="quick-pay-name">{{ app.name }}</span>
-                    </button>
+                    </a>
                   }
                 </div>
 

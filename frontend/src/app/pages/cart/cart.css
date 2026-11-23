@@ -1196,6 +1196,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
+  text-decoration: none;
+  color: inherit;
 }
 .quick-pay-btn:hover {
   border-color: var(--primary-color);
