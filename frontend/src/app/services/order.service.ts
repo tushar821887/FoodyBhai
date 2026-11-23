@@ -8,6 +8,7 @@ export interface DeliveryDetails {
   name: string;
   phone: string;
   address: string;
+  email?: string;
 }
 
 export interface Order {
@@ -15,27 +16,62 @@ export interface Order {
   id?: string;
   userId?: string;
   items: CartItem[];
+  itemTotal?: number;
+  discount?: number;
+  gst?: number;
+  platformFee?: number;
   totalAmount: number;
   deliveryDetails: DeliveryDetails;
   orderType: string;
   status: string;
   deliveryAgent?: { name: string; phone: string };
   createdAt?: string;
+  rating?: number;
+  review?: string;
+  paymentMethod?: string;
+  refundStatus?: string;
+  preparationTime?: number;
+  guestAuth?: any;
+  cancelRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string;
+    requestedBy?: string;
+  };
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
+  getSetting(key: string): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/settings/${key}`);
+  }
   private readonly API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
-  placeOrder(orderData: { items: CartItem[], totalAmount: number, deliveryDetails: DeliveryDetails, orderType: string, paymentMethod?: string }): Observable<Order> {
+  placeOrder(orderData: any): Observable<Order> {
     return this.http.post<Order>(`${this.API_URL}/orders`, orderData);
   }
 
   getOrderHistory(): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.API_URL}/orders`);
+  }
+
+  trackOrder(identifier: string): Observable<Order[]> {
+    return this.http.get<Order[]>(`${this.API_URL}/orders/track/${encodeURIComponent(identifier)}`);
+  }
+
+  rateOrder(id: string, rating: number, review: string): Observable<Order> {
+    return this.http.post<Order>(`${this.API_URL}/orders/${id}/rate`, { rating, review });
+  }
+
+  cancelOrder(id: string, reason: string): Observable<Order> {
+    return this.http.put<Order>(`${this.API_URL}/orders/${id}/cancel`, { reason });
+  }
+
+  getRestaurantStats(): Observable<any> {
+    return this.http.get<any>(`${this.API_URL}/orders/restaurant/stats`);
   }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ViewEncapsulation } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { CommonModule, Location } from '@angular/common';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BlogService, BlogPost } from '../../services/blog.service';
 
@@ -16,10 +16,20 @@ export class BlogDetail implements OnInit {
   safeContent: SafeHtml = '';
 
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private location = inject(Location);
   private blogService = inject(BlogService);
   private meta = inject(Meta);
   private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
+
+  goBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/blog']);
+    }
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {

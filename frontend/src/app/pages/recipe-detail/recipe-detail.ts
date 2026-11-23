@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RecipeService, Recipe } from '../../services/recipe.service';
 import { CartService } from '../../services/cart.service';
@@ -12,33 +12,75 @@ import { CartService } from '../../services/cart.service';
   styleUrl: './recipe-detail.css'
 })
 export class RecipeDetail implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   recipe: Recipe | undefined;
+  relatedRecipes: Recipe[] = [];
   schemaMarkup: SafeHtml = '';
+  isLoading = true;
 
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private location = inject(Location);
   private recipeService = inject(RecipeService);
   private meta = inject(Meta);
   private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
   private cartService = inject(CartService);
 
+  goBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/menu']);
+    }
+  }
+
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const slug = params.get('slug');
       if (slug) {
-        this.recipeService.getRecipeBySlug(slug).subscribe(recipe => {
-          this.recipe = recipe;
-          if (recipe) {
-            this.setSeoTags(recipe);
-            this.generateSchema(recipe);
+        this.isLoading = true;
+        this.recipe = undefined;
+        this.recipeService.getRecipeBySlug(slug).subscribe({
+          next: (recipe) => {
+            this.recipe = recipe;
+            this.isLoading = false;
+            if (recipe) {
+              this.setSeoTags(recipe);
+              this.generateSchema(recipe);
+              this.loadRelatedRecipes(recipe);
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.isLoading = false;
+            this.recipe = undefined;
+            this.cdr.detectChanges();
           }
         });
+      } else {
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
+    });
+  }
+
+  loadRelatedRecipes(currentRecipe: Recipe) {
+    this.recipeService.getRecipes().subscribe(all => {
+      if (!all || all.length === 0) return;
+      const sameCategory = all.filter(r => r.slug !== currentRecipe.slug && r.category === currentRecipe.category);
+      const otherCategories = all.filter(r => r.slug !== currentRecipe.slug && r.category !== currentRecipe.category);
+      this.relatedRecipes = [...sameCategory, ...otherCategories].slice(0, 4);
+      this.cdr.detectChanges();
     });
   }
 
   addToCart() {
     if (this.recipe) {
+      if (this.recipe.inStock === false) {
+        alert('This item is currently out of stock.');
+        return;
+      }
       this.cartService.addToCart(this.recipe);
     }
   }
@@ -46,6 +88,15 @@ export class RecipeDetail implements OnInit {
   getCategorySlug(categoryName: string): string {
     if (!categoryName) return '';
     return categoryName.toLowerCase().replace(/ & /g, '-and-').replace(/ /g, '-');
+  }
+
+  getCleanRecipeHtml(html?: string): string {
+    if (!html) return '';
+    return html
+      .replace(/<div[^>]*>[\s\S]*?(?:Chef's Ingredients|Chef's Recipe Ingredients|Ingredients & Spices)[\s\S]*?<\/ul>[\s\S]*?<\/div>/gi, '')
+      .replace(/<h[1-6][^>]*>[\s\S]*?(?:Chef's Ingredients|Chef's Recipe Ingredients|Ingredients & Spices)[\s\S]*?<\/h[1-6]>(\s*<ul[^>]*>[\s\S]*?<\/ul>)?/gi, '')
+      .replace(/<p>\s*(<br\s*\/?>|&nbsp;|\s)*<\/p>/gi, '')
+      .trim();
   }
 
   private setSeoTags(recipe: Recipe) {

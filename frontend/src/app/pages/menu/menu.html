@@ -1,13 +1,17 @@
-<div class="page-header">
-  <div class="container text-center ">
-    <h1 class="page-title">Our <span>Menu</span></h1>
-    <p class="page-subtitle">Explore our delicious, freshly prepared meals.</p>
+@if (cmsHeroSection) {
+  <app-dynamic-section-renderer [section]="cmsHeroSection"></app-dynamic-section-renderer>
+} @else {
+  <div class="page-header">
+    <div class="container text-center">
+      <h1 class="page-title">Our <span>Menu</span></h1>
+      <p class="page-subtitle">Explore our delicious, freshly prepared meals.</p>
+    </div>
   </div>
-</div>
+}
 
 <section class="section">
   <div class="container">
-    <div class="menu-controls ">
+    <div class="menu-controls">
       <div class="search-bar">
         <i class="fa-solid fa-search"></i>
         <input type="text" placeholder="Search the menu..." [value]="searchQuery" (input)="onSearch($event)">
@@ -22,7 +26,7 @@
       </div>
     </div>
 
-    <div class="category-tabs ">
+    <div class="category-tabs">
       @for (category of categories; track category.slug) {
         <button 
           class="category-tab" 

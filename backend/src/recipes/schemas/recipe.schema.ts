@@ -65,8 +65,14 @@ export class Recipe {
   @Prop({ default: true })
   isVeg: boolean;
 
+  @Prop({ default: true })
+  inStock: boolean;
+
   @Prop({ required: true })
   price: number;
+
+  @Prop()
+  recipeHtml?: string;
 }
 
 export const RecipeSchema = SchemaFactory.createForClass(Recipe);

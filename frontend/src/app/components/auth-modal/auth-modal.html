@@ -5,60 +5,276 @@
     </button>
     
     <div class="auth-modal-header">
-      <h2>{{ isLoginMode ? 'YOUR ACCOUNT' : 'CREATE ACCOUNT' }}</h2>
+      <h2>
+        @if (authMode === 'login') { YOUR ACCOUNT }
+        @else if (authMode === 'register') { CREATE ACCOUNT }
+        @else if (authMode === 'guest-set-password') { CREATE PASSWORD }
+        @else if (authMode === 'forgot-password') { RESET PASSWORD }
+        @else { TRACK GUEST ORDER }
+      </h2>
     </div>
 
-    <form class="auth-modal-form" (ngSubmit)="onSubmit()">
-      
-      @if (errorMessage) {
-        <div class="alert error">{{ errorMessage }}</div>
-      }
-
-      @if (!isLoginMode) {
-        <div class="form-group">
-          <input type="text" id="name" name="name" [(ngModel)]="formData.name" placeholder="Full Name *" required>
-        </div>
-        <div class="form-group">
-          <input type="tel" id="phone" name="phone" [(ngModel)]="formData.phone" placeholder="Phone Number (Optional)">
-        </div>
-      }
-
-      <div class="form-group">
-        <input type="email" id="email" name="email" [(ngModel)]="formData.email" placeholder="Account Email *" required>
+    <!-- Error Alert -->
+    @if (errorMessage) {
+      <div class="alert error" style="margin-bottom: 1rem;">
+        <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>{{ errorMessage }}
       </div>
+    }
 
-      <div class="form-group">
-        <input type="password" id="password" name="password" [(ngModel)]="formData.password" placeholder="Account Password *" required>
-      </div>
-
-      @if (!isLoginMode) {
-        <div class="form-group">
-          <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="formData.confirmPassword" placeholder="Confirm Password *" required>
-        </div>
-        <div class="form-check">
-          <input type="checkbox" id="terms" required>
-          <label for="terms">By clicking 'Register', I agree to the <a href="javascript:void(0)">Terms of Use</a> & <a href="javascript:void(0)">Privacy Policy</a>.</label>
-        </div>
-      } @else {
-        <div class="form-check">
-          <input type="checkbox" id="newsletter">
-          <label for="newsletter">Subscribe to Email Newsletter » get your 20% coupon! <br> <small>I want to receive regular news, trends & offers from Foody Bhai. You can unsubscribe at any time.</small></label>
-        </div>
-      }
-
-      <button type="submit" class="submit-btn" [disabled]="isLoading">
-        @if (isLoading) {
-          <i class="fa-solid fa-spinner fa-spin"></i> Please wait...
-        } @else {
-          {{ isLoginMode ? 'Login' : 'Register' }}
+    <!-- MODE: LOGIN OR REGISTER -->
+    @if (authMode === 'login' || authMode === 'register') {
+      <form class="auth-modal-form" (ngSubmit)="onSubmit()">
+        @if (authMode === 'register') {
+          <div class="form-group">
+            <input type="text" id="name" name="name" [(ngModel)]="formData.name" placeholder="Full Name *" required>
+          </div>
+          <div class="form-group">
+            <input type="tel" id="phone" name="phone" [(ngModel)]="formData.phone" placeholder="Phone Number (Optional)">
+          </div>
         }
-      </button>
 
-      <div class="auth-modal-footer">
-        <a href="javascript:void(0)" (click)="toggleMode()" class="toggle-link">
-          {{ isLoginMode ? 'New here? Create an account' : 'Already have an account? Login' }}
-        </a>
+        <div class="form-group">
+          <input [type]="authMode === 'login' ? 'text' : 'email'" id="email" name="email" [(ngModel)]="formData.email" [placeholder]="authMode === 'login' ? 'Email or 10-digit Phone Number *' : 'Account Email *'" required>
+        </div>
+
+        <div class="form-group">
+          <input type="password" id="password" name="password" [(ngModel)]="formData.password" placeholder="Account Password *" required>
+          @if (authMode === 'login') {
+            <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+              <a href="javascript:void(0)" (click)="switchToMode('forgot-password')" style="color: var(--primary-color); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                <i class="fa-solid fa-lock" style="font-size: 11px;"></i> Forgot Password?
+              </a>
+            </div>
+          }
+        </div>
+
+        @if (authMode === 'register') {
+          <div class="form-group">
+            <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="formData.confirmPassword" placeholder="Confirm Password *" required>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="terms" required>
+            <label for="terms">By clicking 'Register', I agree to the <a href="javascript:void(0)">Terms of Use</a> & <a href="javascript:void(0)">Privacy Policy</a>.</label>
+          </div>
+        } @else {
+          <div class="form-check">
+            <input type="checkbox" id="newsletter">
+            <label for="newsletter">Subscribe to Email Newsletter » get your 20% coupon! <br> <small>I want to receive regular news, trends & offers from Foody Bhai. You can unsubscribe at any time.</small></label>
+          </div>
+        }
+
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          @if (isLoading) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Please wait...
+          } @else {
+            {{ authMode === 'login' ? 'Login' : 'Register' }}
+          }
+        </button>
+
+        <div class="auth-modal-footer">
+          <a href="javascript:void(0)" (click)="toggleMode()" class="toggle-link">
+            {{ authMode === 'login' ? 'New here? Create an account' : 'Already have an account? Login' }}
+          </a>
+
+          <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #e2e8f0; text-align: center;">
+            <a href="javascript:void(0)" (click)="switchToMode('guest-lookup')" style="color: var(--primary-color); font-size: 13.5px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-location-crosshairs"></i> Placed an order as Guest? Track or set password &rarr;
+            </a>
+          </div>
+        </div>
+      </form>
+    }
+
+    <!-- MODE: FORGOT PASSWORD (STANDARD 3-STEP PROCESS) -->
+    @if (authMode === 'forgot-password') {
+      <div class="auth-modal-form">
+
+        <!-- STEP 1: Enter Identifier (Email or Mobile) -->
+        @if (forgotStep === 'identifier') {
+          <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; font-size: 13.5px; color: #475569; line-height: 1.5;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 700; color: #1e293b;">
+              <i class="fa-solid fa-shield-halved" style="color: var(--primary-color);"></i> Identity Verification
+            </div>
+            Enter your registered Email or 10-digit Phone Number. We will verify your identity with a secure 6-digit OTP code.
+          </div>
+
+          <div class="form-group">
+            <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Registered Email or Phone Number *</label>
+            <input type="text" [(ngModel)]="forgotIdentifier" (keyup.enter)="onSendForgotOtp()" placeholder="e.g. name@gmail.com or 9876543210" class="form-control" autofocus>
+          </div>
+
+          <button type="button" class="submit-btn" [disabled]="isLoading" (click)="onSendForgotOtp()">
+            @if (isLoading) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Sending Code...
+            } @else {
+              <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Send Verification Code
+            }
+          </button>
+        }
+
+        <!-- STEP 2: Verify OTP Code -->
+        @if (forgotStep === 'verify') {
+          <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; font-size: 13.5px; color: #166534; line-height: 1.5;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 700; color: #14532d;">
+              <i class="fa-solid fa-envelope-circle-check" style="color: #16a34a;"></i> Code Sent Successfully
+            </div>
+            A 6-digit verification code has been dispatched to
+            <strong>{{ forgotMaskedEmail || forgotMaskedPhone || forgotIdentifier }}</strong>.
+          </div>
+
+          <div class="form-group">
+            <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Enter 6-Digit Verification Code *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="forgotOtp" 
+              (keyup.enter)="onVerifyOtpSubmit()"
+              placeholder="••••••" 
+              maxlength="6" 
+              class="form-control" 
+              style="font-size: 22px; font-weight: 800; letter-spacing: 6px; text-align: center; padding: 12px;"
+              autofocus>
+          </div>
+
+          <button type="button" class="submit-btn" [disabled]="isLoading" (click)="onVerifyOtpSubmit()">
+            @if (isLoading) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Verifying Code...
+            } @else {
+              <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> Verify OTP
+            }
+          </button>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 13px;">
+            <a href="javascript:void(0)" (click)="backToIdentifier()" style="color: #64748b; text-decoration: none;">
+              &larr; Change email/phone
+            </a>
+            @if (resendCountdown > 0) {
+              <span style="color: #94a3b8; font-weight: 600;">
+                Resend in {{ resendCountdown }}s
+              </span>
+            } @else {
+              <a href="javascript:void(0)" (click)="onSendForgotOtp()" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">
+                <i class="fa-solid fa-rotate-right"></i> Resend OTP
+              </a>
+            }
+          </div>
+        }
+
+        <!-- STEP 3: Set New Password (Only after successful verification) -->
+        @if (forgotStep === 'new-password') {
+          <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; font-size: 13.5px; color: #1e40af; line-height: 1.5;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 700; color: #1e3a8a;">
+              <i class="fa-solid fa-lock" style="color: #2563eb;"></i> Identity Verified
+            </div>
+            Create a secure new password for your account below.
+          </div>
+
+          <div class="form-group" style="position: relative;">
+            <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">New Password *</label>
+            <div style="position: relative;">
+              <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="forgotNewPassword" placeholder="Minimum 6 characters" class="form-control" style="padding-right: 40px;" autofocus>
+              <button type="button" (click)="toggleShowNewPassword()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer;">
+                <i class="fa-solid" [class.fa-eye]="!showNewPassword" [class.fa-eye-slash]="showNewPassword"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" style="position: relative;">
+            <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Confirm New Password *</label>
+            <div style="position: relative;">
+              <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="forgotConfirmPassword" (keyup.enter)="onSetNewPasswordSubmit()" placeholder="Re-type your new password" class="form-control" style="padding-right: 40px;">
+              <button type="button" (click)="toggleShowConfirmPassword()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer;">
+                <i class="fa-solid" [class.fa-eye]="!showConfirmPassword" [class.fa-eye-slash]="showConfirmPassword"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="submit-btn" [disabled]="isLoading" (click)="onSetNewPasswordSubmit()">
+            @if (isLoading) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Updating Password...
+            } @else {
+              <i class="fa-solid fa-key" style="margin-right: 6px;"></i> Update Password & Login
+            }
+          </button>
+        }
+
+        <div class="auth-modal-footer">
+          <a href="javascript:void(0)" (click)="switchToMode('login')" class="toggle-link" style="font-size: 13px;">
+            &larr; Back to Regular Login
+          </a>
+        </div>
       </div>
-    </form>
+    }
+
+    <!-- MODE: GUEST SET PASSWORD -->
+    @if (authMode === 'guest-set-password') {
+      <div class="auth-modal-form">
+        <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 14px 16px; color: #1e40af; font-size: 13.5px; line-height: 1.5;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 700; color: #1e3a8a;">
+            <i class="fa-solid fa-key" style="color: #2563eb;"></i> Guest Order Account Found
+          </div>
+          {{ guestMessage || 'Create a password below for your guest order account so you can log in directly, or track your live order.' }}
+        </div>
+
+        <div class="form-group">
+          <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Account Email or Phone</label>
+          <input type="text" [(ngModel)]="guestIdentifier" placeholder="Email or Phone Number" class="form-control" style="background: #f8fafc;">
+        </div>
+
+        <div class="form-group">
+          <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">New Password *</label>
+          <input type="password" [(ngModel)]="guestNewPassword" placeholder="Minimum 6 characters" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label style="font-size: 12.5px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Confirm Password *</label>
+          <input type="password" [(ngModel)]="guestConfirmPassword" placeholder="Re-type your password" class="form-control">
+        </div>
+
+        <button type="button" class="submit-btn" [disabled]="isLoading" (click)="onGuestSetPasswordSubmit()">
+          @if (isLoading) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Saving Password...
+          } @else {
+            <i class="fa-solid fa-lock" style="margin-right: 6px;"></i> Set Password & Login
+          }
+        </button>
+
+        <button type="button" (click)="onGuestLookupTrack()" style="background: white; border: 1.5px solid #cbd5e1; color: #334155; padding: 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i class="fa-solid fa-location-crosshairs" style="color: var(--primary-color);"></i> Track Order Directly (Without Password)
+        </button>
+
+        <div class="auth-modal-footer">
+          <a href="javascript:void(0)" (click)="switchToMode('login')" class="toggle-link" style="font-size: 13px;">
+            &larr; Back to Regular Login
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- MODE: GUEST ORDER LOOKUP -->
+    @if (authMode === 'guest-lookup') {
+      <div class="auth-modal-form">
+        <p style="color: #64748b; font-size: 13.5px; text-align: center; margin: 0 0 10px 0; line-height: 1.5;">
+          Enter your 10-digit Phone Number, Email, or Order ID to view your active live food tracking.
+        </p>
+
+        <div class="form-group">
+          <input type="text" [(ngModel)]="guestIdentifier" (keyup.enter)="onGuestLookupTrack()" placeholder="Phone Number, Email, or Order ID *" class="form-control" autofocus>
+        </div>
+
+        <button type="button" class="submit-btn" (click)="onGuestLookupTrack()">
+          <i class="fa-solid fa-magnifying-glass" style="margin-right: 6px;"></i> Track Live Order
+        </button>
+
+        <button type="button" (click)="switchToMode('guest-set-password')" style="background: white; border: 1.5px solid var(--primary-border, var(--primary-color)); color: var(--primary-color); padding: 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i class="fa-solid fa-key"></i> Set Password for this Order
+        </button>
+
+        <div class="auth-modal-footer">
+          <a href="javascript:void(0)" (click)="switchToMode('login')" class="toggle-link" style="font-size: 13px;">
+            &larr; Back to Regular Login
+          </a>
+        </div>
+      </div>
+    }
   </div>
 </div>

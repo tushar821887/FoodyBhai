@@ -77,7 +77,8 @@
 .icon-wrapper {
   width: 80px;
   height: 80px;
-  background: rgba(255, 71, 87, 0.1);
+  background: var(--primary-light);
+  border: 1.5px solid var(--primary-border);
   color: var(--primary-color);
   border-radius: 50%;
   display: flex;
@@ -89,8 +90,10 @@
 }
 
 .value-card:hover .icon-wrapper {
-  background: var(--primary-color);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color), var(--primary-hover)));
+  border-color: transparent;
   color: #fff;
+  box-shadow: 0 4px 14px var(--primary-glow, rgba(234, 88, 12, 0.25));
 }
 
 .value-card h3 {

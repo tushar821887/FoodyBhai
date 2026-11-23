@@ -45,14 +45,38 @@ export class User {
   })
   email: string;
 
-  @Prop({ trim: true, match: /^[0-9]{10,15}$/ })
+  @Prop({ trim: true, index: true })
   phone: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   passwordHash: string;
+
+  @Prop({ type: String, default: null })
+  resetOtp: string | null;
+
+  @Prop({ type: Date, default: null })
+  resetOtpExpires: Date | null;
+
+  @Prop({ type: String, default: null })
+  resetToken: string | null;
+
+  @Prop({ type: Date, default: null })
+  resetTokenExpires: Date | null;
+
+  @Prop({ default: false })
+  needsPasswordSet: boolean;
+
+  @Prop({ default: false })
+  isGuestConverted: boolean;
 
   @Prop({ default: 'user', enum: ['user', 'admin'] })
   role: string;
+
+  @Prop({ type: String })
+  dateOfBirth: string;
+
+  @Prop({ type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say', ''] })
+  gender: string;
 
   @Prop({ type: [AddressSchema], default: [] })
   addresses: Address[];

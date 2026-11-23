@@ -8,6 +8,7 @@ export interface Agent {
   id: string;
   name: string;
   phone: string;
+  email?: string;
 }
 
 export interface Order {
@@ -21,13 +22,81 @@ export interface Order {
   paymentStatus: string;
   orderType: string;
   deliveryAgent?: { name: string; phone: string };
+  cancelRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string;
+    requestedBy?: string;
+  };
+  reassignRequest?: {
+    requested: boolean;
+    reason: string;
+    status: string; // 'pending', 'approved', 'rejected'
+    requestedByAgent?: { name: string; phone: string };
+    requestedAt?: string;
+    resolvedAt?: string;
+  };
+  refundStatus?: string;
+  cancellationDetails?: {
+    cancelledBy: string;
+    reason?: string;
+  };
+  rating?: number;
+  review?: string;
   items: any[];
   createdAt: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private apiUrl = environment.apiUrl;
+  // Settings
+  getSetting(key: string) {
+    return this.http.get<any>(`${this.apiUrl}/settings/${key}`);
+  }
+  
+  saveSetting(key: string, value: any) {
+    return this.http.put<any>(`${this.apiUrl}/settings/${key}`, { value }, this.getHeaders());
+  }
+
+  testSmtp(data: any) {
+    return this.http.post<any>(`${this.apiUrl}/settings/test-smtp`, data, this.getHeaders());
+  }
+
+  // Pages / CMS Table
+  getPages() {
+    return this.http.get<any>(`${this.apiUrl}/pages`);
+  }
+
+  getPageBySlug(slug: string) {
+    const s = slug ? encodeURIComponent(slug) : 'home';
+    return this.http.get<any>(`${this.apiUrl}/pages/slug/${s}`);
+  }
+
+  savePages(pages: any[]) {
+    return this.http.put<any>(`${this.apiUrl}/pages/bulk`, pages, this.getHeaders());
+  }
+
+  deletePage(slug: string) {
+    return this.http.delete<any>(`${this.apiUrl}/pages/slug/${encodeURIComponent(slug)}`, this.getHeaders());
+  }
+
+  uploadApk(formData: FormData) {
+    let token = '';
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem(this.tokenKey) || '';
+    }
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    return this.http.post<any>(`${this.apiUrl}/settings/app/upload-apk`, formData, { headers });
+  }
+
+  getCurrentUser() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const user = localStorage.getItem('admin_user');
+      return user ? JSON.parse(user) : null;
+    }
+    return null;
+  }
+  public apiUrl = environment.apiUrl;
   private tokenKey = 'foodybhai_admin_token';
   
   private authSubject = new BehaviorSubject<boolean>(false);
@@ -54,6 +123,7 @@ export class ApiService {
         if (res.success && res.accessToken) {
           if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem(this.tokenKey, res.accessToken);
+            localStorage.setItem('admin_user', JSON.stringify(res.user));
           }
           this.authSubject.next(true);
         }
@@ -65,8 +135,16 @@ export class ApiService {
     return this.http.get<Agent[]>(`${this.apiUrl}/agents`, this.getHeaders());
   }
 
-  addAgent(name: string, phone: string) {
-    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone }, this.getHeaders());
+  updateAgent(id: string, name: string, phone: string, email?: string, password?: string) {
+    return this.http.put<Agent>(`${this.apiUrl}/agents/${id}`, { name, phone, email, password }, this.getHeaders());
+  }
+
+  updateAgentStatus(id: string, isActive: boolean) {
+    return this.http.put<Agent>(`${this.apiUrl}/agents/${id}`, { isActive }, this.getHeaders());
+  }
+
+  addAgent(name: string, phone: string, email?: string, password?: string) {
+    return this.http.post<Agent>(`${this.apiUrl}/agents`, { name, phone, email, password }, this.getHeaders());
   }
 
   deleteAgent(id: string) {
@@ -77,11 +155,11 @@ export class ApiService {
   getCategories() {
     return this.http.get<any[]>(`${this.apiUrl}/categories`);
   }
-  addCategory(name: string, description?: string) {
-    return this.http.post<any>(`${this.apiUrl}/categories`, { name, description }, this.getHeaders());
+  addCategory(name: string, description?: string, icon?: string, image?: string) {
+    return this.http.post<any>(`${this.apiUrl}/categories`, { name, description, icon, image }, this.getHeaders());
   }
-  updateCategory(id: string, name: string, description?: string) {
-    return this.http.put<any>(`${this.apiUrl}/categories/${id}`, { name, description }, this.getHeaders());
+  updateCategory(id: string, name: string, description?: string, icon?: string, image?: string) {
+    return this.http.put<any>(`${this.apiUrl}/categories/${id}`, { name, description, icon, image }, this.getHeaders());
   }
 
   deleteCategory(id: string) {
@@ -102,9 +180,31 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/recipes/${id}`, this.getHeaders());
   }
 
+  toggleRecipeStock(id: string, inStock: boolean) {
+    return this.http.put<any>(`${this.apiUrl}/recipes/${id}/stock`, { inStock }, this.getHeaders());
+  }
+
+  
+  // Users
+
+  getUsers() {
+    return this.http.get<any[]>(`${this.apiUrl}/users`, this.getHeaders());
+  }
+  
+  createUser(data: any) {
+    return this.http.post<any>(`${this.apiUrl}/users`, data, this.getHeaders());
+  }
+  updateUser(id: string, data: any) {
+    return this.http.put<any>(`${this.apiUrl}/users/${id}`, data, this.getHeaders());
+  }
+  deleteUser(id: string) {
+    return this.http.delete(`${this.apiUrl}/users/${id}`, this.getHeaders());
+  }
+
   logout() {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem('admin_user');
     }
     this.authSubject.next(false);
   }
@@ -113,7 +213,115 @@ export class ApiService {
     return this.http.get<Order[]>(`${this.apiUrl}/orders/admin/all`, this.getHeaders());
   }
 
-  updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }): Observable<any> {
-    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/status`, { status, preparationTime, deliveryAgent }, this.getHeaders());
+  getRestaurantStats(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/orders/restaurant/stats`, this.getHeaders());
   }
+
+  updateOrderStatus(orderId: string, status: string, preparationTime?: number, deliveryAgent?: { name: string; phone: string }, cancelReason?: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/status`, { status, preparationTime, deliveryAgent, cancelReason }, this.getHeaders());
+  }
+
+  requestCancelOrder(orderId: string, reason: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/agent/${orderId}/cancel-request`, { reason }, this.getHeaders());
+  }
+
+  resolveCancelOrder(orderId: string, approve: boolean, processRefund: boolean = false): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/resolve-cancel`, { approve, processRefund }, this.getHeaders());
+  }
+  
+  processRefund(orderId: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/refund`, {}, this.getHeaders());
+  }
+
+  requestReassignOrder(orderId: string, reason: string, agent?: { name: string; phone: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/agent/${orderId}/reassign-request`, { reason, agent }, this.getHeaders());
+  }
+
+  resolveReassignOrder(orderId: string, approve: boolean, newAgent?: { name: string; phone: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/admin/${orderId}/resolve-reassign`, { approve, newAgent }, this.getHeaders());
+  }
+
+  getContacts(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/contact`, this.getHeaders());
+  }
+
+  getOrderEventSource(): EventSource | null {
+    if (typeof window !== 'undefined' && 'EventSource' in window) {
+      return new EventSource(`${this.apiUrl}/orders/live-stream`);
+    }
+    return null;
+  }
+
+  // Coupons & Coupon Tracking
+  getCoupons(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl + '/coupons', this.getHeaders());
+  }
+
+  getCouponStats(): Observable<any> {
+    return this.http.get<any>(this.apiUrl + '/coupons/stats', this.getHeaders());
+  }
+
+  getCouponOrders(code?: string): Observable<any[]> {
+    const q = code && code !== 'all' ? '?code=' + encodeURIComponent(code) : '';
+    return this.http.get<any[]>(this.apiUrl + '/coupons/tracking/orders' + q, this.getHeaders());
+  }
+
+  createCoupon(data: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl + '/coupons', data, this.getHeaders());
+  }
+
+  updateCoupon(id: string, data: any): Observable<any> {
+    return this.http.put<any>(this.apiUrl + '/coupons/' + id, data, this.getHeaders());
+  }
+
+  deleteCoupon(id: string): Observable<any> {
+    return this.http.delete<any>(this.apiUrl + '/coupons/' + id, this.getHeaders());
+  }
+
+  // Tiffin & Thali Management
+  getTiffinPlans(all: boolean = true): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tiffin/plans${all ? '?all=true' : ''}`, this.getHeaders());
+  }
+
+  createTiffinPlan(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tiffin/plans`, data, this.getHeaders());
+  }
+
+  updateTiffinPlan(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/tiffin/plans/${id}`, data, this.getHeaders());
+  }
+
+  deleteTiffinPlan(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/tiffin/plans/${id}`, this.getHeaders());
+  }
+
+  toggleTiffinPlan(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/tiffin/plans/${id}/toggle`, {}, this.getHeaders());
+  }
+
+  seedTiffinPlans(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tiffin/plans/seed`, {}, this.getHeaders());
+  }
+
+  getTiffinOrders(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/tiffin/orders`, this.getHeaders());
+  }
+
+  updateTiffinOrderStatus(id: string, status: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/tiffin/orders/${id}/status`, { status }, this.getHeaders());
+  }
+
+  // Tiffin Page CMS & Sections
+  getTiffinConfig(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/tiffin/config`, this.getHeaders());
+  }
+
+  updateTiffinConfig(config: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/tiffin/config`, config, this.getHeaders());
+  }
+
+  seedTiffinConfig(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tiffin/config/seed`, {}, this.getHeaders());
+  }
+
 }

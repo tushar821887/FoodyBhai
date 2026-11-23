@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { LocationService } from '../../services/location.service';
+import { Geolocation } from '@capacitor/geolocation';
 
 @Component({
   selector: 'app-location-modal',
@@ -43,7 +44,8 @@ export class LocationModalComponent implements OnInit, OnDestroy {
   constructor(
     public locationService: LocationService,
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cdr: ChangeDetectorRef
   ) {}
 
 
@@ -75,6 +77,7 @@ export class LocationModalComponent implements OnInit, OnDestroy {
         isApi: true
       }));
       this.searchResults = apiResults;
+      this.cdr.detectChanges();
     });
   }
 
@@ -94,6 +97,43 @@ export class LocationModalComponent implements OnInit, OnDestroy {
     this.searchSubject.next(query);
   }
 
+
+  async useCurrentLocation() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.isLoading = true;
+      this.errorMsg = '';
+      this.cdr.detectChanges();
+      
+      try {
+        // Just call getCurrentPosition, the browser/OS will prompt for permissions automatically.
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        this.http.get<any>(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`).subscribe({
+          next: (data) => {
+            this.isLoading = false;
+            if (data && data.display_name) {
+              const name = data.name || data.address?.suburb || data.address?.neighbourhood || data.display_name.split(',')[0];
+              this.selectLocation({ ...data, name: name });
+            } else {
+              this.errorMsg = 'Could not determine location from coordinates.';
+            }
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.isLoading = false;
+            this.errorMsg = 'Failed to fetch location data.';
+            this.cdr.detectChanges();
+          }
+        });
+      } catch (error: any) {
+        this.isLoading = false;
+        this.errorMsg = error.message || 'Failed to get your current location. Please try searching instead.';
+        this.cdr.detectChanges();
+      }
+    }
+  }
 
   selectLocation(result: any) {
     const address = result.address || {};

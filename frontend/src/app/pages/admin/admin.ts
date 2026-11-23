@@ -5,14 +5,19 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 
+import { RichEditorComponent } from '../../components/rich-editor/rich-editor.component';
+import { ThemeManagerComponent } from '../../components/theme-manager/theme-manager.component';
+import { PageBuilderComponent } from '../../components/page-builder/page-builder.component';
+
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RichEditorComponent, ThemeManagerComponent, PageBuilderComponent],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class AdminComponent implements OnInit {
+  activeTab: 'menu' | 'theme' | 'cms' = 'theme';
   recipeForm: FormGroup;
   recipes: any[] = [];
   categories: string[] = ['Main Course', 'Puri & Sabzi', 'Rice', 'Everyday Essentials', 'Snacks', 'Beverages', 'Thali Meals'];
@@ -37,7 +42,10 @@ export class AdminComponent implements OnInit {
       prepTime: ['10 mins'],
       cookTime: ['15 mins'],
       totalTime: ['25 mins'],
-      servings: [1]
+      servings: [1],
+      ingredients: [''],
+      instructions: [''],
+      recipeHtml: ['']
     });
   }
 
@@ -59,11 +67,26 @@ export class AdminComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
-    const newRecipe = this.recipeForm.value;
+    const val = this.recipeForm.value;
+    let ingredients = val.ingredients || [];
+    if (typeof ingredients === 'string') {
+      ingredients = ingredients.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+    }
+    if ((!ingredients || ingredients.length === 0) && val.recipeHtml) {
+      const matches = val.recipeHtml.match(/<li[^>]*>(.*?)<\/li>/gi);
+      if (matches && matches.length > 0) {
+        ingredients = matches.map((m: string) => m.replace(/<[^>]+>/g, '').trim()).filter((m: string) => m.length > 0);
+      }
+    }
+    const newRecipe = {
+      ...val,
+      recipeHtml: val.recipeHtml || '',
+      ingredients
+    };
 
     this.http.post(this.API_URL, newRecipe).subscribe({
       next: () => {
-        this.successMessage = 'Item successfully added!';
+        this.successMessage = 'Item successfully added with ingredients!';
         this.isLoading = false;
         this.recipeForm.reset({
           category: 'Main Course',
@@ -72,7 +95,10 @@ export class AdminComponent implements OnInit {
           prepTime: '10 mins',
           cookTime: '15 mins',
           totalTime: '25 mins',
-          servings: 1
+          servings: 1,
+          ingredients: '',
+          instructions: '',
+          recipeHtml: ''
         });
         this.loadRecipes();
       },

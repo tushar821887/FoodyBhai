@@ -1,0 +1,824 @@
+<div class="tiffin-page-container">
+
+  <!-- FLOATING CART TOAST -->
+  @if (cartToastMessage) {
+    <div class="cart-toast-banner animate-slide-down">
+      <div class="toast-content">
+        <span class="toast-icon">✅</span>
+        <span class="toast-text">{{ cartToastMessage }}</span>
+      </div>
+      <button type="button" class="btn-toast-view-cart" (click)="goToCart()">
+        View Cart ({{ cartService.totalItems$ | async }}) →
+      </button>
+    </div>
+  }
+
+  <!-- ==================== DYNAMIC CMS FLOW (MANAGED VIA PAGE STUDIO) ==================== -->
+  @if (cmsPage?.sections?.length) {
+    <div class="tiffin-cms-flow">
+      @for (sec of cmsPage.sections; track sec.id) {
+        <app-dynamic-section-renderer [section]="sec"></app-dynamic-section-renderer>
+      }
+    </div>
+  } @else {
+    <!-- ==================== HERO SECTION (DYNAMIC FROM CMS / DATABASE) ==================== -->
+  @if (cmsHeroSection) {
+    <app-dynamic-section-renderer [section]="cmsHeroSection"></app-dynamic-section-renderer>
+  } @else if (config?.hero) {
+    <section class="tiffin-hero-section">
+      <div class="hero-bg-accent"></div>
+      <div class="container hero-container">
+        <div class="hero-content">
+          
+          <div class="hero-badge animate-fade-in" *ngIf="config.hero.badge">
+            <span class="badge-icon">🍱</span>
+            <span>{{ config.hero.badge }}</span>
+          </div>
+
+          <h1 class="hero-title" [innerHTML]="config.hero.title"></h1>
+
+          <p class="hero-subtitle" [innerHTML]="config.hero.subtitle"></p>
+
+          <!-- Dynamic Trust Highlights / USPs -->
+          <div class="hero-usps" *ngIf="config.hero.usps?.length">
+            @for (usp of config.hero.usps; track usp) {
+              <div class="usp-item">
+                <i class="fa-solid fa-circle-check usp-icon"></i>
+                <span>{{ usp }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="hero-cta-group">
+            <button type="button" class="btn btn-primary btn-lg" (click)="scrollToPlans()">
+              <i class="fa-solid fa-utensils"></i> {{ config.hero.orderBtnText || 'Order Thali / Choose Plan' }}
+            </button>
+            <button type="button" class="btn btn-outline btn-lg" (click)="scrollToWeeklyMenu()">
+              <i class="fa-solid fa-calendar-days"></i> {{ config.hero.menuBtnText || 'View Weekly Menu' }}
+            </button>
+          </div>
+
+          <div class="hero-customer-rating" *ngIf="config.hero.ratingText">
+            <div class="rating-avatars">
+              <span class="avatar-circle">👩</span>
+              <span class="avatar-circle">👨</span>
+              <span class="avatar-circle">🧑</span>
+              <span class="avatar-circle">👩‍💼</span>
+            </div>
+            <div class="rating-text">
+              <div class="stars">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star-half-stroke"></i>
+                <strong>{{ config.hero.ratingText }}</strong>
+              </div>
+              <span>{{ config.hero.ratingSubtitle }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" *ngIf="config.hero.heroImage">
+          <div class="hero-card-stack">
+            <div class="hero-main-card">
+              <img [src]="config.hero.heroImage" 
+                   alt="Ghar Jaisa Tiffin Thali" 
+                   class="hero-img">
+              
+              <div class="hero-card-floating-badge badge-top-right" *ngIf="config.hero.lunchDeliveryTime">
+                <span class="dot-pulse"></span>
+                <span>{{ config.hero.lunchDeliveryTime }}</span>
+              </div>
+
+              <div class="hero-card-floating-badge badge-bottom-left" *ngIf="config.hero.startingPriceText">
+                <span class="badge-price-label">Starting at</span>
+                <span class="badge-price-val">{{ config.hero.startingPriceText }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  } @else {
+    <section class="tiffin-hero-section">
+      <div class="hero-bg-accent"></div>
+      <div class="container hero-container">
+        <div class="hero-content">
+          <div class="hero-badge animate-fade-in">
+            <span class="badge-icon">🍱</span>
+            <span>✨ FRESH HOMESTYLE MEALS</span>
+          </div>
+          <h1 class="hero-title">Ghar Jaisa <span>Tiffin Service</span> in Meerut</h1>
+          <p class="hero-subtitle">Handcrafted homestyle meals delivered hot to your doorstep everyday. Pure desi ghee phulkas, zero preservatives, and fresh local ingredients.</p>
+          <div class="hero-cta-group">
+            <button type="button" class="btn btn-primary btn-lg" (click)="scrollToPlans()">
+              <i class="fa-solid fa-utensils"></i> Order Thali / Choose Plan
+            </button>
+            <button type="button" class="btn btn-outline btn-lg" (click)="scrollToWeeklyMenu()">
+              <i class="fa-solid fa-calendar-days"></i> View Weekly Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ==================== PLANS SECTION (DYNAMIC FROM DATABASE) ==================== -->
+  <section id="tiffin-plans-section" class="plans-section">
+    <div class="container">
+      
+      <div class="section-header text-center">
+        <span class="section-tag">{{ config?.sectionHeader?.tag || 'Instant Order & Subscriptions' }}</span>
+        <h2 class="section-title">{{ config?.sectionHeader?.title || 'Our Handcrafted Thalis & Meal Plans' }}</h2>
+        <p class="section-desc" [innerHTML]="config?.sectionHeader?.desc || 'Select trial meal to test taste or subscribe for 7 or 30 days. Pause or cancel anytime with single click.'"></p>
+
+        <!-- Subscription Duration Tabs -->
+        <div class="duration-toggle-wrapper">
+          <button type="button" 
+                  class="duration-tab" 
+                  [class.active]="selectedDuration === 'trial'"
+                  (click)="selectedDuration = 'trial'">
+            <span class="tab-label">1-Time / Trial</span>
+            <span class="tab-sub">Single meal order</span>
+          </button>
+          
+          <button type="button" 
+                  class="duration-tab active-glow" 
+                  [class.active]="selectedDuration === 'weekly'"
+                  (click)="selectedDuration = 'weekly'">
+            <span class="tab-badge">POPULAR</span>
+            <span class="tab-label">Weekly Plan (7 Days)</span>
+            <span class="tab-sub">Most flexible choice</span>
+          </button>
+
+          <button type="button" 
+                  class="duration-tab" 
+                  [class.active]="selectedDuration === 'monthly'"
+                  (click)="selectedDuration = 'monthly'">
+            <span class="tab-badge save-badge">SAVE 25%</span>
+            <span class="tab-label">Monthly Plan (30 Days)</span>
+            <span class="tab-sub">Best everyday value</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LOADING STATE -->
+      @if (isLoading) {
+        <div class="tiffin-loading-spinner text-center" style="padding: 50px 0;">
+          <div class="spinner-dot" style="display: inline-block; width: 40px; height: 40px; border: 4px solid #fed7aa; border-top-color: #ea580c; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Loading fresh thalis from kitchen...</p>
+        </div>
+      }
+
+      <!-- EMPTY STATE -->
+      @if (!isLoading && filteredPlans.length === 0) {
+        <div class="empty-plans-state text-center" style="background: white; border-radius: 20px; padding: 60px 20px; border: 1.5px dashed #fed7aa; margin-top: 30px;">
+          <span style="font-size: 50px;">🍱</span>
+          <h3 style="margin: 15px 0 8px; font-size: 22px; font-weight: 800; color: #1e293b;">Fresh Meals Being Prepared</h3>
+          <p style="color: #64748b; max-width: 500px; margin: 0 auto 20px;">Our chefs are setting up today's handcrafted menu. Check back soon or call our kitchen directly.</p>
+          <a href="tel:8218870579" class="btn btn-primary">📞 Call Kitchen Hotline</a>
+        </div>
+      }
+
+      <!-- PLANS GRID -->
+      @if (!isLoading && filteredPlans.length > 0) {
+        <div class="plans-grid">
+          @for (plan of filteredPlans; track plan.slug || plan._id) {
+            <div class="plan-card" [class.popular-card]="plan.isPopular">
+              
+              @if (plan.isPopular) {
+                <div class="popular-ribbon">
+                  <i class="fa-solid fa-crown"></i> MOST POPULAR
+                </div>
+              }
+
+              <div class="plan-card-image-wrap">
+                <img [src]="plan.image" [alt]="plan.name" class="plan-card-img" (error)="plan.image = 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=800&q=80'">
+                <div class="plan-badge-dietary" [class.veg]="plan.dietaryType === 'veg'">
+                  <span class="veg-icon-dot"></span>
+                  <span>{{ plan.dietaryType === 'veg' ? 'Pure Veg' : plan.dietaryType }}</span>
+                </div>
+                <div class="plan-rating-chip" *ngIf="plan.rating">
+                  <i class="fa-solid fa-star"></i> {{ plan.rating }} ({{ plan.reviewsCount || 50 }}+)
+                </div>
+              </div>
+
+              <div class="plan-card-body">
+                <h3 class="plan-title">{{ plan.name }}</h3>
+                <p class="plan-tagline" *ngIf="plan.tagline">{{ plan.tagline }}</p>
+
+                <!-- Dynamic Price Display -->
+                <div class="plan-pricing-box">
+                  <div class="price-main-row">
+                    <span class="currency">₹</span>
+                    <span class="amount">{{ getPriceForPlan(plan, selectedDuration) }}</span>
+                    <span class="period">
+                      @if (selectedDuration === 'trial') { / single meal }
+                      @else if (selectedDuration === 'weekly') { / 7 days (1 meal/day) }
+                      @else { / 30 days (1 meal/day) }
+                    </span>
+                  </div>
+                  <div class="per-meal-hint">
+                    Effective only <strong>₹{{ plan.perMealPrice || (getPriceForPlan(plan, selectedDuration) / (selectedDuration === 'monthly' ? 30 : (selectedDuration === 'weekly' ? 7 : 1)) | number:'1.0-0') }}/meal</strong> • Free Delivery
+                  </div>
+                </div>
+
+                <!-- What's Inside The Thali -->
+                <div class="plan-items-list" *ngIf="plan.items?.length">
+                  <h4 class="items-heading"><i class="fa-solid fa-bowl-rice"></i> What's in the dabba:</h4>
+                  <ul>
+                    @for (item of plan.items; track item) {
+                      <li>
+                        <i class="fa-solid fa-check check-icon"></i>
+                        <span [innerHTML]="item"></span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+
+                <!-- Key Features -->
+                <div class="plan-features-pills" *ngIf="plan.features?.length">
+                  @for (feat of plan.features; track feat) {
+                    <span class="feat-pill"><i class="fa-solid fa-sparkles"></i> <span [innerHTML]="feat"></span></span>
+                  }
+                </div>
+
+                <!-- Action Buttons: Add to Cart & Subscribe -->
+                <div class="plan-card-actions-dual">
+                  <!-- 1. Add to Cart (with add-ons) -->
+                  <button type="button" 
+                          class="btn btn-primary btn-add-to-cart"
+                          (click)="openCustomizeModal(plan, $event)"
+                          title="Add thali to cart and select extra items from menu">
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart (₹{{ plan.trialPrice }})
+                  </button>
+
+                  <!-- 2. Subscribe Recurring Plan -->
+                  <button type="button" 
+                          class="btn btn-outline btn-subscribe-plan"
+                          (click)="openBookingModal(plan, selectedDuration)">
+                    <i class="fa-solid fa-calendar-check"></i> 
+                    {{ selectedDuration === 'trial' ? 'Book Trial' : 'Subscribe Plan' }}
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </section>
+
+  <!-- ==================== CUSTOMIZE & ADD-ONS MODAL (ADD TO CART) ==================== -->
+  @if (isCustomizeModalOpen && activeCustomizingPlan) {
+    <div class="modal-backdrop" (click)="closeCustomizeModal()">
+      <div class="modal-dialog customize-modal-dialog" (click)="$event.stopPropagation()">
+        
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <h3 class="modal-title">Customize & Add to Cart</h3>
+            <span class="modal-subtitle">Enhance your {{ activeCustomizingPlan.name }} with extra items</span>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeCustomizeModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- THALI BASE SUMMARY -->
+          <div class="customize-thali-hero">
+            <img [src]="activeCustomizingPlan.image" [alt]="activeCustomizingPlan.name" class="customize-thali-img">
+            <div class="customize-thali-info">
+              <span class="thali-badge-veg">🌱 Pure Veg Thali</span>
+              <h4>{{ activeCustomizingPlan.name }}</h4>
+              <p class="thali-items-summary" *ngIf="activeCustomizingPlan.items?.length">
+                {{ activeCustomizingPlan.items.slice(0, 4).join(' • ') }}
+              </p>
+              <div class="thali-base-price">Base Price: <strong>₹{{ activeCustomizingPlan.trialPrice }}</strong></div>
+            </div>
+          </div>
+
+          <!-- ADD-ONS CATEGORY TABS -->
+          <div class="addons-section-header" *ngIf="availableAddons.length > 0">
+            <h4><i class="fa-solid fa-plus-circle"></i> Add Extras & Menu Dishes (Optional)</h4>
+            <div class="addons-filter-tabs">
+              <button type="button" class="addon-filter-pill" [class.active]="addonsFilter === 'all'" (click)="addonsFilter = 'all'">All</button>
+              <button type="button" class="addon-filter-pill" [class.active]="addonsFilter === 'Breads'" (click)="addonsFilter = 'Breads'">Breads</button>
+              <button type="button" class="addon-filter-pill" [class.active]="addonsFilter === 'Curries & Dals'" (click)="addonsFilter = 'Curries & Dals'">Curries & Dal</button>
+              <button type="button" class="addon-filter-pill" [class.active]="addonsFilter === 'Desserts & Sweets'" (click)="addonsFilter = 'Desserts & Sweets'">Sweets</button>
+              <button type="button" class="addon-filter-pill" [class.active]="addonsFilter === 'Sides & Drinks'" (click)="addonsFilter = 'Sides & Drinks'">Drinks & Sides</button>
+            </div>
+          </div>
+
+          <!-- ADDONS LIST -->
+          <div class="addons-grid" *ngIf="filteredAddons.length > 0">
+            @for (addon of filteredAddons; track addon.id) {
+              <div class="addon-item-card" [class.selected]="addon.quantity > 0">
+                <div class="addon-item-left">
+                  <span class="addon-icon">{{ addon.icon || '🍛' }}</span>
+                  <div class="addon-info">
+                    <span class="addon-name">{{ addon.name }}</span>
+                    @if (addon.description) {
+                      <span class="addon-desc">{{ addon.description }}</span>
+                    }
+                    <span class="addon-price">+₹{{ addon.price }}</span>
+                  </div>
+                </div>
+
+                <!-- Quantity Controls -->
+                <div class="addon-qty-control">
+                  @if (addon.quantity === 0) {
+                    <button type="button" class="btn-add-addon" (click)="incrementAddon(addon)">
+                      + Add
+                    </button>
+                  } @else {
+                    <div class="qty-stepper">
+                      <button type="button" class="qty-btn" (click)="decrementAddon(addon)">-</button>
+                      <span class="qty-val">{{ addon.quantity }}</span>
+                      <button type="button" class="qty-btn" (click)="incrementAddon(addon)">+</button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+        </div>
+
+        <!-- MODAL FOOTER WITH LIVE TOTAL -->
+        <div class="modal-footer customize-modal-footer">
+          <div class="customize-total-breakdown">
+            <span class="total-label">Grand Total (Thali + {{ selectedAddonsCount }} add-on{{ selectedAddonsCount === 1 ? '' : 's' }}):</span>
+            <span class="total-value">₹{{ customizeGrandTotal }}</span>
+          </div>
+
+          <div class="customize-footer-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeCustomizeModal()">Cancel</button>
+            <button type="button" class="btn btn-primary btn-confirm-add" (click)="confirmAddToCartWithCustomization()">
+              <i class="fa-solid fa-cart-shopping"></i> Add to Cart • ₹{{ customizeGrandTotal }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ==================== WEEKLY ROTATING MENU (DYNAMIC FROM DATABASE) ==================== -->
+  @if (config?.weeklyMenuSection) {
+    <section id="weekly-menu-section" class="weekly-menu-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">{{ config.weeklyMenuSection.tag || "Chef's Special Rotation" }}</span>
+          <h2 class="section-title">{{ config.weeklyMenuSection.title || "See What's Cooking This Week" }}</h2>
+          <p class="section-desc" [innerHTML]="config.weeklyMenuSection.desc"></p>
+
+          <!-- Day Tabs -->
+          <div class="days-tab-scroller">
+            @for (day of daysOfWeek; track day; let i = $index) {
+              <button type="button" 
+                      class="day-pill-btn" 
+                      [class.active]="activeDayIndex === i"
+                      (click)="activeDayIndex = i">
+                <span class="day-name">{{ day.substring(0, 3) }}</span>
+                <span class="day-full">{{ day }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Selected Day Menu Display -->
+        @if (selectedDayMenu) {
+          <div class="day-menu-cards-grid animate-fade-in">
+            
+            <!-- LUNCH CARD -->
+            <div class="meal-slot-card lunch-card" *ngIf="selectedDayMenu.lunch">
+              <div class="meal-slot-header">
+                <div class="slot-title-wrap">
+                  <span class="slot-icon">☀️</span>
+                  <div>
+                    <h3 class="slot-title">Lunch Spread</h3>
+                    <span class="slot-time"><i class="fa-regular fa-clock"></i> Delivery: {{ selectedDayMenu.lunch.time || '12:30 PM - 02:00 PM' }}</span>
+                  </div>
+                </div>
+                <span class="slot-tag">Freshly Steamed</span>
+              </div>
+
+              <div class="meal-slot-items">
+                <div class="menu-item-row" *ngIf="selectedDayMenu.lunch.main">
+                  <div class="item-icon-box">🍛</div>
+                  <div class="item-detail">
+                    <span class="item-label">Main Sabzi</span>
+                    <span class="item-name">{{ selectedDayMenu.lunch.main }}</span>
+                  </div>
+                </div>
+
+                <div class="menu-item-row" *ngIf="selectedDayMenu.lunch.dal">
+                  <div class="item-icon-box">🥣</div>
+                  <div class="item-detail">
+                    <span class="item-label">Dal / Gravy</span>
+                    <span class="item-name">{{ selectedDayMenu.lunch.dal }}</span>
+                  </div>
+                </div>
+
+                <div class="menu-item-row" *ngIf="selectedDayMenu.lunch.breadRice">
+                  <div class="item-icon-box">🫓</div>
+                  <div class="item-detail">
+                    <span class="item-label">Breads & Rice</span>
+                    <span class="item-name">{{ selectedDayMenu.lunch.breadRice }}</span>
+                  </div>
+                </div>
+
+                <div class="menu-item-row" *ngIf="selectedDayMenu.lunch.sides">
+                  <div class="item-icon-box">🥗</div>
+                  <div class="item-detail">
+                    <span class="item-label">Accompaniments</span>
+                    <span class="item-name">{{ selectedDayMenu.lunch.sides }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DINNER CARD -->
+            <div class="meal-slot-card dinner-card" *ngIf="selectedDayMenu.dinner">
+              <div class="meal-slot-header">
+                <div class="slot-title-wrap">
+                  <span class="slot-icon">🌙</span>
+                  <div>
+                    <h3 class="slot-title">Dinner Spread</h3>
+                    <span class="slot-time"><i class="fa-regular fa-clock"></i> Delivery: {{ selectedDayMenu.dinner.time || '07:30 PM - 09:30 PM' }}</span>
+                  </div>
+                </div>
+                <span class="slot-tag">Hot & Comforting</span>
+              </div>
+
+              <div class="meal-slot-items">
+                <div class="menu-item-row" *ngIf="selectedDayMenu.dinner.main">
+                  <div class="item-icon-box">🍲</div>
+                  <div class="item-detail">
+                    <span class="item-label">Main Sabzi</span>
+                    <span class="item-name">{{ selectedDayMenu.dinner.main }}</span>
+                  </div>
+                </div>
+
+                <div class="menu-item-row" *ngIf="selectedDayMenu.dinner.dal">
+                  <div class="item-icon-box">🥣</div>
+                  <div class="item-detail">
+                    <span class="item-label">Dal / Gravy</span>
+                    <span class="item-name">{{ selectedDayMenu.dinner.dal }}</span>
+                  </div>
+                </div>
+
+                <div class="menu-item-row" *ngIf="selectedDayMenu.dinner.breadRice">
+                  <div class="item-icon-box">🫓</div>
+                  <div class="item-detail">
+                    <span class="item-label">Breads & Rice</span>
+                    <span class="item-name">{{ selectedDayMenu.dinner.breadRice }}</span>
+                  </div>
+                </div>
+
+                <div class="menu-item-row" *ngIf="selectedDayMenu.dinner.sides">
+                  <div class="item-icon-box">🥗</div>
+                  <div class="item-detail">
+                    <span class="item-label">Accompaniments</span>
+                    <span class="item-name">{{ selectedDayMenu.dinner.sides }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <div class="weekly-footer-note text-center" *ngIf="config.weeklyMenuSection.jainNote">
+          <p><i class="fa-solid fa-circle-info"></i> {{ config.weeklyMenuSection.jainNote }}</p>
+        </div>
+
+      </div>
+    </section>
+  }
+
+  <!-- ==================== HOW IT WORKS (DYNAMIC FROM DATABASE) ==================== -->
+  @if (config?.howItWorks?.steps?.length) {
+    <section class="how-it-works-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">{{ config.howItWorks.tag || 'Hassle-Free Process' }}</span>
+          <h2 class="section-title">{{ config.howItWorks.title || 'How FoodyBhai Tiffin Works' }}</h2>
+          <p class="section-desc">{{ config.howItWorks.desc }}</p>
+        </div>
+
+        <div class="steps-grid">
+          @for (step of config.howItWorks.steps; track step.stepNumber) {
+            <div class="step-card">
+              <div class="step-badge">{{ step.stepNumber }}</div>
+              <div class="step-icon-wrap">
+                <i [class]="step.icon || 'fa-solid fa-bowl-food'"></i>
+              </div>
+              <h3 class="step-title">{{ step.title }}</h3>
+              <p class="step-desc">{{ step.description }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ==================== TRUST STANDARDS (DYNAMIC FROM DATABASE) ==================== -->
+  @if (config?.trustHighlights?.length) {
+    <section class="trust-section">
+      <div class="container">
+        <div class="trust-grid">
+          @for (trust of config.trustHighlights; track trust.title) {
+            <div class="trust-item">
+              <div class="trust-icon"><i [class]="trust.icon || 'fa-solid fa-check'"></i></div>
+              <h4>{{ trust.title }}</h4>
+              <p>{{ trust.description }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ==================== FAQ SECTION (DYNAMIC FROM DATABASE) ==================== -->
+  @if (config?.faqSection) {
+    <section class="faq-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">{{ config.faqSection.tag || 'Got Questions?' }}</span>
+          <h2 class="section-title">{{ config.faqSection.title || 'Frequently Asked Questions' }}</h2>
+          <p class="section-desc">{{ config.faqSection.desc }}</p>
+        </div>
+
+        <div class="faq-list" *ngIf="config.faqSection.faqs?.length">
+          @for (faq of config.faqSection.faqs; track faq.q; let i = $index) {
+            <div class="faq-item" [class.open]="activeFaqIndex === i">
+              <button type="button" class="faq-question" (click)="toggleFaq(i)">
+                <span>{{ faq.q }}</span>
+                <i class="fa-solid fa-chevron-down faq-chevron"></i>
+              </button>
+              @if (activeFaqIndex === i) {
+                <div class="faq-answer">
+                  <div [innerHTML]="faq.a"></div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Need Help Callout Banner -->
+        <div class="need-help-banner" *ngIf="config.faqSection.supportBanner">
+          <div class="help-text">
+            <h3>{{ config.faqSection.supportBanner.title }}</h3>
+            <p>{{ config.faqSection.supportBanner.desc }}</p>
+          </div>
+          <a [href]="'tel:' + config.faqSection.supportBanner.phone" class="btn btn-outline-white" *ngIf="config.faqSection.supportBanner.phone">
+            <i class="fa-solid fa-phone"></i> {{ config.faqSection.supportBanner.phone }}
+          </a>
+        </div>
+
+      </div>
+    </section>
+  }
+  }
+
+
+  <!-- ==================== SUBSCRIPTION BOOKING MODAL ==================== -->
+  @if (isBookingModalOpen && activeBookingPlan) {
+    <div class="modal-backdrop" (click)="closeBookingModal()">
+      <div class="modal-dialog booking-modal-dialog" (click)="$event.stopPropagation()">
+        
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <h3 class="modal-title">Subscribe {{ activeBookingPlan.name }}</h3>
+            <span class="modal-subtitle">Daily Ghar Jaisa Swad • Free Delivery in Meerut</span>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeBookingModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- Plan Duration Picker in Modal -->
+          <div class="modal-section-box">
+            <label class="form-label-heading">1. Select Subscription Duration</label>
+            <div class="modal-duration-selector">
+              <label class="duration-radio-card" [class.selected]="bookingDuration === 'trial'">
+                <input type="radio" name="duration" value="trial" [(ngModel)]="bookingDuration">
+                <span class="radio-title">1-Day Trial</span>
+                <span class="radio-price">₹{{ activeBookingPlan.trialPrice }}</span>
+              </label>
+
+              <label class="duration-radio-card" [class.selected]="bookingDuration === 'weekly'">
+                <input type="radio" name="duration" value="weekly" [(ngModel)]="bookingDuration">
+                <span class="radio-title">Weekly (7 Days)</span>
+                <span class="radio-price">₹{{ activeBookingPlan.weeklyPrice }}</span>
+              </label>
+
+              <label class="duration-radio-card" [class.selected]="bookingDuration === 'monthly'">
+                <input type="radio" name="duration" value="monthly" [(ngModel)]="bookingDuration">
+                <span class="radio-title">Monthly (30 Days)</span>
+                <span class="radio-price">₹{{ activeBookingPlan.monthlyPrice }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Meal Slot Picker -->
+          <div class="modal-section-box">
+            <label class="form-label-heading">2. Choose Delivery Slot</label>
+            <div class="slot-radio-group">
+              <label class="slot-radio-item" [class.selected]="bookingMealSlot === 'lunch'">
+                <input type="radio" name="slot" value="lunch" [(ngModel)]="bookingMealSlot">
+                <div class="slot-info">
+                  <strong>☀️ Lunch Only</strong>
+                  <span>Delivered between 12:30 PM - 02:00 PM</span>
+                </div>
+              </label>
+
+              <label class="slot-radio-item" [class.selected]="bookingMealSlot === 'dinner'">
+                <input type="radio" name="slot" value="dinner" [(ngModel)]="bookingMealSlot">
+                <div class="slot-info">
+                  <strong>🌙 Dinner Only</strong>
+                  <span>Delivered between 07:30 PM - 09:30 PM</span>
+                </div>
+              </label>
+
+              <label class="slot-radio-item" [class.selected]="bookingMealSlot === 'both'">
+                <input type="radio" name="slot" value="both" [(ngModel)]="bookingMealSlot">
+                <div class="slot-info">
+                  <strong>🍱 Both Lunch & Dinner (2 Meals/Day)</strong>
+                  <span>Save 10% on combo delivery</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Customer & Delivery Details Form -->
+          <div class="modal-section-box">
+            <label class="form-label-heading">3. Delivery Information in Meerut</label>
+            
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Your Full Name *</label>
+                <input type="text" [(ngModel)]="customerName" placeholder="e.g. Rahul Sharma" class="form-input">
+                <span class="error-text" *ngIf="formErrors['name']">{{ formErrors['name'] }}</span>
+              </div>
+
+              <div class="form-group col-6">
+                <label>Phone Number (WhatsApp) *</label>
+                <input type="tel" [(ngModel)]="customerPhone" placeholder="10-digit mobile number" class="form-input">
+                <span class="error-text" *ngIf="formErrors['phone']">{{ formErrors['phone'] }}</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>House / Flat No., Building, Street *</label>
+              <input type="text" [(ngModel)]="street" placeholder="e.g. Flat 302, Green Valley Apartments" class="form-input">
+              <span class="error-text" *ngIf="formErrors['street']">{{ formErrors['street'] }}</span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Area in Meerut *</label>
+                <select [(ngModel)]="area" class="form-input">
+                  <option value="" disabled>Select your delivery area</option>
+                  @for (a of areasInMeerut; track a) {
+                    <option [value]="a">{{ a }}</option>
+                  }
+                </select>
+                <span class="error-text" *ngIf="formErrors['area']">{{ formErrors['area'] }}</span>
+              </div>
+
+              <div class="form-group col-6">
+                <label>Nearest Landmark (Optional)</label>
+                <input type="text" [(ngModel)]="landmark" placeholder="e.g. Near Shiv Mandir" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>First Meal Start Date *</label>
+                <input type="date" [(ngModel)]="startDate" class="form-input">
+                <span class="error-text" *ngIf="formErrors['startDate']">{{ formErrors['startDate'] }}</span>
+              </div>
+
+              <div class="form-group col-6">
+                <label>Special Instructions / Jain Note</label>
+                <input type="text" [(ngModel)]="specialInstructions" placeholder="e.g. No onion garlic, less spicy" class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Options -->
+          <div class="modal-section-box">
+            <label class="form-label-heading">4. Payment Method</label>
+            <div class="payment-options-row">
+              <label class="payment-method-card" [class.selected]="paymentMethod === 'cod'">
+                <input type="radio" name="payment" value="cod" [(ngModel)]="paymentMethod">
+                <div class="payment-info">
+                  <i class="fa-solid fa-money-bill-wave"></i>
+                  <span>Cash on Delivery (Pay on Day 1)</span>
+                </div>
+              </label>
+
+              <label class="payment-method-card" [class.selected]="paymentMethod === 'upi'">
+                <input type="radio" name="payment" value="upi" [(ngModel)]="paymentMethod">
+                <div class="payment-info">
+                  <i class="fa-brands fa-google-pay"></i>
+                  <span>UPI / QR on Delivery</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Price Summary -->
+          <div class="order-summary-box">
+            <div class="summary-row">
+              <span>Plan Selected:</span>
+              <strong>{{ activeBookingPlan.name }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Duration:</span>
+              <span>{{ bookingDuration === 'trial' ? '1 Day Trial' : (bookingDuration === 'weekly' ? '7 Days Subscription' : '30 Days Subscription') }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Total Meals:</span>
+              <span>{{ getCalculatedMealsCount() }} Meals</span>
+            </div>
+            <div class="summary-row text-success">
+              <span>Daily Delivery Charges:</span>
+              <strong>FREE</strong>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-row summary-total">
+              <span>Total Payable Amount:</span>
+              <span class="total-price">₹{{ getModalPrice() }}</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeBookingModal()">Cancel</button>
+          <button type="button" class="btn btn-primary btn-submit-order" [disabled]="isSubmitting" (click)="submitBooking()">
+            {{ isSubmitting ? 'Confirming...' : 'Confirm Subscription • ₹' + getModalPrice() }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ==================== CONFIRMATION / SUCCESS MODAL ==================== -->
+  @if (isSuccessModalOpen) {
+    <div class="modal-backdrop">
+      <div class="modal-dialog success-modal-dialog animate-bounce-in">
+        <div class="success-icon-animated">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 class="success-title">Tiffin Subscription Booked!</h3>
+        <p class="success-desc">
+          Swadist ghar jaisa khana is on the way! Our kitchen team has received your order and will confirm delivery details via WhatsApp.
+        </p>
+
+        <div class="confirmed-details-card" *ngIf="confirmedOrder">
+          <div class="detail-row">
+            <span class="detail-label">Subscription ID:</span>
+            <span class="detail-val badge-order-id">{{ confirmedOrder.orderId }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Plan:</span>
+            <span class="detail-val">{{ confirmedOrder.planName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Slot:</span>
+            <span class="detail-val">{{ confirmedOrder.mealSlot | uppercase }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Starts On:</span>
+            <span class="detail-val">{{ confirmedOrder.startDate }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Total Amount:</span>
+            <span class="detail-val text-primary font-bold">₹{{ confirmedOrder.totalAmount }} ({{ confirmedOrder.paymentMethod | uppercase }})</span>
+          </div>
+        </div>
+
+        <div class="success-next-steps">
+          <p><i class="fa-solid fa-headset"></i> <strong>Kitchen Support:</strong> +91 8218870579</p>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" (click)="closeSuccessModal()">
+          Done / Back to Home
+        </button>
+      </div>
+    </div>
+  }
+
+</div>

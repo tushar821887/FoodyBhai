@@ -1,79 +1,27 @@
-<app-hero></app-hero>
-
-<section class="section about-section">
-  <div class="container">
-    <div class="about-grid">
-      <div class="about-img animate-fade-in">
-        <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80" alt="Cooking healthy food">
-      </div>
-      <div class="about-content animate-fade-in">
-        <h2 class="section-title">Welcome to <span>FoodyBhai</span></h2>
-        <p class="section-subtitle">Your ultimate destination for discovering authentic, easy-to-follow, and delicious recipes for every occasion.</p>
-        
-        <ul class="features-list">
-          <li>
-            <div class="feature-icon"><i class="fa-solid fa-list-check"></i></div>
-            <div class="feature-text">
-              <h4>Step-by-Step Instructions</h4>
-              <p>Clear, detailed, and tested recipes that guarantee perfect results every time.</p>
-            </div>
-          </li>
-          <li>
-            <div class="feature-icon"><i class="fa-solid fa-leaf"></i></div>
-            <div class="feature-text">
-              <h4>Authentic Ingredients</h4>
-              <p>Learn the secrets of traditional cooking with accessible ingredients.</p>
-            </div>
-          </li>
-          <li>
-            <div class="feature-icon"><i class="fa-solid fa-clock"></i></div>
-            <div class="feature-text">
-              <h4>Quick & Easy</h4>
-              <p>Find meals that fit your schedule, from 15-minute snacks to elaborate weekend feasts.</p>
-            </div>
-          </li>
-        </ul>
-      </div>
+@if (isLoading && (!homePage || !homePage.sections || homePage.sections.length === 0)) {
+  <div class="global-loading-container">
+    <i class="fa-solid fa-spinner fa-spin global-loading-spinner"></i>
+    <p style="color: var(--text-light); font-weight: 500;">Connecting to Foody Bhai kitchen...</p>
+  </div>
+} @else if (isServerOffline && (!homePage || !homePage.sections || homePage.sections.length === 0)) {
+  <div class="container text-center" style="padding: 6rem 1.5rem; max-width: 650px; margin: 0 auto;">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔌</div>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--secondary-color, #241814); margin-bottom: 0.75rem;">
+      Backend Server Stopped / Offline
+    </h2>
+    <p style="color: var(--text-light, #716661); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
+      All page sections, hero texts, menu recipes, and features are strictly powered live by the backend database and Admin CMS. No hardcoded website fallbacks are used.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <button class="btn btn-primary" (click)="retryLoad()" style="padding: 0.75rem 2rem; border-radius: 50px;">
+        <i class="fa-solid fa-rotate-right" style="margin-right: 6px;"></i> Reconnect
+      </button>
     </div>
   </div>
-</section>
-
-<section class="section categories-section bg-light">
-  <div class="container">
-    <div class="text-center animate-fade-in mb-5">
-      <h2 class="section-title">Explore <span>Categories</span></h2>
-      <p class="section-subtitle">Find exactly what you're craving by browsing our recipe categories.</p>
-    </div>
-    
-    <div class="category-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
-      @for (category of categories; track category.slug) {
-        <a [routerLink]="['/category', category.slug]" class="category-card" style="background: white; padding: 2rem; border-radius: var(--border-radius); text-align: center; text-decoration: none; color: inherit; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
-          <div style="width: 70px; height: 70px; background: rgba(255, 71, 87, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--primary-color); font-size: 2rem; transition: all 0.3s ease;">
-            <i [class]="category.icon"></i>
-          </div>
-          <h3 style="color: var(--secondary-color); margin-bottom: 0.5rem;">{{category.name}}</h3>
-          <p style="color: var(--text-light); font-size: 0.9rem;">{{category.description}}</p>
-        </a>
-      }
-    </div>
-  </div> 
-</section>
-
-<section class="section popular-section">
-  <div class="container">
-    <div class="text-center animate-fade-in">
-      <h2 class="section-title">Popular <span>Menu</span></h2>
-      <p class="section-subtitle">Discover our most loved and highly-rated recipes from the community.</p>
-    </div>
-    
-    <div class="menu-grid">
-      @for (item of popularItems; track item.id || item._id) {
-        <app-menu-card [item]="item"></app-menu-card>
-      }
-    </div>
-    
-    <div class="text-center" style="margin-top: 3rem;">
-      <a routerLink="/menu" class="btn btn-primary">Browse Full Menu</a>
-    </div>
+} @else {
+  <div class="home-cms-canvas">
+    @for (sec of (homePage?.sections || []); track trackBySection($index, sec)) {
+      <app-dynamic-section-renderer [section]="sec"></app-dynamic-section-renderer>
+    }
   </div>
-</section>
+}

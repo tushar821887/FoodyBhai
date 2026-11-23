@@ -2,9 +2,13 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./pages/home/home').then(m => m.Home) },
+  { path: 'recipe', redirectTo: 'menu', pathMatch: 'full' },
+  { path: 'recipes', redirectTo: 'menu', pathMatch: 'full' },
   { path: 'recipe/:slug', loadComponent: () => import('./pages/recipe-detail/recipe-detail').then(m => m.RecipeDetail) },
   { path: 'category/:slug', loadComponent: () => import('./pages/category/category').then(m => m.Category) },
   { path: 'menu', loadComponent: () => import('./pages/menu/menu').then(m => m.MenuComponent) },
+  { path: 'tiffin', loadComponent: () => import('./pages/tiffin/tiffin').then(m => m.TiffinComponent) },
+  { path: 'tiffin-service', redirectTo: 'tiffin', pathMatch: 'full' },
   { path: 'blog', loadComponent: () => import('./pages/blog/blog').then(m => m.Blog) },
   { path: 'blog/:slug', loadComponent: () => import('./pages/blog-detail/blog-detail').then(m => m.BlogDetail) },
   { path: 'about', loadComponent: () => import('./pages/about/about').then(m => m.About) },
@@ -16,5 +20,7 @@ export const routes: Routes = [
   { path: 'addresses', loadComponent: () => import('./pages/addresses/addresses').then(m => m.AddressesComponent) },
   { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.CartComponent) },
   { path: 'admin', loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent) },
+  { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
+  { path: 'page/:slug', loadComponent: () => import('./pages/dynamic-page/dynamic-page.component').then(m => m.DynamicPageComponent) },
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then(m => m.NotFound) }
 ];

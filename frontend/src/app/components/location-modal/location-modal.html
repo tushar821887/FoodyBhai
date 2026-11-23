@@ -26,6 +26,10 @@
           }
         </div>
 
+        <button class="btn-current-location" (click)="useCurrentLocation()">
+          <i class="fa-solid fa-crosshairs"></i> Use Current Location
+        </button>
+
         @if (errorMsg) {
           <div class="error-msg">
             <i class="fa-solid fa-triangle-exclamation"></i> {{errorMsg}}

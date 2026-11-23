@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -33,17 +34,11 @@ export class Contact {
     this.submitSuccess = false;
     this.submitError = false;
 
-    this.http.post('https://formsubmit.co/ajax/tusharmanusharma@gmail.com', {
+    this.http.post(`${environment.apiUrl}/contact`, {
       name: this.contactData.name,
       email: this.contactData.email || 'Not provided',
       phone: this.contactData.phone || 'Not provided',
-      message: this.contactData.message,
-      _subject: `New Contact Form Submission from ${this.contactData.name}`
-    }, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+      message: this.contactData.message
     }).subscribe({
       next: (response) => {
         this.isSubmitting = false;

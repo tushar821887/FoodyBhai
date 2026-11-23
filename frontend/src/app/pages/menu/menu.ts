@@ -1,12 +1,16 @@
-import { Component, OnInit, inject, PLATFORM_ID, Inject, ChangeDetectorRef } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MenuCard } from '../../components/menu-card/menu-card';
 import { RecipeService, Recipe } from '../../services/recipe.service';
+import { CmsService } from '../../services/cms.service';
+import { CmsSection } from '../../models/cms.model';
+import { DynamicSectionRendererComponent } from '../../components/cms/dynamic-section-renderer/dynamic-section-renderer.component';
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule, MenuCard],
+  standalone: true,
+  imports: [CommonModule, MenuCard, DynamicSectionRendererComponent],
   templateUrl: './menu.html',
   styleUrl: './menu.css'
 })
@@ -21,15 +25,26 @@ export class MenuComponent implements OnInit {
 
   isLoading = true;
   skeletonItems = [1, 2, 3, 4, 5, 6]; // 6 skeleton cards
+  cmsHeroSection: CmsSection | null = null;
 
   private recipeService = inject(RecipeService);
-  private platformId = inject(PLATFORM_ID);
+  private cmsService = inject(CmsService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
+    this.cmsService.getPageBySlug('menu').subscribe(page => {
+      if (page && page.sections && page.sections.length > 0) {
+        this.cmsHeroSection = page.sections.find(s => (s.type || '').toLowerCase() === 'hero') || null;
+      } else {
+        this.cmsHeroSection = null;
+      }
+      this.cdr.detectChanges();
+    });
+
     // Load categories from API
     this.recipeService.getCategories().subscribe(cats => {
-      this.categories = [{name: 'All', slug: 'all'}, ...cats];
+      this.categories = [{name: 'All', slug: 'all'}, {name: 'Tiffin Service 🍱', slug: 'tiffin'}, ...cats];
       this.cdr.detectChanges();
     });
 
@@ -50,6 +65,10 @@ export class MenuComponent implements OnInit {
   }
 
   setCategory(categoryName: string) {
+    if (categoryName.toLowerCase().includes('tiffin')) {
+      this.router.navigate(['/tiffin']);
+      return;
+    }
     this.activeCategory = categoryName;
     this.applyFilters();
   }

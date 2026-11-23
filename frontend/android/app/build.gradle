@@ -52,3 +52,21 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+// Automatically sync generated APK into frontend/public/downloads/foodybhai.apk
+android.applicationVariants.all { variant ->
+    variant.outputs.all { output ->
+        def taskSuffix = variant.name.capitalize()
+        def syncTask = tasks.register("sync${taskSuffix}ApkToPublic", Copy) {
+            from output.outputFile
+            into "${project.rootDir}/../public/downloads"
+            rename { String fileName -> "foodybhai.apk" }
+            doLast {
+                println "🎉 [Automated APK Sync] Copied ${output.outputFile.name} -> frontend/public/downloads/foodybhai.apk"
+            }
+        }
+        variant.assembleProvider.configure { assembleTask ->
+            assembleTask.finalizedBy(syncTask)
+        }
+    }
+}

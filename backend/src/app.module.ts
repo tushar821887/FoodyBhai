@@ -1,3 +1,9 @@
+import * as dns from 'dns';
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
+
+import { ContactModule } from "./contact/contact.module";
 import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -8,9 +14,14 @@ import { CategoriesModule } from './categories/categories.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { SettingsModule } from './settings/settings.module';
+import { PagesModule } from './pages/pages.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { TiffinModule } from './tiffin/tiffin.module';
 
 @Module({
   imports: [
+    ContactModule,
     // Load environment variables
     ConfigModule.forRoot({
       isGlobal: true,
@@ -60,7 +71,11 @@ import { RecipesModule } from './recipes/recipes.module';
     CategoriesModule,
     CartModule,
     OrdersModule,
-    RecipesModule
+    RecipesModule,
+    SettingsModule,
+    PagesModule,
+    CouponsModule,
+    TiffinModule
   ],
 })
 export class AppModule {}

@@ -1,13 +1,29 @@
-import { Component, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { CartService, CartItem } from '../../services/cart.service';
 import { OrderService } from '../../services/order.service';
 import { AuthService, Address } from '../../services/auth.service';
 import { UiService } from '../../services/ui.service';
 import { Subscription } from 'rxjs';
+
+export interface UpiLauncherPlugin {
+  openUpi(options: { url: string; packageName?: string }): Promise<void>;
+}
+const UpiLauncher = registerPlugin<UpiLauncherPlugin>('UpiLauncher');
+
+export interface UpiAppInfo {
+  id: string;
+  name: string;
+  packageName: string;
+  badge?: string;
+  color: string;
+  bgColor: string;
+  description: string;
+}
 
 @Component({
   selector: 'app-cart',
@@ -16,10 +32,17 @@ import { Subscription } from 'rxjs';
   templateUrl: './cart.html',
   styleUrls: ['./cart.css']
 })
-export class CartComponent implements OnDestroy {
+export class CartComponent implements OnInit, OnDestroy {
   customerName = '';
   customerPhone = '';
+  customerEmail = '';
   orderType: 'delivery' | 'pickup' = 'delivery';
+
+  setOrderType(type: 'delivery' | 'pickup') {
+    this.orderType = type;
+    this.cartService.setOrderType(type);
+    this.cdr.detectChanges();
+  }
 
   // Address properties
   deliveryAddress = '';
@@ -33,6 +56,18 @@ export class CartComponent implements OnDestroy {
   couponInput = '';
   couponError = '';
   couponSuccess = '';
+  isApplyingCoupon = false;
+  availableCoupons: any[] = [];
+  isLoadingAvailableCoupons = false;
+  showOffersModal = false;
+  cartOffersConfig: any = {
+    enabled: true,
+    title: 'Available Offers',
+    subtitle: 'Tap to view coupons & deals',
+    buttonText: 'View Offers',
+    displayMode: 'popup',
+    maxOffersToShow: 5
+  };
 
   private authSub: Subscription;
   currentTotal = 0;
@@ -42,7 +77,275 @@ export class CartComponent implements OnDestroy {
   paymentMethod: 'online' | 'cod' = 'online';
   codConfirmed = false;
   qrImageUrl = '';
-  upiId = 'foodybhai@okaxis';
+  upiId = '';
+  selectedQrMode: 'dynamic' | 'uploaded' = 'dynamic';
+  onlineViewMode: 'quick_pay' | 'qr_code' = 'quick_pay';
+  qrLoadFailed = false;
+
+  get isMobile(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (Capacitor.isNativePlatform()) return true;
+    return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  }
+
+  get hasCustomUploadedQr(): boolean {
+    return !!(this.qrImageUrl && !this.qrImageUrl.includes('wikimedia.org'));
+  }
+  
+  get effectiveUpiId(): string {
+    return (this.upiId || '8218870579@ptyes').trim();
+  }
+
+  get upiPaymentString(): string {
+    const upi = this.effectiveUpiId;
+    const amount = Number(this.currentTotal).toFixed(2);
+    const tr = 'FB' + Date.now();
+    return `upi://pay?pa=${upi}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
+  }
+
+  get dynamicQrUrl(): string {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(this.upiPaymentString)}`;
+  }
+
+  get currentQrDisplayUrl(): string {
+    if (this.selectedQrMode === 'uploaded' && this.qrImageUrl) {
+      return this.qrImageUrl;
+    }
+    if (this.qrLoadFailed) {
+      return `https://quickchart.io/qr?text=${encodeURIComponent(this.upiPaymentString)}&size=300`;
+    }
+    return this.dynamicQrUrl;
+  }
+
+  onQrError() {
+    if (!this.qrLoadFailed) {
+      this.qrLoadFailed = true;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // --- UPI Apps Selector ---
+  showUpiAppsModal = false;
+  selectedUpiApp: UpiAppInfo | null = null;
+
+  readonly upiApps: UpiAppInfo[] = [
+    {
+      id: 'gpay',
+      name: 'Google Pay',
+      packageName: 'com.google.android.apps.nbu.paisa.user',
+      badge: 'Popular',
+      color: '#1a73e8',
+      bgColor: '#e8f0fe',
+      description: 'Fast UPI payments with Google Pay'
+    },
+    {
+      id: 'phonepe',
+      name: 'PhonePe',
+      packageName: 'com.phonepe.app',
+      badge: 'Popular',
+      color: '#5f259f',
+      bgColor: '#f3e8ff',
+      description: 'UPI, Wallet & instant bank transfers'
+    },
+    {
+      id: 'paytm',
+      name: 'Paytm UPI',
+      packageName: 'net.one97.paytm',
+      badge: 'Fast',
+      color: '#002970',
+      bgColor: '#e0f2fe',
+      description: 'Instant payment via Paytm app'
+    },
+    {
+      id: 'bhim',
+      name: 'BHIM UPI',
+      packageName: 'in.org.npci.upiapp',
+      badge: 'NPCI',
+      color: '#00843d',
+      bgColor: '#dcfce7',
+      description: 'Govt. of India official UPI app'
+    },
+    {
+      id: 'cred',
+      name: 'CRED UPI',
+      packageName: 'com.dreamplug.androidapp',
+      badge: 'Rewards',
+      color: '#111827',
+      bgColor: '#f3f4f6',
+      description: 'Pay using CRED UPI & earn rewards'
+    },
+    {
+      id: 'amazonpay',
+      name: 'Amazon Pay',
+      packageName: 'in.amazon.mShop.android.shopping',
+      color: '#ea580c',
+      bgColor: '#ffedd5',
+      description: 'Amazon Pay UPI balance & bank'
+    },
+    {
+      id: 'any',
+      name: 'Other UPI Apps',
+      packageName: '',
+      badge: 'All Apps',
+      color: '#e11d48',
+      bgColor: '#ffe4e6',
+      description: 'Open Android system chooser for all installed UPI apps'
+    }
+  ];
+
+  get topUpiApps(): UpiAppInfo[] {
+    return this.upiApps.filter(app => ['gpay', 'phonepe', 'paytm', 'bhim'].includes(app.id));
+  }
+
+  openUpiAppsModal() {
+    this.showUpiAppsModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeUpiAppsModal() {
+    this.showUpiAppsModal = false;
+    this.cdr.detectChanges();
+  }
+
+  getUpiQueryString(): string {
+    const upi = this.effectiveUpiId;
+    const amount = Number(this.currentTotal).toFixed(2);
+    const tr = 'FB' + Date.now();
+    // Do NOT percent-encode '@' in UPI ID as it breaks PhonePe and Paytm VPA parser!
+    return `pa=${upi}&pn=FoodyBhai&am=${amount}&cu=INR&tn=FoodyBhaiOrder&tr=${tr}`;
+  }
+
+  getAppUpiLink(appId: string): string {
+    const query = this.getUpiQueryString();
+    const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+
+    switch (appId) {
+      case 'gpay':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`
+          : `tez://upi/pay?${query}`;
+      case 'phonepe':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.phonepe.app;end`
+          : `phonepe://pay?${query}`;
+      case 'paytm':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=net.one97.paytm;end`
+          : `paytmmp://pay?${query}`;
+      case 'bhim':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=in.org.npci.upiapp;end`
+          : `upi://pay?${query}`;
+      case 'cred':
+        return isAndroid
+          ? `intent://pay?${query}#Intent;scheme=upi;package=com.dreamplug.androidapp;end`
+          : `credpay://pay?${query}`;
+      case 'amazonpay':
+        return `intent://pay?${query}#Intent;scheme=upi;package=in.amazon.mShop.android.shopping;end`;
+      case 'any':
+      default:
+        return `upi://pay?${query}`;
+    }
+  }
+
+  async launchUpi(url: string, packageName?: string) {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await UpiLauncher.openUpi({ url, packageName });
+        return;
+      } catch (err) {
+        console.warn('Native UpiLauncher error, falling back to web navigation:', err);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const isAndroid = /android/i.test(navigator.userAgent);
+        if (isAndroid && url.startsWith('intent://')) {
+          // On Android mobile browser (Chrome/Samsung), intent:// URLs directly launch the targeted app!
+          window.location.href = url;
+          return;
+        }
+
+        const cleanUpi = url.startsWith('intent://') 
+          ? url.replace(/^intent:\/\//, 'upi://').replace(/#Intent;.*$/, '') 
+          : url;
+
+        window.location.href = cleanUpi;
+      } catch (e) {
+        window.location.href = url;
+      }
+    }
+  }
+
+  onAppSelected(app: UpiAppInfo, event?: Event) {
+    this.selectedUpiApp = app;
+    this.showUpiAppsModal = false;
+    this.showToast(`Opening ${app.name}... Please complete payment and tap "I've Paid".`, 'info');
+    this.cdr.detectChanges();
+
+    if (Capacitor.isNativePlatform() && event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const link = this.getAppUpiLink(app.id);
+    this.launchUpi(link, app.packageName);
+  }
+
+  onQrCodeClick() {
+    this.showToast(`Opening UPI apps to pay ₹${this.currentTotal}...`, 'info');
+    this.launchUpi(this.upiPaymentString);
+  }
+
+  downloadQrCode() {
+    const url = this.currentQrDisplayUrl;
+    if (!url) {
+      this.showToast('QR code is not available.', 'error');
+      return;
+    }
+
+    const filename = `foodybhai-qr-₹${this.currentTotal}.png`;
+    fetch(url)
+      .then(res => res.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        this.showToast('✅ QR code saved! In your UPI app, tap "Scan QR" → "Upload from Gallery".', 'success');
+      })
+      .catch(() => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        this.showToast('✅ QR opened! In your UPI app, use Scan from Gallery.', 'success');
+      });
+  }
+
+  copyUpiId() {
+    const upi = this.effectiveUpiId;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(upi).then(() => {
+        this.showToast('UPI ID copied: ' + upi, 'success');
+      }).catch(() => {
+        this.showToast('UPI ID: ' + upi, 'info');
+      });
+    } else {
+      this.showToast('UPI ID: ' + upi, 'info');
+    }
+  }
+
+  restaurantOpen = true;
+  restaurantClosedReason = '';
   isPlacingOrder = false;
 
   // --- Toast Notification ---
@@ -54,7 +357,7 @@ export class CartComponent implements OnDestroy {
   constructor(
     public cartService: CartService,
     private orderService: OrderService,
-    public authService: AuthService,
+    public authService: AuthService, private cdr: ChangeDetectorRef,
     public uiService: UiService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -66,7 +369,8 @@ export class CartComponent implements OnDestroy {
     this.authSub = this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.customerName = user.name;
-        this.customerPhone = user.email;
+        this.customerPhone = user.phone || '';
+        this.customerEmail = user.email || '';
         this.savedAddresses = user.addresses || [];
         if (this.savedAddresses.length > 0 && !this.selectedAddressId) {
           this.selectedAddressId = this.savedAddresses[0].id || null;
@@ -76,20 +380,54 @@ export class CartComponent implements OnDestroy {
       } else {
         this.customerName = '';
         this.customerPhone = '';
+        this.customerEmail = '';
         this.savedAddresses = [];
         this.selectedAddressId = null;
       }
     });
 
     this.cartService.finalPrice$.subscribe(total => this.currentTotal = total);
+    this.cartService.cartOffersConfig$.subscribe(cfg => {
+      if (cfg) {
+        this.cartOffersConfig = cfg;
+        this.cdr.detectChanges();
+      }
+    });
 
     // Load QR & UPI from localStorage (set by admin)
     if (isPlatformBrowser(this.platformId)) {
-      const savedQr = localStorage.getItem('foodybhai_qr');
-      const savedUpi = localStorage.getItem('foodybhai_upi');
-      if (savedQr) this.qrImageUrl = savedQr;
-      if (savedUpi) this.upiId = savedUpi;
+      this.orderService.getSetting('foodybhai_qr').subscribe(res => { if (res && res.value !== undefined) { this.qrImageUrl = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('restaurant_open').subscribe(res => { if (res && res.value !== undefined) { this.restaurantOpen = res.value === 'true' || res.value === true; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('restaurant_closed_reason').subscribe(res => { if (res && res.value !== undefined) { this.restaurantClosedReason = res.value; this.cdr.detectChanges(); } });
+      this.orderService.getSetting('foodybhai_upi').subscribe(res => { if (res && res.value !== undefined) { this.upiId = res.value; this.cdr.detectChanges(); } });
+      
+      
     }
+  }
+
+  ngOnInit() {
+    this.cartService.setOrderType(this.orderType);
+    this.loadAvailableCoupons();
+    const currentCoupon = this.cartService.getCouponCode();
+    if (currentCoupon) {
+      this.couponInput = currentCoupon;
+    }
+  }
+
+  loadAvailableCoupons() {
+    this.isLoadingAvailableCoupons = true;
+    this.cartService.getActivePublicCoupons().subscribe({
+      next: (coupons) => {
+        this.availableCoupons = coupons || [];
+        this.isLoadingAvailableCoupons = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.availableCoupons = [];
+        this.isLoadingAvailableCoupons = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -107,22 +445,74 @@ export class CartComponent implements OnDestroy {
   }
 
   // --- Coupon ---
-  applyCoupon() {
+  applyCoupon(codeToApply?: string) {
     this.couponError = '';
     this.couponSuccess = '';
-    if (this.cartService.getCurrentTotal() < 100) {
-      this.couponError = 'Minimum order of ₹100 required.';
+
+    const code = (codeToApply || this.couponInput || '').trim().toUpperCase();
+    if (!code) {
+      this.couponError = 'Please enter a coupon code.';
       return;
     }
-    if (!this.couponInput.trim()) {
-      this.couponError = 'Please enter a coupon code';
+
+    const currentTotal = this.cartService.getCurrentTotal();
+    if (currentTotal <= 0) {
+      this.couponError = 'Your cart is empty. Add items first.';
       return;
     }
-    const success = this.cartService.applyCoupon(this.couponInput);
-    if (success) {
-      this.couponSuccess = 'Coupon applied! 20% OFF';
-    } else {
-      this.couponError = 'Invalid coupon code';
+
+    this.isApplyingCoupon = true;
+    const currentUser = this.authService.getCurrentUser();
+    const userId = currentUser?.id;
+
+    this.cartService.validateAndApplyCoupon(code, currentTotal, userId).subscribe({
+      next: (res: any) => {
+        this.isApplyingCoupon = false;
+        if (res && res.valid) {
+          this.couponInput = code;
+          this.couponSuccess = res.message || `Coupon "${code}" applied successfully!`;
+          this.couponError = '';
+          this.showToast(this.couponSuccess, 'success');
+        } else {
+          this.couponError = res?.message || `Coupon "${code}" is invalid.`;
+          this.couponSuccess = '';
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isApplyingCoupon = false;
+        this.couponError = err?.error?.message || 'Unable to apply coupon. Please check and try again.';
+        this.couponSuccess = '';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  selectQuickCoupon(code: string) {
+    this.couponInput = code;
+    this.applyCoupon(code);
+  }
+
+  openOffersModal() {
+    this.showOffersModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeOffersModal() {
+    this.showOffersModal = false;
+    this.cdr.detectChanges();
+  }
+
+  applyCouponFromModal(code: string) {
+    this.showOffersModal = false;
+    this.applyCoupon(code);
+  }
+
+  copyCouponCode(code: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(code);
+      this.showToast(`Coupon code "${code}" copied to clipboard!`, 'info');
     }
   }
 
@@ -131,6 +521,33 @@ export class CartComponent implements OnDestroy {
     this.couponInput = '';
     this.couponSuccess = '';
     this.couponError = '';
+    this.showToast('Coupon removed', 'info');
+    this.cdr.detectChanges();
+  }
+
+  // --- Remove Item Confirmation Modal ---
+  showRemoveConfirmModal = false;
+  itemToRemove: CartItem | null = null;
+
+  confirmRemoveItem(item: CartItem) {
+    this.itemToRemove = item;
+    this.showRemoveConfirmModal = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelRemoveItem() {
+    this.itemToRemove = null;
+    this.showRemoveConfirmModal = false;
+    this.cdr.detectChanges();
+  }
+
+  executeRemoveItem() {
+    if (this.itemToRemove && this.itemToRemove.recipe) {
+      const title = this.itemToRemove.recipe.title;
+      this.cartService.removeFromCart(this.itemToRemove.recipe.id);
+      this.showToast(`"${title}" removed from cart`, 'info');
+    }
+    this.cancelRemoveItem();
   }
 
   // --- Cart Quantity ---
@@ -142,14 +559,29 @@ export class CartComponent implements OnDestroy {
     this.cartService.updateQuantity(item.recipe.id, item.quantity - 1);
   }
 
+  handleDecreaseQuantity(item: CartItem) {
+    if (item.quantity <= 1) {
+      this.confirmRemoveItem(item);
+    } else {
+      this.decreaseQuantity(item);
+    }
+  }
+
   removeItem(item: CartItem) {
-    this.cartService.removeFromCart(item.recipe.id);
+    this.confirmRemoveItem(item);
   }
 
   // --- Stepper ---
   currentStep = 1;
 
   setStep(step: number) {
+    if (step > 1) {
+      const outOfStockItem = this.cartService.getItems().find(i => i.recipe?.inStock === false);
+      if (outOfStockItem) {
+        this.showToast(`"${outOfStockItem.recipe.title}" is currently out of stock. Please remove it from your cart to proceed.`, 'error');
+        return;
+      }
+    }
     if (step === 2 && this.cartService.getCurrentTotal() < 100) {
       this.showToast('Minimum order of ₹100 required.', 'error');
       return;
@@ -204,8 +636,14 @@ export class CartComponent implements OnDestroy {
 
   saveNewAddress() {
     if (!this.newAddressLabel || !this.newAddressText) return;
+    
+    let addressToSave = this.newAddressText;
+    if (!addressToSave.toLowerCase().includes('meerut')) {
+      addressToSave += ', Meerut, Uttar Pradesh';
+    }
+    
     this.isAddingAddress = true;
-    this.authService.addAddress({ label: this.newAddressLabel, fullAddress: this.newAddressText }).subscribe({
+    this.authService.addAddress({ label: this.newAddressLabel, fullAddress: addressToSave }).subscribe({
       next: (user) => {
         this.isAddingAddress = false;
         this.newAddressText = '';
@@ -224,16 +662,13 @@ export class CartComponent implements OnDestroy {
 
   deleteAddress(id: string | undefined, event: Event) {
     event.stopPropagation();
-    if (!id) return;
+    if (!id || !confirm('Are you sure you want to delete this address?')) return;
     this.authService.deleteAddress(id).subscribe();
   }
 
   // --- Checkout: open Payment Modal ---
   checkout() {
-    if (!this.authService.isLoggedIn()) {
-      this.uiService.openAuthModal();
-      return;
-    }
+    // Allow guest checkout
     // Validate address
     if (this.orderType === 'delivery') {
       if (this.savedAddresses.length > 0 && !this.selectedAddressId) {
@@ -251,12 +686,18 @@ export class CartComponent implements OnDestroy {
     }
     // Open payment modal
     this.paymentMethod = 'online';
+    this.selectedQrMode = 'dynamic';
     this.codConfirmed = false;
+    this.onlineViewMode = this.isMobile ? 'quick_pay' : 'qr_code';
+    this.qrLoadFailed = false;
     this.showPaymentModal = true;
+    this.cdr.detectChanges();
   }
 
   closePaymentModal() {
     this.showPaymentModal = false;
+    this.showUpiAppsModal = false;
+    this.cdr.detectChanges();
   }
 
   confirmPaymentAndPlaceOrder() {
@@ -268,7 +709,11 @@ export class CartComponent implements OnDestroy {
     let finalAddress = this.deliveryAddress;
     if (this.orderType === 'delivery') {
       const selected = this.savedAddresses.find(a => a.id === this.selectedAddressId);
-      if (selected) finalAddress = selected.fullAddress;
+      if (selected) {
+        finalAddress = selected.fullAddress;
+      } else if (!finalAddress.toLowerCase().includes('meerut')) {
+        finalAddress += ', Meerut, Uttar Pradesh';
+      }
     } else {
       finalAddress = 'Self Pickup — 226 Bhatwara, Budhana Gate, Meerut';
     }
@@ -277,26 +722,69 @@ export class CartComponent implements OnDestroy {
     this.cartService.items$.subscribe(i => items = i).unsubscribe();
 
     this.isPlacingOrder = true;
+    let itemTotal = 0, discount = 0, gst = 0, platformFee = 0, deliveryFee = 0;
+    this.cartService.totalPrice$.subscribe(v => itemTotal = v).unsubscribe();
+    this.cartService.discount$.subscribe(v => discount = v).unsubscribe();
+    this.cartService.gst$.subscribe(v => gst = v).unsubscribe();
+    this.cartService.platformFee$.subscribe(v => platformFee = v).unsubscribe();
+    if (this.orderType === 'delivery') {
+      this.cartService.deliveryFee$.subscribe(v => deliveryFee = v).unsubscribe();
+    } else {
+      deliveryFee = 0;
+    }
+
+    const effectiveTotal = Math.max(0, itemTotal - discount + platformFee + gst + (this.orderType === 'pickup' ? 0 : deliveryFee));
+    this.currentTotal = effectiveTotal;
+
+    if (this.cartService.isOffline$.value) {
+      this.showToast("We are currently offline and not accepting orders.", 'error');
+      return;
+    }
+
+    const outOfStock = items.find(i => i.recipe?.inStock === false);
+    if (outOfStock) {
+      this.isPlacingOrder = false;
+      this.showToast(`"${outOfStock.recipe.title}" is out of stock. Please remove it from your cart.`, 'error');
+      return;
+    }
+
     this.orderService.placeOrder({
       items,
-      totalAmount: this.currentTotal,
+      itemTotal,
+      discount,
+      couponCode: this.cartService.getCouponCode() || undefined,
+      couponDiscount: discount,
+      gst,
+      platformFee,
+      deliveryFee: this.orderType === 'pickup' ? 0 : deliveryFee,
+      deliveryCharge: this.orderType === 'pickup' ? 0 : deliveryFee,
+      totalAmount: effectiveTotal,
       orderType: this.orderType,
       paymentMethod: this.paymentMethod,
       deliveryDetails: {
         name: this.customerName,
         phone: this.customerPhone,
-        address: finalAddress
+        address: finalAddress,
+        email: this.customerEmail || undefined
       }
     }).subscribe({
-      next: () => {
+      next: (orderRes: any) => {
+        if (orderRes?.guestAuth?.accessToken && orderRes?.guestAuth?.user) {
+          this.authService.setAuth(orderRes.guestAuth.accessToken, orderRes.guestAuth.user);
+        }
         this.isPlacingOrder = false;
         this.showPaymentModal = false;
         this.cartService.clearCart();
         this.deliveryAddress = '';
         this.showToast('🎉 Order placed successfully! We\'ll start preparing your food.', 'success');
-        setTimeout(() => this.router.navigate(['/orders']), 2000);
+        const trackId = orderRes?._id || orderRes?.id;
+        const targetUrl = trackId ? `/orders?track=${trackId}` : '/orders';
+        setTimeout(() => this.router.navigateByUrl(targetUrl), 1500);
       },
       error: (err) => {
+        if (err.error && err.error.message && err.error.message.includes('offline')) {
+           this.showToast(err.error.message, 'error');
+        }
         this.isPlacingOrder = false;
         console.error(err);
         this.showToast('Failed to place order. Please try again.', 'error');
